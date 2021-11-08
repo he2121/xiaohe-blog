@@ -1,21 +1,11 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>小贺的博客</title>
-    <link>https://he2121.github.io/heganghuan-blog/</link>
-    <description>Recent content on 小贺的博客</description>
+    <title>建站 on 小贺的博客</title>
+    <link>https://he2121.github.io/heganghuan-blog/tags/%E5%BB%BA%E7%AB%99/</link>
+    <description>Recent content in 建站 on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>zh-cn</language>
-    <lastBuildDate>Mon, 08 Nov 2021 14:51:56 +0800</lastBuildDate><atom:link href="https://he2121.github.io/heganghuan-blog/index.xml" rel="self" type="application/rss+xml" />
-    <item>
-      <title>TEST</title>
-      <link>https://he2121.github.io/heganghuan-blog/posts/my-first-post/</link>
-      <pubDate>Mon, 08 Nov 2021 14:51:56 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/heganghuan-blog/posts/my-first-post/</guid>
-      <description></description>
-    </item>
-    
+    <language>zh-cn</language><atom:link href="https://he2121.github.io/heganghuan-blog/tags/%E5%BB%BA%E7%AB%99/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>使用 Hugo 与 GitHub Pages 快速建站</title>
       <link>https://he2121.github.io/heganghuan-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</link>
