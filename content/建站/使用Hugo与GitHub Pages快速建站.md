@@ -53,7 +53,7 @@ hugo server -D
 ```
 打开命令行给出的地址，修改 markdown 文件，网页还会实时变化
 
-7. GitHub Pages 设置
+7. GitHub Pages 设置（这里只介绍其中最简单的一种方式）
 
 Github 仓库首页  -> Settings -> Pages -> main -> docs -> save
 
@@ -84,8 +84,55 @@ git push
 测试是否成功
 
 ## 个性化
-- 平时使用 idea/vscode 在本地编辑 markdown，实时本地看网页效果，编辑完 生成静态网页，push 到远程即输出一篇文章
-- 
+建议先跳去看总结
+### 使用
+平时使用 idea/vscode 在本地编辑 markdown，实时本地看网页效果，编辑完生成静态网页，push 到远程即输出一篇文章
+### 主题
+挑选了这款主题 https://themes.gohugo.io/themes/hugo-theme-cactus-plus/
+
+按照教程安装即可。
+
+评论功能要去 https://disqus.com/ 申请账号。
+网页统计数据 https://analytics.google.com/analytics/web/ 注册。
+
+给出个人配置文件
+```text
+baseURL = 'https://he2121.github.io/heganghuan-blog/'
+languageCode = 'zh-cn'
+defaultContentLanguage = 'cn'
+title = '小贺的博客'
+publishDir = 'docs'
+theme = 'github.com/nodejh/hugo-theme-mini'
+
+googleAnalytics = 'G-583xxxxxx'
+disqusShortname = 'xxxx'
+
+[social]
+github = "https://github.com/he2121/"
+
+[params]
+author = '小贺'
+bio = 'Golang 工程师'
+description = "小贺的博客"
+enableGoogleAnalytics = true
+enableComments = true
+[[params.links]]
+name = "tag"
+path = "/heganghuan-blog/tags"
+[[params.links]]
+name = "算法"
+path = "/heganghuan-blog/算法"
+[[params.links]]
+name = "建站"
+path = "/heganghuan-blog/建站"
+[[params.links]]
+name = "杂谈"
+path = "/heganghuan-blog/杂谈"
+```
+
+## 总结
+使用 Hugo 与 GitHub Pages 能够很快搭建一个个人网站，但是定制化比较花费时间，
+建议新手全部使用默认功能即可，写文章才是重点，其他应该暂时忽略。
 
  
 

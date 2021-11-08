@@ -17,3 +17,15 @@ bio = 'Golang 工程师'
 description = "小贺的博客"
 enableGoogleAnalytics = true
 enableComments = true
+[[params.links]]
+name = "tag"
+path = "/heganghuan-blog/tags"
+[[params.links]]
+name = "算法"
+path = "/heganghuan-blog/算法"
+[[params.links]]
+name = "建站"
+path = "/heganghuan-blog/建站"
+[[params.links]]
+name = "杂谈"
+path = "/heganghuan-blog/杂谈"
