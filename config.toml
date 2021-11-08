@@ -1,5 +1,19 @@
 baseURL = 'https://he2121.github.io/heganghuan-blog/'
 languageCode = 'zh-cn'
+defaultContentLanguage = 'cn'
 title = '小贺的博客'
-theme = "ananke"
 publishDir = 'docs'
+theme = 'github.com/nodejh/hugo-theme-mini'
+
+googleAnalytics = 'G-58332205CQ'
+disqusShortname = 'heganghuan-blog'
+
+[social]
+github = "https://github.com/he2121/"
+
+[params]
+author = '小贺'
+bio = 'Golang 工程师'
+description = "小贺的博客"
+enableGoogleAnalytics = true
+enableComments = true

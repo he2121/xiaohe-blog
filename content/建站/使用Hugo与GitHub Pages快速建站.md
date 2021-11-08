@@ -1,3 +1,7 @@
+---
+title: "使用 Hugo 与 GitHub Pages 快速建站"
+tags: ["建站", "GitHub Pages", "Hugo"]
+---
 ## 前言
 作为一名程序员，并且是一名有追求的程序员，**技术影响力** 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
 ## Hugo 与 GitHub Pages 简介
@@ -58,9 +62,10 @@ Github 仓库首页  -> Settings -> Pages -> main -> docs -> save
 意思是打开这个地址就会展现仓库 /docs 下的内容。
 
 接下来我们的工作就是：把 Hugo 生成的静态网页生成文件放在 /docs 文件夹下，再 push 到 GitHub。
+
 8. 修改 config.toml
 示例如下，请自行修改
-```
+```bash
 baseURL = 'https://he2121.github.io/heganghuan-blog/'   // 设置成你自己的
 languageCode = 'zh-cn'
 title = '小贺的博客'
@@ -69,14 +74,18 @@ publishDir = 'docs'
 ```
 
 9. 生成静态网页，push 到 GitHub
-```
-hugo -D
+```bash
+hugo -D // 生成静态网页
 git add .
 git commit -m "first commit"
 git push
 ```
 打开 GitHub 提供的页面链接 https://he2121.github.io/heganghuan-blog/
 测试是否成功
+
+## 个性化
+- 平时使用 idea/vscode 在本地编辑 markdown，实时本地看网页效果，编辑完 生成静态网页，push 到远程即输出一篇文章
+- 
 
  
 
