@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>Go 反射解析与实战 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="前言 🔗日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
+什么是反射 🔗 在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
+ 来自维基百科
+在 Goland 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、
+执行它们的方法，
+反射能够干什么 🔗反射是元编程的一个关键策略
+ java spring goland json 序列化与反序列化 go orm 框架 &hellip;  反射的缺点 🔗 性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Goland 反射解析 🔗要搞清楚反射，得先简要了解一下 interface
+Interface 🔗定义 🔗接口有两种定义：
+  eface: 空接口定义, 包含具体类型与数据
+  iface: 非空接口定义（实现了方法的接口），
+  // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.">
+<meta name="generator" content="Hugo 0.89.1" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-58332205CQ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span></a>
+	
+	<a href="/xiaohe-blog/posts"></a>
+	<a href="/xiaohe-blog/tags"></a>
+	<a href="/xiaohe-blog/about"></a>
+
+	
+		<a href="/xiaohe-blog/tags">tag</a>
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e5%bb%ba%e7%ab%99">建站</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Go 反射解析与实战</h1>
+
+    <div class="tip">
+        <time datetime="2021-08-30 17:10:12 &#43;0800 CST"></time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <h2 id="前言">前言 <a href="#%e5%89%8d%e8%a8%80" class="anchor">🔗</a></h2><p>日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。
+虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。</p>
+<h4 id="什么是反射">什么是反射 <a href="#%e4%bb%80%e4%b9%88%e6%98%af%e5%8f%8d%e5%b0%84" class="anchor">🔗</a></h4><blockquote>
+<p>在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。</p>
+</blockquote>
+<p>来自维基百科</p>
+<p>在 Goland 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、</p>
+<p>执行它们的方法，</p>
+<h4 id="反射能够干什么">反射能够干什么 <a href="#%e5%8f%8d%e5%b0%84%e8%83%bd%e5%a4%9f%e5%b9%b2%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h4><p>反射是元编程的一个关键策略</p>
+<ul>
+<li>java spring</li>
+<li>goland json 序列化与反序列化</li>
+<li>go orm 框架</li>
+<li>&hellip;</li>
+</ul>
+<h4 id="反射的缺点">反射的缺点 <a href="#%e5%8f%8d%e5%b0%84%e7%9a%84%e7%bc%ba%e7%82%b9" class="anchor">🔗</a></h4><ul>
+<li>性能</li>
+<li>可读性</li>
+<li>go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic</li>
+</ul>
+<h2 id="goland-反射解析">Goland 反射解析 <a href="#goland-%e5%8f%8d%e5%b0%84%e8%a7%a3%e6%9e%90" class="anchor">🔗</a></h2><p>要搞清楚反射，得先简要了解一下 interface</p>
+<h3 id="interface">Interface <a href="#interface" class="anchor">🔗</a></h3><h4 id="定义">定义 <a href="#%e5%ae%9a%e4%b9%89" class="anchor">🔗</a></h4><p>接口有两种定义：</p>
+<ul>
+<li>
+<p>eface: 空接口定义, 包含具体类型与数据</p>
+</li>
+<li>
+<p>iface:  非空接口定义（实现了方法的接口），</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 位于 src/runtime/runtime2.go
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">eface</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">_type</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>					<span style="color:#75715e">// 具体的类型
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">data</span>  <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>			<span style="color:#75715e">// 数据
+</span><span style="color:#75715e"></span>}
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">iface</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">tab</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">itab</span>					<span style="color:#75715e">// 指向itab 的指针
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">data</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>			<span style="color:#75715e">// 数据
+</span><span style="color:#75715e"></span>}
+
+</code></pre></div><p>_type 就是所有类型最原始的元信息</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">_type</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">size</span>       <span style="color:#66d9ef">uintptr</span> 		<span style="color:#75715e">// 类型占用内存大小
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ptrdata</span>    <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">hash</span>       <span style="color:#66d9ef">uint32</span>
+	<span style="color:#a6e22e">tflag</span>      	<span style="color:#a6e22e">tflag</span>   	  <span style="color:#75715e">// 标记位，主要用于反射
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">align</span>      <span style="color:#66d9ef">uint8</span>   		<span style="color:#75715e">// 对齐字节信息
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">fieldAlign</span> 	<span style="color:#66d9ef">uint8</span>   
+	<span style="color:#a6e22e">kind</span>       <span style="color:#66d9ef">uint8</span>   		<span style="color:#75715e">// 基础类型枚举值,  26 个基础类型, int，ptr，struct，interface 
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">equal</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>, <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>) <span style="color:#66d9ef">bool</span> <span style="color:#75715e">// 比较两个形参对应对象的类型是否相等
+</span><span style="color:#75715e"></span>  <span style="color:#f92672">...</span>
+}
+</code></pre></div><p>iface 中 itab 相对复杂，存放的是类型、方法等信息</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 位于 src/runtime/iface.go
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">itab</span> <span style="color:#66d9ef">struct</span> {
+    <span style="color:#a6e22e">inter</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">interfacetype</span>	<span style="color:#75715e">// 包装了一层*_type，代表接口类型，go 中 中基础类型slice，chan 的类型 都有定义，并且都是包装了一层*_type
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">_type</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>			<span style="color:#75715e">// 等同于 eface 中的 *_type, 具体对象的类型
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">link</span>   <span style="color:#f92672">*</span><span style="color:#a6e22e">itab</span>
+    <span style="color:#a6e22e">bad</span>    <span style="color:#66d9ef">int32</span>
+    <span style="color:#a6e22e">inhash</span> <span style="color:#66d9ef">int32</span>      		<span style="color:#75715e">// has this itab been added to hash?
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">fun</span>    [<span style="color:#ae81ff">1</span>]<span style="color:#66d9ef">uintptr</span> 		<span style="color:#75715e">// 这里存的是指向第一个方法的指针，其他方法在这个地址后按字典序存储，偏移量即可
+</span><span style="color:#75715e"></span>}
+</code></pre></div><h4 id="各种基础类型的类型">各种基础类型的类型 <a href="#%e5%90%84%e7%a7%8d%e5%9f%ba%e7%a1%80%e7%b1%bb%e5%9e%8b%e7%9a%84%e7%b1%bb%e5%9e%8b" class="anchor">🔗</a></h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 位于 src/runtime/type.go
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">interfacetype</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">typ</span>     <span style="color:#a6e22e">_type</span>
+	<span style="color:#a6e22e">pkgpath</span> <span style="color:#a6e22e">name</span>		<span style="color:#75715e">// 包路径
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mhdr</span>    []<span style="color:#a6e22e">imethod</span>	<span style="color:#75715e">// 方法
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">arraytype</span> <span style="color:#66d9ef">struct</span> {
+    <span style="color:#a6e22e">typ</span>   <span style="color:#a6e22e">_type</span>
+    <span style="color:#a6e22e">elem</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>	<span style="color:#75715e">// array 上具体元素的类型
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">slice</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>
+    <span style="color:#a6e22e">len</span>   <span style="color:#66d9ef">uintptr</span>
+}
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">chantype</span> <span style="color:#66d9ef">struct</span> {
+    <span style="color:#a6e22e">typ</span>  <span style="color:#a6e22e">_type</span>
+    <span style="color:#a6e22e">elem</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>		<span style="color:#75715e">// channel 上具体元素的类型
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">dir</span>  <span style="color:#66d9ef">uintptr</span>
+}
+<span style="color:#75715e">// ...
+</span></code></pre></div><h4 id="interface-总结">Interface 总结 <a href="#interface-%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h4><p>一个具体的对象转换成 interface后，<strong>类型信息与数据会分别存在在 _type，data 两个指针中，不会丢失信息</strong>（所以后面反射能够还原出实际对象），如果这个具体的对象还实现了一些接口的函数，方法列表保存在 fun 指向的地址。</p>
+<p>使用 interface 还有一个常见的坑： 判断一个 interface 是不是 nil，只要类型信息不为空，则这个 interface != nil</p>
+<h3 id="反射">反射 <a href="#%e5%8f%8d%e5%b0%84" class="anchor">🔗</a></h3><p>此处分析的代码都在 src/reflect 包下</p>
+<p>反射最基本的两个方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">TypeOf</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">interface</span>{}) <span style="color:#a6e22e">Type</span>		<span style="color:#75715e">// 对应着 interface 结构体中 *_type
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">ValueOf</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">interface</span>{}) <span style="color:#a6e22e">Value</span>	<span style="color:#75715e">// 结合了data指针与 *_type 类型信息
+</span></code></pre></div><p>在继续解析代码前，我们可以先思考以下几个问题</p>
+<ul>
+<li>为什么 Value 有 Interface() (i interface{}) 而 Type 没有</li>
+<li>Kind 与 Type 的区别</li>
+<li>我们期望从 struct 通过反射获取到什么信息</li>
+</ul>
+<h4 id="type">Type <a href="#type" class="anchor">🔗</a></h4><p>反射包下的 Type 是一个接口，其倒数第两个方法 common()  rtype其实就是上文中的 _type</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 位于 src/reflect/type.go 下
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Type</span> <span style="color:#66d9ef">interface</span> {
+	<span style="color:#a6e22e">Align</span>() <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">FieldAlign</span>() <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">Method</span>(<span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">Method</span>										<span style="color:#75715e">// 返回类型方法集里的第 `i` (传入的参数)个方法
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">MethodByName</span>(<span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">Method</span>, <span style="color:#66d9ef">bool</span>) 	<span style="color:#75715e">// 通过名称获取方法
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">NumMethod</span>() <span style="color:#66d9ef">int</span>												<span style="color:#75715e">// 方法个数
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Name</span>() <span style="color:#66d9ef">string</span>													<span style="color:#75715e">// 类型名字
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Size</span>() <span style="color:#66d9ef">uintptr</span>
+	<span style="color:#a6e22e">String</span>() <span style="color:#66d9ef">string</span>
+	<span style="color:#a6e22e">Kind</span>() <span style="color:#a6e22e">Kind</span>														<span style="color:#75715e">// 所属基础类型
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Implements</span>(<span style="color:#a6e22e">u</span> <span style="color:#a6e22e">Type</span>) <span style="color:#66d9ef">bool</span>
+	<span style="color:#a6e22e">AssignableTo</span>(<span style="color:#a6e22e">u</span> <span style="color:#a6e22e">Type</span>) <span style="color:#66d9ef">bool</span>							
+	<span style="color:#a6e22e">ConvertibleTo</span>(<span style="color:#a6e22e">u</span> <span style="color:#a6e22e">Type</span>) <span style="color:#66d9ef">bool</span>						<span style="color:#75715e">// 能否转换 u
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Comparable</span>() <span style="color:#66d9ef">bool</span>
+	<span style="color:#a6e22e">Bits</span>() <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">ChanDir</span>() <span style="color:#a6e22e">ChanDir</span>											<span style="color:#75715e">// channel 类型的方向
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">IsVariadic</span>() <span style="color:#66d9ef">bool</span>
+	<span style="color:#a6e22e">Elem</span>() <span style="color:#a6e22e">Type</span>														<span style="color:#75715e">// 返回内部子元素类型，只能由类型 Array, Chan, Map, Ptr, or Slice 调用
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Field</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">StructField</span>							<span style="color:#75715e">// 获取结构体中的 字段
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">FieldByIndex</span>(<span style="color:#a6e22e">index</span> []<span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">StructField</span>
+	<span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">StructField</span>, <span style="color:#66d9ef">bool</span>)
+	<span style="color:#a6e22e">FieldByNameFunc</span>(<span style="color:#a6e22e">match</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span>) (<span style="color:#a6e22e">StructField</span>, <span style="color:#66d9ef">bool</span>)
+	<span style="color:#a6e22e">In</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">Type</span>
+	<span style="color:#a6e22e">Key</span>() <span style="color:#a6e22e">Type</span>												<span style="color:#75715e">// 返回 map 的 key 类型，只能由类型 map 调用
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Len</span>() <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">NumField</span>() <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">NumIn</span>() <span style="color:#66d9ef">int</span>									<span style="color:#75715e">// 入参个数
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">NumOut</span>() <span style="color:#66d9ef">int</span>								<span style="color:#75715e">// 出参个数
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">Out</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">Type</span>
+
+	<span style="color:#a6e22e">common</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>							<span style="color:#75715e">// 与 interface 结构中 _type 一一对应
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">uncommon</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">uncommonType</span>		<span style="color:#75715e">// 与 interface 结构中 itab 所包含内容对应，所具备的方法，包名
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>Type 的方法比较多, 个人认为下面几个比较<strong>常用</strong>，可以仔细去看一下具体代码</p>
+<ul>
+<li>
+<pre tabindex="0"><code>MethodByName(string) (Method, bool)  通过名称获取方法
+</code></pre></li>
+<li>
+<pre tabindex="0"><code>FieldByName(name string) (StructField, bool) 根据名字获取struct中的字段信息，其中常用到字段信息包括字段名，类型，tag
+</code></pre></li>
+<li>
+<pre tabindex="0"><code>Elem() Type 如果这个 type 是 Array, Chan, Map, Ptr, or Slice，返回其指向的具体元素的类型
+</code></pre></li>
+<li>
+<pre tabindex="0"><code>AssignableTo(u Type) bool 判断两个类型的值能够直接赋值（类型相等，或者其中一个类型没有定义）
+</code></pre></li>
+<li>
+<pre tabindex="0"><code>ConvertibleTo(u Type) bool 判断两个类型 是否能够强制转换, 如 Int 之间，int 与 float，string 与 int32 能够转换。
+</code></pre></li>
+</ul>
+<p>其实 Type 接口的之所以具备这么多方法，是为了使用便利与通用性。实际上很多都是特异化的，例如常用到的 Field(i int), 只有基础类型 为 Struct 的才能使用，Elem() 只能由类型 Array, Chan, Map, Ptr, or Slice 调用, 其他的类型调用会直接 panic。</p>
+<p>下面的代码展示了struct 的解析，我们以及能够 struct 字段里面 字段名、类型、tag 等信息</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 位于/reflect/type.go 下 struct 类型的结构
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">structType</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">rtype</span>
+	<span style="color:#a6e22e">pkgPath</span> <span style="color:#a6e22e">name</span>
+	<span style="color:#a6e22e">fields</span>  []<span style="color:#a6e22e">structField</span> <span style="color:#75715e">// sorted by offset
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>) <span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) (<span style="color:#a6e22e">StructField</span>, <span style="color:#66d9ef">bool</span>) {
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">Kind</span>() <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Struct</span> {
+		panic(<span style="color:#e6db74">&#34;reflect: FieldByName of non-struct type &#34;</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">String</span>())
+	}
+	<span style="color:#a6e22e">tt</span> <span style="color:#f92672">:=</span> (<span style="color:#f92672">*</span><span style="color:#a6e22e">structType</span>)(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">t</span>))
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">tt</span>.<span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">name</span>)
+}
+
+<span style="color:#75715e">// A StructField describes a single field in a struct.
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">StructField</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>					<span style="color:#75715e">// 字段名
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">PkgPath</span> <span style="color:#66d9ef">string</span>			<span style="color:#75715e">// 包路径
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">Type</span>      <span style="color:#a6e22e">Type</span>      <span style="color:#75715e">// 字段类型
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Tag</span>       <span style="color:#a6e22e">StructTag</span> <span style="color:#75715e">// 字段 tag
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Offset</span>    <span style="color:#66d9ef">uintptr</span>   <span style="color:#75715e">// offset within struct, in bytes
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Index</span>     []<span style="color:#66d9ef">int</span>     <span style="color:#75715e">// index sequence for Type.FieldByIndex
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Anonymous</span> <span style="color:#66d9ef">bool</span>      <span style="color:#75715e">// is an embedded field
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p><strong>总结</strong></p>
+<p>TypeOf(i interface) 返回一个接口，通过这些接口的方法能够获取所有类型信息</p>
+<h4 id="value">Value <a href="#value" class="anchor">🔗</a></h4><p>Value 是一个结构体， 其包含类型与数据信息</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Value</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">typ</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>						<span style="color:#75715e">// 类型
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ptr</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>		<span style="color:#75715e">// 实际数据
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">flag</span>					 				<span style="color:#75715e">// 标记位
+</span><span style="color:#75715e"></span>}
+
+</code></pre></div><p>Value 常用的方法</p>
+<ul>
+<li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">Type</span>() <span style="color:#a6e22e">Type</span>  <span style="color:#a6e22e">返回具体类型</span>
+</code></pre></div></li>
+<li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">Interface</span>() (<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">interface</span>{})  <span style="color:#a6e22e">value</span> <span style="color:#a6e22e">有类型又有数据</span><span style="color:#960050;background-color:#1e0010">，</span><span style="color:#a6e22e">可以直接转化成</span> <span style="color:#66d9ef">interface</span>
+</code></pre></div></li>
+<li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"> <span style="color:#a6e22e">MethodByName</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) <span style="color:#a6e22e">Value</span> <span style="color:#a6e22e">返回方法</span>
+</code></pre></div></li>
+<li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>) <span style="color:#a6e22e">Value</span>	<span style="color:#a6e22e">根据字段名找出字段对应的值</span><span style="color:#960050;background-color:#1e0010">，</span><span style="color:#a6e22e">在</span> <span style="color:#a6e22e">Type</span> <span style="color:#a6e22e">有类似的方法</span><span style="color:#960050;background-color:#1e0010">，</span><span style="color:#a6e22e">不过</span> <span style="color:#a6e22e">Type</span> <span style="color:#a6e22e">返回的是字段类型信息</span>
+</code></pre></div></li>
+<li>
+<pre tabindex="0"><code>Indirect(v Value) Value	 这个 value 如果是指针，返回它指向的 value，不是返回本身，实际使用 Elem() 实现
+</code></pre></li>
+<li>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">Elem</span>() <span style="color:#a6e22e">Value</span> <span style="color:#a6e22e">返回指向的对象</span>,<span style="color:#a6e22e">并且会标记为</span> <span style="color:#a6e22e">addr</span><span style="color:#960050;background-color:#1e0010">，</span> <span style="color:#a6e22e">返回的</span> <span style="color:#a6e22e">value</span> <span style="color:#a6e22e">能用Addr</span>() <span style="color:#a6e22e">获取地址</span> 
+</code></pre></div></li>
+<li>
+<pre tabindex="0"><code>CanSet() bool 判断 value 里的数据能否被改变，满足可寻址的条件（CanAddr），如果是字段是对外暴露的（字段名大写）
+</code></pre></li>
+<li>
+<pre tabindex="0"><code>Convert(t Type) Value 改变 value 的具体类型，可以利用上面Type中提到的 ConvertibleTo方法 来判断是否可以转换，如int -&gt; int64
+</code></pre></li>
+<li>
+<pre tabindex="0"><code>Call(in []Value) []Value	调用 Call Value Kind必须是函数，用 in 作为参数，返回 []Value, 反射执行方法
+</code></pre></li>
+<li>
+<p>取出 value 中的值转换成具体类型</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">Float</span>() <span style="color:#66d9ef">float64</span>	<span style="color:#a6e22e">取出</span> <span style="color:#a6e22e">float得值</span>
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">Int</span>() <span style="color:#66d9ef">int64</span>	 <span style="color:#a6e22e">取出</span> <span style="color:#66d9ef">int64</span> <span style="color:#a6e22e">的值</span>
+</code></pre></div><p>&hellip;</p>
+</li>
+<li>
+<p>改变 value 的值</p>
+<pre tabindex="0"><code>Set(x Value) 把 value 里的值设置成 x， value 满足CanSet()
+</code></pre><pre tabindex="0"><code>SetInt(x int64) 作用类似
+</code></pre><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">SetLen(n int) 切片设置长度，不是切片 panic
+</code></pre></div></li>
+</ul>
+<p><strong>总结</strong></p>
+<p>ValueOf(i interface) 返回一个结构体，这个结构体包含 &lt;类型，数据&gt; 信息， 并且提供了许多方法，来获取，修改里面的信息（类型，数据）</p>
+<h2 id="代码实战">代码实战 <a href="#%e4%bb%a3%e7%a0%81%e5%ae%9e%e6%88%98" class="anchor">🔗</a></h2><h4 id="能否开发一个-copy-函数完成对象之间的复制函数">能否开发一个 copy 函数完成对象之间的复制函数 <a href="#%e8%83%bd%e5%90%a6%e5%bc%80%e5%8f%91%e4%b8%80%e4%b8%aa-copy-%e5%87%bd%e6%95%b0%e5%ae%8c%e6%88%90%e5%af%b9%e8%b1%a1%e4%b9%8b%e9%97%b4%e7%9a%84%e5%a4%8d%e5%88%b6%e5%87%bd%e6%95%b0" class="anchor">🔗</a></h4><p>web 开发PO 转化成 DTO 的代码必不可少，这些代码比较重复枯燥，写个方法提升下效率</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">dest</span>, <span style="color:#a6e22e">src</span> <span style="color:#66d9ef">interface</span>{}) <span style="color:#66d9ef">error</span> {
+	<span style="color:#75715e">// dest 预期是指向对象的ptr，Go 中是值传递，不是 ptr 的话，修改会无效
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Indirect 如果这个值是指针，会返回指向的值，其中 flag 会加上 CanAddr 的标记
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">destValue</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">Indirect</span>(<span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">ValueOf</span>(<span style="color:#a6e22e">dest</span>))
+	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">destValue</span>.<span style="color:#a6e22e">CanAddr</span>() {
+		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Errorf</span>(<span style="color:#e6db74">&#34;dest type is not ptr&#34;</span>)
+	}
+	
+	<span style="color:#75715e">// 反射 src 得到 src 的类型 与 对象值
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">srcValue</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">ValueOf</span>(<span style="color:#a6e22e">src</span>)
+	<span style="color:#a6e22e">srcType</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">TypeOf</span>(<span style="color:#a6e22e">src</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">srcType</span>.<span style="color:#a6e22e">Kind</span>() <span style="color:#f92672">==</span> <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">Ptr</span> {
+		<span style="color:#a6e22e">srcType</span> = <span style="color:#a6e22e">srcType</span>.<span style="color:#a6e22e">Elem</span>()
+	}
+	<span style="color:#75715e">// 遍历 src类型字段
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">srcType</span>.<span style="color:#a6e22e">NumField</span>(); <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
+		<span style="color:#a6e22e">fieldSrc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">srcType</span>.<span style="color:#a6e22e">Field</span>(<span style="color:#a6e22e">i</span>)
+		<span style="color:#75715e">// 根据 src 的字段名 在 dest 的结构中查找
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">fieldDest</span>, <span style="color:#a6e22e">exist</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">destValue</span>.<span style="color:#a6e22e">Type</span>().<span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">fieldSrc</span>.<span style="color:#a6e22e">Name</span>)
+		<span style="color:#75715e">// dest 不存在同名的字段跳过
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">exist</span> {
+			<span style="color:#66d9ef">continue</span>
+		}
+		<span style="color:#75715e">// 判断 src 字段类型能否转化成 dest 字段类型
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fieldSrc</span>.<span style="color:#a6e22e">Type</span>.<span style="color:#a6e22e">ConvertibleTo</span>(<span style="color:#a6e22e">fieldDest</span>.<span style="color:#a6e22e">Type</span>); <span style="color:#a6e22e">ok</span> {
+			<span style="color:#75715e">// 获取 src value 对象中具体的字段值，并且转换成 dest 字段的类型
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">convertValue</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">srcValue</span>.<span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">fieldSrc</span>.<span style="color:#a6e22e">Name</span>).<span style="color:#a6e22e">Convert</span>(<span style="color:#a6e22e">fieldDest</span>.<span style="color:#a6e22e">Type</span>)
+			<span style="color:#75715e">// 设置 dest value 对象的相应字段的值
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">destValue</span>.<span style="color:#a6e22e">FieldByName</span>(<span style="color:#a6e22e">fieldSrc</span>.<span style="color:#a6e22e">Name</span>).<span style="color:#a6e22e">Set</span>(<span style="color:#a6e22e">convertValue</span>)
+		}
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+</code></pre></div><p>上面就是一个对象 Copy 的主要代码，依靠字段名复制，主要问题有两个</p>
+<ul>
+<li>完全依靠字段名匹配，字段名不一致且不好改了，能否完成复制</li>
+<li>字段类型转换完全依靠内置的ConvertibleTo(u Type) bool 函数，如果我想完成 int64 -&gt; time.time 的复制该怎么做</li>
+</ul>
+<p>当然这个代码已经有比较好的实现了，见 <a href="https://github.com/jinzhu/copier," target="_blank" rel="noopener">https://github.com/jinzhu/copier,</a> 目前 2.2 k star, 如此简单的思想，但又如此实用，是不是对反射的代码更有兴趣了呢。</p>
+<h4 id="orm-中需要对数据库表与实体model做一个映射如何实现">orm 中需要对数据库表与实体model做一个映射，如何实现？ <a href="#orm-%e4%b8%ad%e9%9c%80%e8%a6%81%e5%af%b9%e6%95%b0%e6%8d%ae%e5%ba%93%e8%a1%a8%e4%b8%8e%e5%ae%9e%e4%bd%93model%e5%81%9a%e4%b8%80%e4%b8%aa%e6%98%a0%e5%b0%84%e5%a6%82%e4%bd%95%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Schema 解析 model 得到的元数据
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Schema</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Model</span>      <span style="color:#66d9ef">interface</span>{}			<span style="color:#75715e">// 实体对象
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Name</span>       <span style="color:#66d9ef">string</span>			 	<span style="color:#75715e">// 实体的名字，作为表名
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Fields</span>     []<span style="color:#f92672">*</span><span style="color:#a6e22e">Field</span>				<span style="color:#75715e">// 字段列表，转化成 sql 中用到的信息
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">FieldNames</span> []<span style="color:#66d9ef">string</span>				<span style="color:#75715e">// 字段名列表，这里用实体字段名作为 sql 中字段名
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">fieldMap</span>   <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Field</span>	<span style="color:#75715e">// map[字段名] 字段
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// Field sql 表中字段
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Field</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>		<span style="color:#75715e">// sql 字段名
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Type</span> <span style="color:#66d9ef">string</span>		<span style="color:#75715e">// sql 类型 int bigint..
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Tag</span>  <span style="color:#66d9ef">string</span>		<span style="color:#75715e">// 额外信息，例如 primary key
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#75715e">// model 作为与数据库表一一对应的实体，dialect 代表一种类型转换规则，例如 go -&gt; mysql 中 string -&gt; varchar
+</span><span style="color:#75715e">// 而 go -&gt; sqlite中， string -&gt; text
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Parse</span>(<span style="color:#a6e22e">model</span> <span style="color:#66d9ef">interface</span>{}, <span style="color:#a6e22e">dialect</span> <span style="color:#a6e22e">dialect</span>.<span style="color:#a6e22e">Dialect</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Schema</span> {
+	<span style="color:#75715e">// 获取 model 的实际类型
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">modelType</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">Indirect</span>(<span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">ValueOf</span>(<span style="color:#a6e22e">model</span>)).<span style="color:#a6e22e">Type</span>()
+	<span style="color:#a6e22e">schema</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Schema</span>{
+		<span style="color:#a6e22e">Model</span>:    <span style="color:#a6e22e">model</span>,
+		<span style="color:#a6e22e">Name</span>:     <span style="color:#a6e22e">modelType</span>.<span style="color:#a6e22e">Name</span>(),		<span style="color:#75715e">// 类型信息中 有实体名字
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">fieldMap</span>: <span style="color:#66d9ef">map</span>[<span style="color:#66d9ef">string</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">Field</span>{},
+	}
+	<span style="color:#75715e">// 遍历实体中每个字段
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">modelType</span>.<span style="color:#a6e22e">NumField</span>(); <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+		<span style="color:#75715e">// 字段信息
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">structField</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">modelType</span>.<span style="color:#a6e22e">Field</span>(<span style="color:#a6e22e">i</span>)
+		<span style="color:#75715e">// 字段必须是不是匿名的和对外暴露的
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">structField</span>.<span style="color:#a6e22e">Anonymous</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">ast</span>.<span style="color:#a6e22e">IsExported</span>(<span style="color:#a6e22e">structField</span>.<span style="color:#a6e22e">Name</span>) {
+			<span style="color:#75715e">// 根据 go 对象 构建 sql 表中字段
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">field</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Field</span>{
+				<span style="color:#a6e22e">Name</span>: <span style="color:#a6e22e">structField</span>.<span style="color:#a6e22e">Name</span>,		<span style="color:#75715e">// 字段的名字
+</span><span style="color:#75715e"></span>				<span style="color:#a6e22e">Type</span>: <span style="color:#a6e22e">dialect</span>.<span style="color:#a6e22e">DataTypeOf</span>(<span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">Indirect</span>(<span style="color:#a6e22e">reflect</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">structField</span>.<span style="color:#a6e22e">Type</span>))),
+				<span style="color:#75715e">// 这里把 go 中的类型转换成 sql 中的类型，dialect 有多个实现，例如 sqlite， mysql
+</span><span style="color:#75715e"></span>			}
+			<span style="color:#75715e">// 从 structFiled 获取需要的 tag 信息
+</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">structField</span>.<span style="color:#a6e22e">Tag</span>.<span style="color:#a6e22e">Lookup</span>(<span style="color:#e6db74">&#34;orm&#34;</span>); <span style="color:#a6e22e">ok</span> {
+				<span style="color:#a6e22e">field</span>.<span style="color:#a6e22e">Tag</span> = <span style="color:#a6e22e">v</span>
+			}
+			<span style="color:#75715e">// 存入 schema 中
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">schema</span>.<span style="color:#a6e22e">Fields</span> = append(<span style="color:#a6e22e">schema</span>.<span style="color:#a6e22e">Fields</span>, <span style="color:#a6e22e">field</span>)
+			<span style="color:#a6e22e">schema</span>.<span style="color:#a6e22e">FieldNames</span> = append(<span style="color:#a6e22e">schema</span>.<span style="color:#a6e22e">FieldNames</span>, <span style="color:#a6e22e">field</span>.<span style="color:#a6e22e">Name</span>)
+			<span style="color:#a6e22e">schema</span>.<span style="color:#a6e22e">fieldMap</span>[<span style="color:#a6e22e">field</span>.<span style="color:#a6e22e">Name</span>] = <span style="color:#a6e22e">field</span>
+		}
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">schema</span>
+}
+</code></pre></div><p>上面的代码就完成了一个 model 对象对数据库表的映射，主要有：</p>
+<ul>
+<li>表名 -&gt; 数据库表名</li>
+<li>字段名 -&gt; 数据库表字段名</li>
+<li>字段类型 -&gt; 数据库表字段的类型</li>
+<li>tag -&gt; 字段的一些额外信息</li>
+</ul>
+<p>这里的功能就是 gorm 框架 <a href="https://github.com/go-gorm/gorm/blob/master/schema/schema.go" target="_blank" rel="noopener">https://github.com/go-gorm/gorm/blob/master/schema/schema.go</a> 的核心逻辑，对自己写一个 orm 是不是更有信心一点了呢。</p>
+<h4 id="课后作业">课后作业 <a href="#%e8%af%be%e5%90%8e%e4%bd%9c%e4%b8%9a" class="anchor">🔗</a></h4><ul>
+<li>
+<p>reflect DeepEqual 方法 源代码</p>
+</li>
+<li>
+<p>json Marshal 方法 源代码</p>
+</li>
+<li>
+<p>govalidator 自己实现一个参数校验的方法，</p>
+</li>
+</ul>
+<hr>
+<p>以上就是全部内容了</p>
+<p>最后再来一个问题， 2021 年底，go 会在 1.18 版本中添加泛型，你们能说一下 interface 与 泛型的区别吗</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/goland">goland</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E5%8F%8D%E5%B0%84">反射</a>
+            
+        </div>
+    
+    
+    
+  <div id="comment">
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "heganghuan-blog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2021 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+      <div class="powerby">
+        
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>

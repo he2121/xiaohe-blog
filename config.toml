@@ -28,4 +28,4 @@ name = "建站"
 path = "/xiaohe-blog/建站"
 [[params.links]]
 name = "杂谈"
-path = "xiaohe-blog/杂谈"
+path = "/xiaohe-blog/杂谈"

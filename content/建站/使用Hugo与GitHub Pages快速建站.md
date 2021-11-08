@@ -1,7 +1,9 @@
 ---
 title: "使用 Hugo 与 GitHub Pages 快速建站"
 tags: ["建站", "GitHub Pages", "Hugo"]
+date: 2021-11-08
 ---
+
 ## 前言
 作为一名程序员，并且是一名有追求的程序员，**技术影响力** 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
 ## Hugo 与 GitHub Pages 简介
