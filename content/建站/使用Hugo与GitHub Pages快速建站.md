@@ -15,11 +15,11 @@ Mac 直接使用以下命令二进制安装
 ```bash
 brew install hugo
 ```
-2. GitHub 创建一个仓库，如 heganghuan-blog，并且 git clone 到本地
+2. GitHub 创建一个仓库，如 xiaohe-blog，并且 git clone 到本地
 
 3. 使用 Hugo 初始化 Clone 下来的仓库
 ```bash
-hugo new site heganghuan-blog --force
+hugo new site xiaohe-blog --force
 ```
 生成文件目录应该如下:
 ```
@@ -66,7 +66,7 @@ Github 仓库首页  -> Settings -> Pages -> main -> docs -> save
 8. 修改 config.toml
 示例如下，请自行修改
 ```bash
-baseURL = 'https://he2121.github.io/heganghuan-blog/'   // 设置成你自己的
+baseURL = 'https://he2121.github.io/xiaohe-blog/'   // 设置成你自己的
 languageCode = 'zh-cn'
 title = '小贺的博客'
 theme = "ananke"
@@ -80,7 +80,7 @@ git add .
 git commit -m "first commit"
 git push
 ```
-打开 GitHub 提供的页面链接 https://he2121.github.io/heganghuan-blog/
+打开 GitHub 提供的页面链接 https://he2121.github.io/xiaohe-blog/
 测试是否成功
 
 ## 个性化
@@ -97,7 +97,7 @@ git push
 
 给出个人配置文件
 ```text
-baseURL = 'https://he2121.github.io/heganghuan-blog/'
+baseURL = 'https://he2121.github.io/xiaohe-blog/'
 languageCode = 'zh-cn'
 defaultContentLanguage = 'cn'
 title = '小贺的博客'
@@ -118,16 +118,16 @@ enableGoogleAnalytics = true
 enableComments = true
 [[params.links]]
 name = "tag"
-path = "/heganghuan-blog/tags"
+path = "/xiaohe-blog/tags"
 [[params.links]]
 name = "算法"
-path = "/heganghuan-blog/算法"
+path = "/xiaohe-blog/算法"
 [[params.links]]
 name = "建站"
-path = "/heganghuan-blog/建站"
+path = "/xiaohe-blog/建站"
 [[params.links]]
 name = "杂谈"
-path = "/heganghuan-blog/杂谈"
+path = "/xiaohe-blog/杂谈"
 ```
 
 ## 总结

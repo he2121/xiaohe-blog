@@ -10,9 +10,9 @@
 Hugo 与 GitHub Pages 简介 🔗Hugo: 世界上最快的网站建设框架，将 Markdown 文件生成 HTML 静态页面。
 GitHub Pages GitHub 提供的静态网页托管服务，不需要额外的服务器来部署你的博客系统了。
 搭建过程 🔗 安装 Hugo  Mac 直接使用以下命令二进制安装
-brew install hugo  GitHub 创建一个仓库，如 heganghuan-blog，并且 git clone 到本地
+brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clone 到本地
   使用 Hugo 初始化 Clone 下来的仓库
-  hugo new site heganghuan-blog --force 生成文件目录应该如下:
+  hugo new site xiaohe-blog --force 生成文件目录应该如下:
 ├── archetypes // 文章默认模版 │ └── default.md ├── config.toml // 配置文件 ├── content // Markdown 文件 ├── data // ├── layouts // html 文件 ├── static // 图片, CSS, JS.">
 <meta name="generator" content="Hugo 0.89.1" />
 
@@ -20,11 +20,11 @@ brew install hugo  GitHub 创建一个仓库，如 heganghuan-blog，并且 git 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
 
 
-<link rel="stylesheet" href="/heganghuan-blog/css/style.css">
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
 
 
 
-<link rel="shortcut icon" href="/heganghuan-blog/images/favicon.ico" type="image/x-icon" />
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
 
  
     
@@ -50,20 +50,20 @@ if (!doNotTrack) {
   <body>
     <nav class="navigation">
 	
-		<a href="/heganghuan-blog/"> <span class="arrow">←</span></a>
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span></a>
 	
-	<a href="/heganghuan-blog/posts"></a>
-	<a href="/heganghuan-blog/tags"></a>
-	<a href="/heganghuan-blog/about"></a>
+	<a href="/xiaohe-blog/posts"></a>
+	<a href="/xiaohe-blog/tags"></a>
+	<a href="/xiaohe-blog/about"></a>
 
 	
-		<a href="/heganghuan-blog/tags">tag</a>
+		<a href="/xiaohe-blog/tags">tag</a>
 	
-		<a href="/heganghuan-blog/%e7%ae%97%e6%b3%95">算法</a>
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
 	
-		<a href="/heganghuan-blog/%e5%bb%ba%e7%ab%99">建站</a>
+		<a href="/xiaohe-blog/%e5%bb%ba%e7%ab%99">建站</a>
 	
-		<a href="/heganghuan-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+		<a href="xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
 	
 
 	
@@ -107,13 +107,13 @@ if (!doNotTrack) {
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">brew install hugo
 </code></pre></div><ol start="2">
 <li>
-<p>GitHub 创建一个仓库，如 heganghuan-blog，并且 git clone 到本地</p>
+<p>GitHub 创建一个仓库，如 xiaohe-blog，并且 git clone 到本地</p>
 </li>
 <li>
 <p>使用 Hugo 初始化 Clone 下来的仓库</p>
 </li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hugo new site heganghuan-blog --force
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">hugo new site xiaohe-blog --force
 </code></pre></div><p>生成文件目录应该如下:</p>
 <pre tabindex="0"><code>├── archetypes  // 文章默认模版
 │   └── default.md
@@ -151,7 +151,7 @@ echo theme <span style="color:#f92672">=</span> <span style="color:#ae81ff">\&#3
 <li>修改 config.toml
 示例如下，请自行修改</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">baseURL <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;https://he2121.github.io/heganghuan-blog/&#39;</span>   // 设置成你自己的
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">baseURL <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;https://he2121.github.io/xiaohe-blog/&#39;</span>   // 设置成你自己的
 languageCode <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;zh-cn&#39;</span>
 title <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;小贺的博客&#39;</span>
 theme <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;ananke&#34;</span>
@@ -163,7 +163,7 @@ publishDir <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39
 git add .
 git commit -m <span style="color:#e6db74">&#34;first commit&#34;</span>
 git push
-</code></pre></div><p>打开 GitHub 提供的页面链接 <a href="https://he2121.github.io/heganghuan-blog/" target="_blank" rel="noopener">https://he2121.github.io/heganghuan-blog/</a>
+</code></pre></div><p>打开 GitHub 提供的页面链接 <a href="https://he2121.github.io/xiaohe-blog/" target="_blank" rel="noopener">https://he2121.github.io/xiaohe-blog/</a>
 测试是否成功</p>
 <h2 id="个性化">个性化 <a href="#%e4%b8%aa%e6%80%a7%e5%8c%96" class="anchor">🔗</a></h2><p>建议先跳去看总结</p>
 <h3 id="使用">使用 <a href="#%e4%bd%bf%e7%94%a8" class="anchor">🔗</a></h3><p>平时使用 idea/vscode 在本地编辑 markdown，实时本地看网页效果，编辑完生成静态网页，push 到远程即输出一篇文章</p>
@@ -172,7 +172,7 @@ git push
 <p>评论功能要去 <a href="https://disqus.com/" target="_blank" rel="noopener">https://disqus.com/</a> 申请账号。
 网页统计数据 <a href="https://analytics.google.com/analytics/web/" target="_blank" rel="noopener">https://analytics.google.com/analytics/web/</a> 注册。</p>
 <p>给出个人配置文件</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">baseURL = &#39;https://he2121.github.io/heganghuan-blog/&#39;
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-text" data-lang="text">baseURL = &#39;https://he2121.github.io/xiaohe-blog/&#39;
 languageCode = &#39;zh-cn&#39;
 defaultContentLanguage = &#39;cn&#39;
 title = &#39;小贺的博客&#39;
@@ -193,16 +193,16 @@ enableGoogleAnalytics = true
 enableComments = true
 [[params.links]]
 name = &#34;tag&#34;
-path = &#34;/heganghuan-blog/tags&#34;
+path = &#34;/xiaohe-blog/tags&#34;
 [[params.links]]
 name = &#34;算法&#34;
-path = &#34;/heganghuan-blog/算法&#34;
+path = &#34;/xiaohe-blog/算法&#34;
 [[params.links]]
 name = &#34;建站&#34;
-path = &#34;/heganghuan-blog/建站&#34;
+path = &#34;/xiaohe-blog/建站&#34;
 [[params.links]]
 name = &#34;杂谈&#34;
-path = &#34;/heganghuan-blog/杂谈&#34;
+path = &#34;/xiaohe-blog/杂谈&#34;
 </code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>使用 Hugo 与 GitHub Pages 能够很快搭建一个个人网站，但是定制化比较花费时间，
 建议新手全部使用默认功能即可，写文章才是重点，其他应该暂时忽略。</p>
 
@@ -211,11 +211,11 @@ path = &#34;/heganghuan-blog/杂谈&#34;
     
         <div class="tags">
             
-                <a href="https://he2121.github.io/heganghuan-blog/tags/%E5%BB%BA%E7%AB%99">建站</a>
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E5%BB%BA%E7%AB%99">建站</a>
             
-                <a href="https://he2121.github.io/heganghuan-blog/tags/github-pages">GitHub Pages</a>
+                <a href="https://he2121.github.io/xiaohe-blog/tags/github-pages">GitHub Pages</a>
             
-                <a href="https://he2121.github.io/heganghuan-blog/tags/hugo">Hugo</a>
+                <a href="https://he2121.github.io/xiaohe-blog/tags/hugo">Hugo</a>
             
         </div>
     

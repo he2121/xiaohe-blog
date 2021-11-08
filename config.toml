@@ -1,4 +1,4 @@
-baseURL = 'https://he2121.github.io/heganghuan-blog/'
+baseURL = 'https://he2121.github.io/xiaohe-blog/'
 languageCode = 'zh-cn'
 defaultContentLanguage = 'cn'
 title = '小贺的博客'
@@ -19,13 +19,13 @@ enableGoogleAnalytics = true
 enableComments = true
 [[params.links]]
 name = "tag"
-path = "/heganghuan-blog/tags"
+path = "/xiaohe-blog/tags"
 [[params.links]]
 name = "算法"
-path = "/heganghuan-blog/算法"
+path = "/xiaohe-blog/算法"
 [[params.links]]
 name = "建站"
-path = "/heganghuan-blog/建站"
+path = "/xiaohe-blog/建站"
 [[params.links]]
 name = "杂谈"
-path = "/heganghuan-blog/杂谈"
+path = "xiaohe-blog/杂谈"

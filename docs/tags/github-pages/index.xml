@@ -2,23 +2,23 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>GitHub Pages on 小贺的博客</title>
-    <link>https://he2121.github.io/heganghuan-blog/tags/github-pages/</link>
+    <link>https://he2121.github.io/xiaohe-blog/tags/github-pages/</link>
     <description>Recent content in GitHub Pages on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>zh-cn</language><atom:link href="https://he2121.github.io/heganghuan-blog/tags/github-pages/index.xml" rel="self" type="application/rss+xml" />
+    <language>zh-cn</language><atom:link href="https://he2121.github.io/xiaohe-blog/tags/github-pages/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>使用 Hugo 与 GitHub Pages 快速建站</title>
-      <link>https://he2121.github.io/heganghuan-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</link>
+      <link>https://he2121.github.io/xiaohe-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://he2121.github.io/heganghuan-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</guid>
       <description>前言 🔗作为一名程序员，并且是一名有追求的程序员，技术影响力 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
 Hugo 与 GitHub Pages 简介 🔗Hugo: 世界上最快的网站建设框架，将 Markdown 文件生成 HTML 静态页面。
 GitHub Pages GitHub 提供的静态网页托管服务，不需要额外的服务器来部署你的博客系统了。
 搭建过程 🔗 安装 Hugo  Mac 直接使用以下命令二进制安装
-brew install hugo  GitHub 创建一个仓库，如 heganghuan-blog，并且 git clone 到本地
+brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clone 到本地
   使用 Hugo 初始化 Clone 下来的仓库
-  hugo new site heganghuan-blog --force 生成文件目录应该如下:
+  hugo new site xiaohe-blog --force 生成文件目录应该如下:
 ├── archetypes // 文章默认模版 │ └── default.md ├── config.toml // 配置文件 ├── content // Markdown 文件 ├── data // ├── layouts // html 文件 ├── static // 图片, CSS, JS.</description>
     </item>
     
