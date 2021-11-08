@@ -1,5 +1,5 @@
 baseURL = 'https://he2121.github.io/heganghuan-blog/'
 languageCode = 'zh-cn'
-title = 'heganghuan '
+title = '小贺的博客'
 theme = "ananke"
-publishDir = "docs"
+publishDir = 'docs'
