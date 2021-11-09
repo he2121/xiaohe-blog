@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>Golang 常用日志库介绍 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="前言 🔗为什么需要日志 🔗 调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
+Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
+ Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
+示例如下:
+package main import &#34;log&#34; func main() { log.Println(&#34;日志信息1&#34;) log.Print(&#34;日志信息2&#34;) log.Panicln(&#34;日志信息3&#34;) log.Fatalln(&#34;日志信息4&#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.">
+<meta name="generator" content="Hugo 0.89.1" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-58332205CQ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span></a>
+	
+	<a href="/xiaohe-blog/posts"></a>
+	<a href="/xiaohe-blog/tags"></a>
+	<a href="/xiaohe-blog/about"></a>
+
+	
+		<a href="/xiaohe-blog/tags">tag</a>
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e5%bb%ba%e7%ab%99">建站</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Golang 常用日志库介绍</h1>
+
+    <div class="tip">
+        <time datetime="2021-11-09 14:30:12 &#43;0800 CST"></time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <h2 id="前言">前言 <a href="#%e5%89%8d%e8%a8%80" class="anchor">🔗</a></h2><h3 id="为什么需要日志">为什么需要日志 <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e6%97%a5%e5%bf%97" class="anchor">🔗</a></h3><ul>
+<li>调试开发</li>
+<li>程序运行日志</li>
+<li>用户行为日志</li>
+</ul>
+<p>不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。</p>
+<h2 id="go-标准库-log">Go 标准库 Log <a href="#go-%e6%a0%87%e5%87%86%e5%ba%93-log" class="anchor">🔗</a></h2><h3 id="使用">使用 <a href="#%e4%bd%bf%e7%94%a8" class="anchor">🔗</a></h3><p>我们常使用 Go log 以下三组函数：</p>
+<ul>
+<li><code>Print/Printf/Println</code> : 打印日志信息</li>
+<li><code> Panic/Panicf/Panicln</code> : 打印日志信息后，以拼装好的字符串为参数调用 Panic</li>
+<li><code> Fatal/Fatalf/Fatalln</code> : 打印日志信息后，<code>os.Exit(1)</code> 退出程序</li>
+</ul>
+<p>带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。</p>
+<p>示例如下:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;log&#34;</span>
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;日志信息1&#34;</span>)
+	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Print</span>(<span style="color:#e6db74">&#34;日志信息2&#34;</span>)
+	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#e6db74">&#34;日志信息3&#34;</span>)
+	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#e6db74">&#34;日志信息4&#34;</span>) <span style="color:#75715e">// 运行不到
+</span><span style="color:#75715e"></span>}
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">2021/11/09 15:41:34 日志信息1
+2021/11/09 15:41:34 日志信息2
+2021/11/09 15:41:34 日志信息3
+panic: 日志信息3
+goroutine <span style="color:#ae81ff">1</span> <span style="color:#f92672">[</span>running<span style="color:#f92672">]</span>:
+log.Panicln<span style="color:#f92672">({</span>0xc0000bdf60, 0x0, 0x1015ba5<span style="color:#f92672">})</span>
+        /usr/local/opt/go/libexec/src/log/log.go:368 +0x65
+main.main<span style="color:#f92672">()</span>
+        /Users/bytedance/go/src/github.com/he2121/log_test/main.go:8 +0xa8
+</code></pre></div><p>可以看到日志格式默认是：时间 + msg。为什么是这样，可以改吗？</p>
+<h3 id="原理与自定义">原理与自定义 <a href="#%e5%8e%9f%e7%90%86%e4%b8%8e%e8%87%aa%e5%ae%9a%e4%b9%89" class="anchor">🔗</a></h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">v</span> <span style="color:#f92672">...</span><span style="color:#66d9ef">interface</span>{}) {
+   <span style="color:#a6e22e">std</span>.<span style="color:#a6e22e">Output</span>(<span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintln</span>(<span style="color:#a6e22e">v</span><span style="color:#f92672">...</span>))
+}
+</code></pre></div><p>可以看到前面的方法都是调用 <code>std</code> 对象中 <code>Output</code> 方法。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">std</span> = <span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stderr</span>, <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#a6e22e">LstdFlags</span>)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">out</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Writer</span>, <span style="color:#a6e22e">prefix</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">flag</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Logger</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Logger</span>{<span style="color:#a6e22e">out</span>: <span style="color:#a6e22e">out</span>, <span style="color:#a6e22e">prefix</span>: <span style="color:#a6e22e">prefix</span>, <span style="color:#a6e22e">flag</span>: <span style="color:#a6e22e">flag</span>}
+}
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Logger</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">mu</span>     <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span> <span style="color:#75715e">// ensures atomic writes; protects the following fields
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">prefix</span> <span style="color:#66d9ef">string</span>     <span style="color:#75715e">// prefix on each line to identify the logger (but see Lmsgprefix)
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">flag</span>   <span style="color:#66d9ef">int</span>        <span style="color:#75715e">// properties
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">out</span>    <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Writer</span>  <span style="color:#75715e">// destination for output
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">buf</span>    []<span style="color:#66d9ef">byte</span>     <span style="color:#75715e">// for accumulating text to write
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p><code> std</code> 使用 <code>log.New</code> 构造出来，三个参数</p>
+<ul>
+<li><code> io.Writer</code> : 任何实现了 <code>Writer</code> 接口的结构，日志会写到这个里面，<code> std</code> 的输出位置是 <code>os.Stderr</code></li>
+<li><code>prefix</code> : 自定义前缀字符串，std 传入的是空字符串</li>
+<li><code>flag</code> : 一些标志位，定制化 prefix，<code>std</code> 的是 <code>LstdFlags</code>, 默认日志格式中的时间就从这个标志位而来</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">const</span> (
+	<span style="color:#a6e22e">Ldate</span>         = <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#66d9ef">iota</span>     <span style="color:#75715e">// the date in the local time zone: 2009/01/23
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Ltime</span>                         <span style="color:#75715e">// the time in the local time zone: 01:23:23
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Lmicroseconds</span>                 <span style="color:#75715e">// microsecond resolution: 01:23:23.123123.  assumes Ltime.
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Llongfile</span>                     <span style="color:#75715e">// full file name and line number: /a/b/c/d.go:23
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Lshortfile</span>                    <span style="color:#75715e">// final file name element and line number: d.go:23. overrides Llongfile
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">LUTC</span>                          <span style="color:#75715e">// if Ldate or Ltime is set, use UTC rather than the local time zone
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Lmsgprefix</span>                    <span style="color:#75715e">// move the &#34;prefix&#34; from the beginning of the line to before the message
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">LstdFlags</span>     = <span style="color:#a6e22e">Ldate</span> | <span style="color:#a6e22e">Ltime</span> <span style="color:#75715e">// initial values for the standard logger
+</span><span style="color:#75715e"></span>)
+</code></pre></div><p>而日志输出位置，自定义前缀字符串，flag 这三者都能够自定义</p>
+<p>示例 (这里直接修改的<code>std</code>logger, 实际项目中应该自己 New 一个新的 logger)：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+   <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">buf</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>
+   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">SetOutput</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">buf</span>)
+   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">SetPrefix</span>(<span style="color:#e6db74">&#34;[info: ]&#34;</span>)
+   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">SetFlags</span>(<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">LstdFlags</span> | <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Lshortfile</span>)
+   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;自定义日志格式&#34;</span>)
+   <span style="color:#75715e">//fmt.Print(&amp;buf)
+</span><span style="color:#75715e"></span>}
+</code></pre></div><p>上述例子把日志输出位置放在了 <code>bytes.Buffer</code>，还可以改成 file、stdout、网络&hellip;</p>
+<p>前缀加了  [info: ] 字符串</p>
+<p>flag 中加了 <code>Lshortfile</code>：打印日志语句所处的文件名与位置。</p>
+<p>执行上述语句，发现控制台无输出。</p>
+<p>因为日志输出位置不再是 <code>stderr</code>. 去掉最后一行的注释，打印 buff，输出为：</p>
+<pre tabindex="0"><code>[info: ]2021/11/09 16:49:27 main.go:14: 自定义日志格式
+</code></pre><h3 id="优点">优点 <a href="#%e4%bc%98%e7%82%b9" class="anchor">🔗</a></h3><ul>
+<li>go 内置，使用简单</li>
+</ul>
+<h3 id="缺点">缺点 <a href="#%e7%bc%ba%e7%82%b9" class="anchor">🔗</a></h3><ul>
+<li>缺少常用的几种日志级别，<code>Info/debug/error...</code></li>
+<li>缺少日志结构化输出的功能</li>
+<li>性能</li>
+</ul>
+<h2 id="go-第三方-log-库">Go 第三方 log 库 <a href="#go-%e7%ac%ac%e4%b8%89%e6%96%b9-log-%e5%ba%93" class="anchor">🔗</a></h2><h3 id="logrus">logrus <a href="#logrus" class="anchor">🔗</a></h3><p><a href="https://github.com/sirupsen/logrus" target="_blank" rel="noopener">logrus</a> : Logrus 是 Go (golang) 的结构化日志记录器，与标准库 log 完全 API 兼容。（19.1 k stars）</p>
+<h4 id="why-logrus-"><strong>Why logrus ?</strong> <a href="#why-logrus-" class="anchor">🔗</a></h4><ol>
+<li>比较全的日志级别</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">PanicLevel: 记录日志，panic
+FatalLevel: 记录日志，程序 exit
+ErrorLevel: 错误级别日志
+WarnLevel:  警告级别日志
+InfoLevel:  关键信息级别日志
+DebugLevel: 调试级别
+TraceLevel: 追踪级别
+</code></pre></div><ol start="2">
+<li>
+<p>支持结构化日志</p>
+</li>
+<li>
+<p>易用性</p>
+</li>
+</ol>
+<ul>
+<li>钩子</li>
+<li><code>WithField</code></li>
+<li>&hellip;</li>
+</ul>
+<h4 id="简单使用">简单使用 <a href="#%e7%ae%80%e5%8d%95%e4%bd%bf%e7%94%a8" class="anchor">🔗</a></h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;github.com/sirupsen/logrus&#34;</span>
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">SetLevel</span>(<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">TraceLevel</span>)	<span style="color:#75715e">// 在测试环境中设置低等级级别，
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//logrus.SetLevel(logrus.InfoLevel)	// 在生产环境中需要考虑性能，关注关键信息，level 设置高一点
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//logrus.SetReportCaller(true)			// 调用者文件名与位置
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">//logrus.SetFormatter(new(logrus.JSONFormatter))	// 日志格式设置成json
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Traceln</span>(<span style="color:#e6db74">&#34;trace 日志&#34;</span>)
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Debugln</span>(<span style="color:#e6db74">&#34;debug 日志&#34;</span>)
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Infoln</span>(<span style="color:#e6db74">&#34;Info 日志&#34;</span>)
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Warnln</span>(<span style="color:#e6db74">&#34;warn 日志&#34;</span>)
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Errorln</span>(<span style="color:#e6db74">&#34;error msg&#34;</span>)
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;fatal 日志&#34;</span>)
+	<span style="color:#a6e22e">logrus</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#e6db74">&#34;panic 日志&#34;</span>)
+}
+
+</code></pre></div><p>考虑到易用性，库一般会使用默认值创建一个对象，包最外层的方法一般都是操作这个默认对象，logrus 与 log 都是这样</p>
+<p>结构化前：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">INFO<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span>/Users/bytedance/go/src/github.com/he2121/log_test/main.go:12 main.main<span style="color:#f92672">()</span> Info 日志                                      
+WARN<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span>/Users/bytedance/go/src/github.com/he2121/log_test/main.go:13 main.main<span style="color:#f92672">()</span> warn 日志                                      
+ERRO<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span>/Users/bytedance/go/src/github.com/he2121/log_test/main.go:14 main.main<span style="color:#f92672">()</span> error msg                                    
+FATA<span style="color:#f92672">[</span>0000<span style="color:#f92672">]</span>/Users/bytedance/go/src/github.com/he2121/log_test/main.go:15 main.main<span style="color:#f92672">()</span> fatal 日志
+</code></pre></div><p>结构化后：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#f92672">{</span><span style="color:#e6db74">&#34;file&#34;</span>:<span style="color:#e6db74">&#34;/Users/bytedance/go/src/github.com/he2121/log_test/main.go:12&#34;</span>,<span style="color:#e6db74">&#34;func&#34;</span>:<span style="color:#e6db74">&#34;main.main&#34;</span>,<span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;info&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;Info 日志&#34;</span>,<span style="color:#e6db74">&#34;time&#34;</span>:<span style="color:#e6db74">&#34;2021-11-09T17:37:27+08:00&#34;</span><span style="color:#f92672">}</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;file&#34;</span>:<span style="color:#e6db74">&#34;/Users/bytedance/go/src/github.com/he2121/log_test/main.go:13&#34;</span>,<span style="color:#e6db74">&#34;func&#34;</span>:<span style="color:#e6db74">&#34;main.main&#34;</span>,<span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;warning&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;warn 日志&#34;</span>,<span style="color:#e6db74">&#34;time&#34;</span>:<span style="color:#e6db74">&#34;2021-11-09T17:37:27+08:00&#34;</span><span style="color:#f92672">}</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;file&#34;</span>:<span style="color:#e6db74">&#34;/Users/bytedance/go/src/github.com/he2121/log_test/main.go:14&#34;</span>,<span style="color:#e6db74">&#34;func&#34;</span>:<span style="color:#e6db74">&#34;main.main&#34;</span>,<span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;error&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;error msg&#34;</span>,<span style="color:#e6db74">&#34;time&#34;</span>:<span style="color:#e6db74">&#34;2021-11-09T17:37:27+08:00&#34;</span><span style="color:#f92672">}</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;file&#34;</span>:<span style="color:#e6db74">&#34;/Users/bytedance/go/src/github.com/he2121/log_test/main.go:15&#34;</span>,<span style="color:#e6db74">&#34;func&#34;</span>:<span style="color:#e6db74">&#34;main.main&#34;</span>,<span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;fatal&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;fatal 日志&#34;</span>,<span style="color:#e6db74">&#34;time&#34;</span>:<span style="color:#e6db74">&#34;2021-11-09T17:37:27+08:00&#34;</span><span style="color:#f92672">}</span>
+</code></pre></div><h3 id="zap">zap <a href="#zap" class="anchor">🔗</a></h3><p><a href="https://github.com/uber-go/zap" target="_blank" rel="noopener">zap</a> : 快速的、结构化的、分层次的日志记录器 (14k stars)。</p>
+<h4 id="why-zap"><strong>why zap?</strong> <a href="#why-zap" class="anchor">🔗</a></h4><ol>
+<li>
+<p>比较全的日志级别</p>
+</li>
+<li>
+<p>支持结构化日志</p>
+</li>
+<li>
+<p>性能
+<p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211109201453244-2021-11-09.png" alt="image-20211109201453244"  />
+</p></p>
+</li>
+</ol>
+<h4 id="简单使用-1">简单使用 <a href="#%e7%ae%80%e5%8d%95%e4%bd%bf%e7%94%a8-1" class="anchor">🔗</a></h4><p>Zap提供了两种类型的日志记录器 — <code>Sugared Logger</code> 和 <code>Logger</code></p>
+<p><code>Sugared Logger</code> 并重性能与易用性，支持结构化和 <code>printf</code> 风格的日志记录。</p>
+<p><code>Logger</code> 非常强调性能，不提供 printf 风格的 api （减少了 interface{} 与 反射的性能损耗），如下例子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;go.uber.org/zap&#34;</span>
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+   <span style="color:#75715e">// sugared
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">sugar</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>().<span style="color:#a6e22e">Sugar</span>()
+   <span style="color:#a6e22e">sugar</span>.<span style="color:#a6e22e">Infof</span>(<span style="color:#e6db74">&#34;hello! name:%s,age:%d&#34;</span>, <span style="color:#e6db74">&#34;xiaomin&#34;</span>, <span style="color:#ae81ff">20</span>)	<span style="color:#75715e">// printf 风格，易用性
+</span><span style="color:#75715e"></span>   <span style="color:#75715e">// logger
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">logger</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>()
+   <span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;hello!&#34;</span>, <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">String</span>(<span style="color:#e6db74">&#34;name&#34;</span>, <span style="color:#e6db74">&#34;xiaomin&#34;</span>), <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">Int</span>(<span style="color:#e6db74">&#34;age&#34;</span>, <span style="color:#ae81ff">20</span>)) <span style="color:#75715e">// 强调性能
+</span><span style="color:#75715e"></span>}
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">// output 
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;info&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;hello! name:xiaomin,age:20&#34;</span><span style="color:#f92672">}</span>
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;info&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;hello!&#34;</span>,<span style="color:#e6db74">&#34;name&#34;</span>:<span style="color:#e6db74">&#34;xiaomin&#34;</span>,<span style="color:#e6db74">&#34;age&#34;</span>:20<span style="color:#f92672">}</span>
+</code></pre></div><p>zap 有三种默认配置创建出一个 logger，分别为 <code>example，development，production</code>，示例：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;go.uber.org/zap&#34;</span>
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+   <span style="color:#75715e">// example
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">logger</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewExample</span>()
+   <span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;example&#34;</span>)
+   <span style="color:#75715e">// Development
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">logger</span>,<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewDevelopment</span>()
+   <span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;Development&#34;</span>)
+   <span style="color:#75715e">// Production
+</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">logger</span>,<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewProduction</span>()
+   <span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;Production&#34;</span>)
+}
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">// output
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;info&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;example&#34;</span><span style="color:#f92672">}</span>
+2021-11-09T21:02:07.181+0800    INFO    log_test/main.go:11     Development	
+<span style="color:#f92672">{</span><span style="color:#e6db74">&#34;level&#34;</span>:<span style="color:#e6db74">&#34;info&#34;</span>,<span style="color:#e6db74">&#34;ts&#34;</span>:1636462927.182271,<span style="color:#e6db74">&#34;caller&#34;</span>:<span style="color:#e6db74">&#34;log_test/main.go:14&#34;</span>,<span style="color:#e6db74">&#34;msg&#34;</span>:<span style="color:#e6db74">&#34;Production&#34;</span><span style="color:#f92672">}</span>
+
+</code></pre></div><p>可以看出：日志等级，日志输出格式，默认字段都有所差异。</p>
+<p>也可以自定义 logger，如以下例子</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+
+<span style="color:#f92672">import</span> (
+	<span style="color:#e6db74">&#34;go.uber.org/zap&#34;</span>
+	<span style="color:#e6db74">&#34;go.uber.org/zap/zapcore&#34;</span>
+	<span style="color:#e6db74">&#34;os&#34;</span>
+)
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+	<span style="color:#a6e22e">encoder</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getEncoder</span>()
+	<span style="color:#a6e22e">sync</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getWriteSync</span>()
+	<span style="color:#a6e22e">core</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">NewCore</span>(<span style="color:#a6e22e">encoder</span>, <span style="color:#a6e22e">sync</span>, <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">InfoLevel</span>)
+	<span style="color:#a6e22e">logger</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">New</span>(<span style="color:#a6e22e">core</span>)
+	
+	<span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;info 日志&#34;</span>,<span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">Int</span>(<span style="color:#e6db74">&#34;line&#34;</span>, <span style="color:#ae81ff">1</span>))
+	<span style="color:#a6e22e">logger</span>.<span style="color:#a6e22e">Error</span>(<span style="color:#e6db74">&#34;info 日志&#34;</span>, <span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">Int</span>(<span style="color:#e6db74">&#34;line&#34;</span>, <span style="color:#ae81ff">2</span>))
+}
+
+<span style="color:#75715e">// 负责设置 encoding 的日志格式
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getEncoder</span>() <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">Encoder</span> {
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">NewJSONEncoder</span>(<span style="color:#a6e22e">zap</span>.<span style="color:#a6e22e">NewProductionEncoderConfig</span>())
+}
+
+<span style="color:#75715e">// 负责日志写入的位置
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">getWriteSync</span>() <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">WriteSyncer</span> {
+	<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">OpenFile</span>(<span style="color:#e6db74">&#34;./log.txt&#34;</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">O_CREATE</span>|<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">O_APPEND</span>|<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">O_RDWR</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">ModePerm</span>)
+	<span style="color:#a6e22e">syncFile</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">AddSync</span>(<span style="color:#a6e22e">file</span>)
+	<span style="color:#a6e22e">syncConsole</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">AddSync</span>(<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Stderr</span>)
+	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">zapcore</span>.<span style="color:#a6e22e">NewMultiWriteSyncer</span>(<span style="color:#a6e22e">syncConsole</span>, <span style="color:#a6e22e">syncFile</span>)
+}
+<span style="color:#75715e">// output
+</span><span style="color:#75715e">// 创建 log.txt，追加日志
+</span><span style="color:#75715e">// console 打印日志
+</span><span style="color:#75715e">//{&#34;level&#34;:&#34;info&#34;,&#34;ts&#34;:1636471657.16419,&#34;msg&#34;:&#34;info 日志&#34;,&#34;line&#34;:1}
+</span><span style="color:#75715e">//{&#34;level&#34;:&#34;error&#34;,&#34;ts&#34;:1636471657.1643898,&#34;msg&#34;:&#34;info 日志&#34;,&#34;line&#34;:2}
+</span><span style="color:#75715e"></span>
+</code></pre></div><p>从 <code>New(core zapcore.Core, options ...Option) *Logger</code> 出发，需要构造 <code>zapcore.Core </code></p>
+<ol>
+<li>
+<p>通过 <code>NewCore(enc Encoder, ws WriteSyncer, enab LevelEnabler) Core</code> 方法，又需要传入三个参数</p>
+<ul>
+<li>
+<p><code>Encoder</code> : 负责设置 encoding 的日志格式, 可以设置 json 或者 text结构，也可以自定义json中 key 值，时间格式&hellip;</p>
+</li>
+<li>
+<p><code>ws WriteSyncer</code>: 负责日志写入的位置，上述例子往 file 与 console 同时写入，这里也可以写入网络。</p>
+</li>
+<li>
+<p><code>LevelEnabler</code>: 设置日志记录级别</p>
+</li>
+</ul>
+</li>
+<li>
+<p><code>options</code> 是一个实现了<code>apply(*Logger)</code> 方法的接口，可以扩展很多功能</p>
+<ul>
+<li>覆盖 core 的配置</li>
+<li>增加 hook</li>
+<li>增加键值信息</li>
+<li>error 日志单独输出</li>
+</ul>
+</li>
+</ol>
+<h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>首先介绍了 Go 标准库 log的使用以及自定义过程，总结了 log 的优缺点，由此引入了第三方库 logrus 与 zap 的话题，两个库都十分优秀与强大，十分推荐使用</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/golang">golang</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E6%97%A5%E5%BF%97%E5%BA%93">日志库</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/log">log</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/logrus">logrus</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/zap">zap</a>
+            
+        </div>
+    
+    
+    
+  <div id="comment">
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "heganghuan-blog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2021 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+      <div class="powerby">
+        
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>

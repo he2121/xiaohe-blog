@@ -1,7 +1,7 @@
 ---
 title: "使用 Hugo 与 GitHub Pages 快速建站"
 tags: ["建站", "GitHub Pages", "Hugo"]
-date: 2021-11-08
+date: 2021-11-08T20:39:11+08:00
 ---
 
 ## 前言

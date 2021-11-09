@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>logrus on 小贺的博客</title>
+    <link>https://he2121.github.io/xiaohe-blog/tags/logrus/</link>
+    <description>Recent content in logrus on 小贺的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Tue, 09 Nov 2021 14:30:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/logrus/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 常用日志库介绍</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</link>
+      <pubDate>Tue, 09 Nov 2021 14:30:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</guid>
+      <description>前言 🔗为什么需要日志 🔗 调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&amp;hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
+Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
+ Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
+示例如下:
+package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日志信息1&amp;#34;) log.Print(&amp;#34;日志信息2&amp;#34;) log.Panicln(&amp;#34;日志信息3&amp;#34;) log.Fatalln(&amp;#34;日志信息4&amp;#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.</description>
+    </item>
+    
+  </channel>
+</rss>

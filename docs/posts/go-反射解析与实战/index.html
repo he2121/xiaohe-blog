@@ -9,10 +9,10 @@
 <meta name="description" content="前言 🔗日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
 什么是反射 🔗 在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
  来自维基百科
-在 Goland 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、
+在 Golang 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、
 执行它们的方法，
 反射能够干什么 🔗反射是元编程的一个关键策略
- java spring goland json 序列化与反序列化 go orm 框架 &hellip;  反射的缺点 🔗 性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Goland 反射解析 🔗要搞清楚反射，得先简要了解一下 interface
+ java spring golang json 序列化与反序列化 go orm 框架 &hellip;  反射的缺点 🔗 性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Golang 反射解析 🔗要搞清楚反射，得先简要了解一下 interface
 Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
@@ -106,12 +106,12 @@ if (!doNotTrack) {
 <p>在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。</p>
 </blockquote>
 <p>来自维基百科</p>
-<p>在 Goland 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、</p>
+<p>在 Golang 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、</p>
 <p>执行它们的方法，</p>
 <h4 id="反射能够干什么">反射能够干什么 <a href="#%e5%8f%8d%e5%b0%84%e8%83%bd%e5%a4%9f%e5%b9%b2%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h4><p>反射是元编程的一个关键策略</p>
 <ul>
 <li>java spring</li>
-<li>goland json 序列化与反序列化</li>
+<li>golang json 序列化与反序列化</li>
 <li>go orm 框架</li>
 <li>&hellip;</li>
 </ul>
@@ -120,7 +120,7 @@ if (!doNotTrack) {
 <li>可读性</li>
 <li>go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic</li>
 </ul>
-<h2 id="goland-反射解析">Goland 反射解析 <a href="#goland-%e5%8f%8d%e5%b0%84%e8%a7%a3%e6%9e%90" class="anchor">🔗</a></h2><p>要搞清楚反射，得先简要了解一下 interface</p>
+<h2 id="golang-反射解析">Golang 反射解析 <a href="#golang-%e5%8f%8d%e5%b0%84%e8%a7%a3%e6%9e%90" class="anchor">🔗</a></h2><p>要搞清楚反射，得先简要了解一下 interface</p>
 <h3 id="interface">Interface <a href="#interface" class="anchor">🔗</a></h3><h4 id="定义">定义 <a href="#%e5%ae%9a%e4%b9%89" class="anchor">🔗</a></h4><p>接口有两种定义：</p>
 <ul>
 <li>
@@ -447,7 +447,7 @@ if (!doNotTrack) {
     
         <div class="tags">
             
-                <a href="https://he2121.github.io/xiaohe-blog/tags/goland">goland</a>
+                <a href="https://he2121.github.io/xiaohe-blog/tags/golang">golang</a>
             
                 <a href="https://he2121.github.io/xiaohe-blog/tags/%E5%8F%8D%E5%B0%84">反射</a>
             
