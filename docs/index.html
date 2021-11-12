@@ -88,14 +88,54 @@ if (!doNotTrack) {
         
         <section class="item">
           <div>
+            <h1 class="title"><a href='/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/'>普通人的理财-阶段总结一</a></h1>
+            <div class ="date">
+                <time datetime="2021-11-13 00:08:32 &#43;0800 CST"></time>  
+            </div>
+          </div>
+
+          
+
+        </section>
+    
+        
+        
+        <section class="item">
+          <div>
+            <h1 class="title"><a href='/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/'>MySQL binlog 设计介绍</a></h1>
+            <div class ="date">
+                <time datetime="2021-11-10 18:33:24 &#43;0800 CST"></time>  
+            </div>
+          </div>
+
+          
+
+        </section>
+    
+        
+        
+        <section class="item">
+          <div>
+            <h1 class="title"><a href='/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/'>2021度博客每周回顾</a></h1>
+            <div class ="date">
+                <time datetime="2021-11-10 14:08:32 &#43;0800 CST"></time>  
+            </div>
+          </div>
+
+          
+
+        </section>
+    
+        
+        
+        <section class="item">
+          <div>
             <h1 class="title"><a href='/xiaohe-blog/posts/convert%E8%B5%84%E6%BA%90%E9%9B%86%E5%90%88/'>Convert资源集合</a></h1>
             <div class ="date">
                 <time datetime="2021-11-10 00:38:28 &#43;0800 CST"></time>  
             </div>
           </div>
 
-          
-              <div class="summary">json2go 🔗 https://mholt.github.io/json-to-go/  sql2go 🔗 https://sql2go.ricestdiotech.com/  curl2go 🔗 https://mholt.github.io/curl-to-go/  curl2all 🔗 https://curlconverter.com/  yaml2go 🔗 https://yaml2go.prasadg.dev/  toml2go 🔗 https://xuri.me/toml-to-go/  数据转换大集合(json、xml、html、yaml、toml、csv、xlsx、png、pdf…) 🔗 https://www.convertsimple.com/  sql2es 🔗 https://sqltoelasticsearch.azurewebsites.net/  time convert 🔗 https://www.epochconverter.com/  base 64 encode/decode 🔗 https://www.base64decode.org/  欢迎评论补充 🔗- ...  </div>
           
 
         </section>
@@ -111,12 +151,6 @@ if (!doNotTrack) {
           </div>
 
           
-              <div class="summary">前言 🔗为什么需要日志 🔗 调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值…），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
-Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
- Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
-示例如下:
-package main import &#34;log&#34; func main() { log.Println(&#34;日志信息1&#34;) log.Print(&#34;日志信息2&#34;) log.Panicln(&#34;日志信息3&#34;) log.Fatalln(&#34;日志信息4&#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.</div>
-          
 
         </section>
     
@@ -130,15 +164,6 @@ package main import &#34;log&#34; func main() { log.Println(&#34;日志信息1&#
             </div>
           </div>
 
-          
-              <div class="summary">前言 🔗作为一名程序员，并且是一名有追求的程序员，技术影响力 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
-Hugo 与 GitHub Pages 简介 🔗Hugo: 世界上最快的网站建设框架，将 Markdown 文件生成 HTML 静态页面。
-GitHub Pages GitHub 提供的静态网页托管服务，不需要额外的服务器来部署你的博客系统了。
-搭建过程 🔗 安装 Hugo  Mac 直接使用以下命令二进制安装
-brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clone 到本地
-  使用 Hugo 初始化 Clone 下来的仓库
-  hugo new site xiaohe-blog --force 生成文件目录应该如下:
-├── archetypes // 文章默认模版 │ └── default.md ├── config.toml // 配置文件 ├── content // Markdown 文件 ├── data // ├── layouts // html 文件 ├── static // 图片, CSS, JS.</div>
           
 
         </section>
@@ -154,8 +179,6 @@ brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clon
           </div>
 
           
-              <div class="summary">计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora &#43; upic)  </div>
-          
 
         </section>
     
@@ -169,18 +192,6 @@ brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clon
             </div>
           </div>
 
-          
-              <div class="summary">前言 🔗日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
-什么是反射 🔗 在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
- 来自维基百科
-在 Golang 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、
-执行它们的方法，
-反射能够干什么 🔗反射是元编程的一个关键策略
- java spring golang json 序列化与反序列化 go orm 框架 …  反射的缺点 🔗 性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Golang 反射解析 🔗要搞清楚反射，得先简要了解一下 interface
-Interface 🔗定义 🔗接口有两种定义：
-  eface: 空接口定义, 包含具体类型与数据
-  iface: 非空接口定义（实现了方法的接口），
-  // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</div>
           
 
         </section>

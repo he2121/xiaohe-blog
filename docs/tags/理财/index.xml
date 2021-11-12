@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>杂谈s on 小贺的博客</title>
-    <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/</link>
-    <description>Recent content in 杂谈s on 小贺的博客</description>
+    <title>理财 on 小贺的博客</title>
+    <link>https://he2121.github.io/xiaohe-blog/tags/%E7%90%86%E8%B4%A2/</link>
+    <description>Recent content in 理财 on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 13 Nov 2021 00:08:32 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 13 Nov 2021 00:08:32 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/%E7%90%86%E8%B4%A2/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>普通人的理财-阶段总结一</title>
       <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</link>
@@ -34,28 +34,6 @@
 下图就是我基金的最终战果了，有遗憾（新能源从最多 90% 的盈利，到卖出只有 40% 多的盈利），但其实成绩也还算可以了。
 之前的操作如果还能勉强说正常，后面操作就比较癫狂了。
  之前看好的新能源，现在由于价格比较高，我不敢入手 听信各种大 v 的价值投资，白马蓝筹股吹嘘 由于买的白马蓝筹不断跌，承受不了这么多的亏损，开始京东金条加仓，幻想很快能涨回来  现在已不堪回首那个阶段了，今年的 4，5，6，7，8 月份应该都处于这种情况，每月都借，每月都还。</description>
-    </item>
-    
-    <item>
-      <title>2021度博客每周回顾</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</link>
-      <pubDate>Wed, 10 Nov 2021 14:08:32 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
-      <description>每周至少三篇博客，用这个监督下自己
-11.8 - 11.14 🔗  使用 Hugo 与 GitHub Pages 快速建站
-  Golang 常用日志库介绍
-  Convert资源集合
-  11.15-11.21 🔗   11.22-11.28 🔗   11.29 - 12.05 🔗   12.06 - 12.12 🔗   12.13 - 12.19 🔗   12.20 - 12.26 🔗   12.27 - 1.2 🔗</description>
-    </item>
-    
-    <item>
-      <title>提升技术影响力</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</link>
-      <pubDate>Mon, 08 Nov 2021 20:39:11 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</guid>
-      <description>计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度 🔗 知乎 CSDN 掘金   todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
     </item>
     
   </channel>

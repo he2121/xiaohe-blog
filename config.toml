@@ -17,6 +17,7 @@ bio = 'Golang 工程师'
 description = "小贺的博客"
 enableGoogleAnalytics = true
 enableComments = true
+hiddenPostSummaryInHomePage = true
 [[params.links]]
 name = "tag"
 path = "/xiaohe-blog/tags"

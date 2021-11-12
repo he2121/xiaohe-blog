@@ -1,12 +1,16 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
   <head>
-    <title>提升技术影响力 | 小贺的博客</title>
+    <title>MySQL binlog 设计介绍 | 小贺的博客</title>
 
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
 <meta name="viewport" content="width=device-width,minimum-scale=1">
-<meta name="description" content="计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度 🔗 知乎 CSDN 掘金   todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora &#43; upic)  ">
+<meta name="description" content="binlog 是什么 🔗Binary log，顾名思义 binlog 是一种二进制日志。具体来说，binlog 是 MySQL sever 层级
+binlog 能做什么 🔗参考 🔗  https://dev.mysql.com/doc/internals/en/binary-log-overview.html
+  http://mysql.taobao.org/monthly/2018/08/01/
+  https://zhuanlan.zhihu.com/p/33504555
+  ">
 <meta name="generator" content="Hugo 0.89.1" />
 
 
@@ -67,10 +71,10 @@ if (!doNotTrack) {
       
 
 <section id="single">
-    <h1 class="title">提升技术影响力</h1>
+    <h1 class="title">MySQL binlog 设计介绍</h1>
 
     <div class="tip">
-        <time datetime="2021-11-08 20:39:11 &#43;0800 CST"></time>
+        <time datetime="2021-11-10 18:33:24 &#43;0800 CST"></time>
         <span class="split">
           ·
         </span>
@@ -90,39 +94,29 @@ if (!doNotTrack) {
 
 
     <div class="content">
-      <h2 id="计划">计划 <a href="#%e8%ae%a1%e5%88%92" class="anchor">🔗</a></h2><ul>
-<li>每周至少三篇博客</li>
-<li>持续至少两年</li>
-<li>更新到各大平台</li>
-</ul>
-<h2 id="平台">平台 <a href="#%e5%b9%b3%e5%8f%b0" class="anchor">🔗</a></h2><ul>
-<li><a href="https://he2121.github.io/xiaohe-blog/" target="_blank" rel="noopener">自己的博客</a></li>
-<li><a href="https://blog.csdn.net/" target="_blank" rel="noopener">CSDN</a></li>
-<li><a href="https://www.zhihu.com/" target="_blank" rel="noopener">知乎</a></li>
-<li><a href="https://juejin.cn/" target="_blank" rel="noopener">掘金</a></li>
-<li><a href="https://www.oschina.net/" target="_blank" rel="noopener">思否</a></li>
-<li>博客园</li>
-<li><a href="https://cloud.tencent.com/developer/column" target="_blank" rel="noopener">微信公共号</a></li>
-</ul>
-<h2 id="发布帖子热度">发布帖子热度 <a href="#%e5%8f%91%e5%b8%83%e5%b8%96%e5%ad%90%e7%83%ad%e5%ba%a6" class="anchor">🔗</a></h2><ul>
-<li><a href="https://www.zhihu.com/creator/manage/creation/all" target="_blank" rel="noopener">知乎</a></li>
-<li><a href="https://blog.csdn.net/weixin_44065217?spm=1001.2100.3001.5343&amp;type=blog" target="_blank" rel="noopener">CSDN</a></li>
-<li><a href="https://juejin.cn/user/97180966464552/posts" target="_blank" rel="noopener">掘金</a></li>
-<li></li>
-</ul>
-<h2 id="todo">todo <a href="#todo" class="anchor">🔗</a></h2><ul>
-<li>vscode/GoLand 一键发布帖子插件</li>
-<li>vscode/GoLand markdown图床支持(类似 typora + upic)</li>
-</ul>
+      <h2 id="binlog-是什么">binlog 是什么 <a href="#binlog-%e6%98%af%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h2><p>Binary log，顾名思义 binlog 是一种二进制日志。具体来说，binlog 是 <strong>MySQL sever 层级</strong></p>
+<h2 id="binlog-能做什么">binlog 能做什么 <a href="#binlog-%e8%83%bd%e5%81%9a%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h2><h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
+<li>
+<p><a href="https://dev.mysql.com/doc/internals/en/binary-log-overview.html" target="_blank" rel="noopener">https://dev.mysql.com/doc/internals/en/binary-log-overview.html</a></p>
+</li>
+<li>
+<p><a href="http://mysql.taobao.org/monthly/2018/08/01/" target="_blank" rel="noopener">http://mysql.taobao.org/monthly/2018/08/01/</a></p>
+</li>
+<li>
+<p><a href="https://zhuanlan.zhihu.com/p/33504555" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/33504555</a></p>
+</li>
+</ol>
 
     </div>
 
     
         <div class="tags">
             
-                <a href="https://he2121.github.io/xiaohe-blog/tags/%E8%A7%84%E5%88%92">规划</a>
+                <a href="https://he2121.github.io/xiaohe-blog/tags/mysql">MySQL</a>
             
-                <a href="https://he2121.github.io/xiaohe-blog/tags/%E5%BD%B1%E5%93%8D%E5%8A%9B">影响力</a>
+                <a href="https://he2121.github.io/xiaohe-blog/tags/binlog">binlog</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E6%95%B0%E6%8D%AE%E5%BA%93">数据库</a>
             
         </div>
     
