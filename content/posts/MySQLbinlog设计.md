@@ -67,11 +67,19 @@ binlog 为什么会有这三种类型？
 
 ### binlog 文件结构
 
-`binlog.index` : 文本文件，列出了当前的二进制日志文件（现在有 6 个）。
+`binlog.index` : 文本文件，如下面的例子，列出了当前的二进制日志文件（现在有 6 个）。
 
-`binlog.xxxxxx:` log 二进制文件 
+`binlog.xxxxxx:` log 二进制文件，
 
-![image-20211115144606439](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211115144606439-2021-11-15.png)
+```bash
+binlog.000001
+binlog.000002
+binlog.000003
+binlog.000004
+binlog.000005
+binlog.000006
+binlog.index 
+```
 
 每个日志文件以一个 4 字节魔数 ( 0xfe b i n) 开头，后面是一组**描述数据修改的事件**，文件格式如下：
 

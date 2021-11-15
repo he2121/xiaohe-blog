@@ -145,12 +145,16 @@ if (!doNotTrack) {
 <li><code>RBL</code> 日志文件更大</li>
 </ul>
 <h3 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h3><p>推荐使用 <code>RBL</code>，利大于弊，最新 MySQL 版本默认也是使用 <code>RBL</code>。</p>
-<h2 id="binlog-结构"><code>binlog</code> 结构 <a href="#binlog-%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h2><h3 id="binlog-文件结构">binlog 文件结构 <a href="#binlog-%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h3><p><code>binlog.index</code> : 文本文件，列出了当前的二进制日志文件（现在有 6 个）。</p>
-<p><code>binlog.xxxxxx:</code> log 二进制文件</p>
-<p><p class="markdown-image">
-  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211115144606439-2021-11-15.png" alt="image-20211115144606439"  />
-</p></p>
-<p>每个日志文件以一个 4 字节魔数 ( 0xfe b i n) 开头，后面是一组<strong>描述数据修改的事件</strong>，文件格式如下：</p>
+<h2 id="binlog-结构"><code>binlog</code> 结构 <a href="#binlog-%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h2><h3 id="binlog-文件结构">binlog 文件结构 <a href="#binlog-%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h3><p><code>binlog.index</code> : 文本文件，如下面的例子，列出了当前的二进制日志文件（现在有 6 个）。</p>
+<p><code>binlog.xxxxxx:</code> log 二进制文件，</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">binlog.000001
+binlog.000002
+binlog.000003
+binlog.000004
+binlog.000005
+binlog.000006
+binlog.index 
+</code></pre></div><p>每个日志文件以一个 4 字节魔数 ( 0xfe b i n) 开头，后面是一组<strong>描述数据修改的事件</strong>，文件格式如下：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+<span style="color:#f92672">===================</span>+
 | Magic Number	    |
 +<span style="color:#f92672">===================</span>+
