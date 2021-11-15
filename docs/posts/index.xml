@@ -9,15 +9,15 @@
     <lastBuildDate>Wed, 10 Nov 2021 18:33:24 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>MySQL binlog 设计介绍</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1/</link>
       <pubDate>Wed, 10 Nov 2021 18:33:24 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1%E5%8F%8A%E5%85%B6%E5%BA%94%E7%94%A8/</guid>
-      <description>binlog 是什么 🔗Binary log，顾名思义 binlog 是一种二进制日志。具体来说，binlog 是 MySQL sever 层级
-binlog 能做什么 🔗参考 🔗  https://dev.mysql.com/doc/internals/en/binary-log-overview.html
-  http://mysql.taobao.org/monthly/2018/08/01/
-  https://zhuanlan.zhihu.com/p/33504555
-  </description>
+      <guid>https://he2121.github.io/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1/</guid>
+      <description>通过这篇文章你能了解到的知识 🔗 binlog是什么 binlog 的作用 binlog 的三种类型，以及各自优缺点 binlog 文件的结构与内容  binlog 是什么 🔗Binary Log，顾名思义是一种二进制格式日志。具体来说，binlog 日志是一组包含了对 MySQL server 实例进行数据修改（update/delete/insert/...）信息的文件。
+binlog 作用 🔗 用于复制，主从复制 某些数据恢复操作需要使用 binlog  binlog 类型 🔗 **基于语句 (Statement-based) **的日志记录 (SBL): 事件包含产生数据变化的SQL语句。 基于行 (Row-based) 的日志记录(RBL): 描述单个行的变化 混合 (Mixed)：上述两者结合使用, 以 SBL 为主，特殊情况下切换到 RBL  binlog 为什么会有这三种类型？
+一开始只有 statement-based，但 statement-based 存在不少问题，后面才有的 row-base与 mixed。
+SBL 优点 🔗 产生的日志文件少，减少 io 次数  SBL 缺点 🔗  在一些不安全的语句上，主从复制做不到数据一致，比如
+  含有系统函数的语句，可能会在副本上返回不同的值，如 RAND(), USER(),UUID(), SYSDATE() .</description>
     </item>
     
     <item>

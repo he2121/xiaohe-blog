@@ -5,7 +5,7 @@ title = '小贺的博客'
 publishDir = 'docs'
 theme = 'github.com/nodejh/hugo-theme-mini'
 
-googleAnalytics = 'G-58332205CQ'
+googleAnalytics = 'G-FY1WNXTY3L'
 disqusShortname = 'heganghuan-blog'
 
 [social]

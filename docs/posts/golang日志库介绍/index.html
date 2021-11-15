@@ -11,7 +11,7 @@ Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
  Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
 示例如下:
 package main import &#34;log&#34; func main() { log.Println(&#34;日志信息1&#34;) log.Print(&#34;日志信息2&#34;) log.Panicln(&#34;日志信息3&#34;) log.Fatalln(&#34;日志信息4&#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.">
-<meta name="generator" content="Hugo 0.89.1" />
+<meta name="generator" content="Hugo 0.89.2" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -29,7 +29,7 @@ package main import &#34;log&#34; func main() { log.Println(&#34;日志信息1&#
 var doNotTrack = false;
 if (!doNotTrack) {
 	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'G-58332205CQ', 'auto');
+	ga('create', 'G-FY1WNXTY3L', 'auto');
 	
 	ga('send', 'pageview');
 }

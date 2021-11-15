@@ -17,7 +17,7 @@ Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.">
-<meta name="generator" content="Hugo 0.89.1" />
+<meta name="generator" content="Hugo 0.89.2" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -35,7 +35,7 @@ Interface 🔗定义 🔗接口有两种定义：
 var doNotTrack = false;
 if (!doNotTrack) {
 	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-	ga('create', 'G-58332205CQ', 'auto');
+	ga('create', 'G-FY1WNXTY3L', 'auto');
 	
 	ga('send', 'pageview');
 }
@@ -368,7 +368,7 @@ if (!doNotTrack) {
 <li>完全依靠字段名匹配，字段名不一致且不好改了，能否完成复制</li>
 <li>字段类型转换完全依靠内置的ConvertibleTo(u Type) bool 函数，如果我想完成 int64 -&gt; time.time 的复制该怎么做</li>
 </ul>
-<p>当然这个代码已经有比较好的实现了，见 <a href="https://github.com/jinzhu/copier," target="_blank" rel="noopener">https://github.com/jinzhu/copier,</a> 目前 2.2 k star, 如此简单的思想，但又如此实用，是不是对反射的代码更有兴趣了呢。</p>
+<p>当然这个代码已经有比较好的实现了，见 <a href="https://github.com/jinzhu/copier" target="_blank" rel="noopener">https://github.com/jinzhu/copier</a>, 目前 2.2 k star, 如此简单的思想，但又如此实用，是不是对反射的代码更有兴趣了呢。</p>
 <h4 id="orm-中需要对数据库表与实体model做一个映射如何实现">orm 中需要对数据库表与实体model做一个映射，如何实现？ <a href="#orm-%e4%b8%ad%e9%9c%80%e8%a6%81%e5%af%b9%e6%95%b0%e6%8d%ae%e5%ba%93%e8%a1%a8%e4%b8%8e%e5%ae%9e%e4%bd%93model%e5%81%9a%e4%b8%80%e4%b8%aa%e6%98%a0%e5%b0%84%e5%a6%82%e4%bd%95%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Schema 解析 model 得到的元数据
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Schema</span> <span style="color:#66d9ef">struct</span> {
 	<span style="color:#a6e22e">Model</span>      <span style="color:#66d9ef">interface</span>{}			<span style="color:#75715e">// 实体对象
