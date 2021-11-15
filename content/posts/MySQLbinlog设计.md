@@ -1,6 +1,4 @@
-#! https://zhuanlan.zhihu.com/p/433699302
 ---
-
 title: "MySQL binlog 设计"
 date: 2021-11-10T18:33:24+08:00
 tags: ["MySQL", "binlog", "数据库"]
