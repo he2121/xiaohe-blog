@@ -51,7 +51,7 @@ goroutine 1 [running]:
 log.Panicln({0xc0000bdf60, 0x0, 0x1015ba5})
         /usr/local/opt/go/libexec/src/log/log.go:368 +0x65
 main.main()
-        /Users/bytedance/go/src/github.com/he2121/log_test/main.go:8 +0xa8
+        /Users/xiaohe/go/src/github.com/he2121/log_test/main.go:8 +0xa8
 ```
 
 可以看到日志格式默认是：时间 + msg。为什么是这样，可以改吗？
@@ -196,19 +196,19 @@ func main() {
 结构化前：
 
 ```bash
-INFO[0000]/Users/bytedance/go/src/github.com/he2121/log_test/main.go:12 main.main() Info 日志                                      
-WARN[0000]/Users/bytedance/go/src/github.com/he2121/log_test/main.go:13 main.main() warn 日志                                      
-ERRO[0000]/Users/bytedance/go/src/github.com/he2121/log_test/main.go:14 main.main() error msg                                    
-FATA[0000]/Users/bytedance/go/src/github.com/he2121/log_test/main.go:15 main.main() fatal 日志
+INFO[0000]/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:12 main.main() Info 日志                                      
+WARN[0000]/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:13 main.main() warn 日志                                      
+ERRO[0000]/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:14 main.main() error msg                                    
+FATA[0000]/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:15 main.main() fatal 日志
 ```
 
 结构化后：
 
 ```bash
-{"file":"/Users/bytedance/go/src/github.com/he2121/log_test/main.go:12","func":"main.main","level":"info","msg":"Info 日志","time":"2021-11-09T17:37:27+08:00"}
-{"file":"/Users/bytedance/go/src/github.com/he2121/log_test/main.go:13","func":"main.main","level":"warning","msg":"warn 日志","time":"2021-11-09T17:37:27+08:00"}
-{"file":"/Users/bytedance/go/src/github.com/he2121/log_test/main.go:14","func":"main.main","level":"error","msg":"error msg","time":"2021-11-09T17:37:27+08:00"}
-{"file":"/Users/bytedance/go/src/github.com/he2121/log_test/main.go:15","func":"main.main","level":"fatal","msg":"fatal 日志","time":"2021-11-09T17:37:27+08:00"}
+{"file":"/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:12","func":"main.main","level":"info","msg":"Info 日志","time":"2021-11-09T17:37:27+08:00"}
+{"file":"/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:13","func":"main.main","level":"warning","msg":"warn 日志","time":"2021-11-09T17:37:27+08:00"}
+{"file":"/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:14","func":"main.main","level":"error","msg":"error msg","time":"2021-11-09T17:37:27+08:00"}
+{"file":"/Users/xiaohe/go/src/github.com/he2121/log_test/main.go:15","func":"main.main","level":"fatal","msg":"fatal 日志","time":"2021-11-09T17:37:27+08:00"}
 ```
 
 ### zap
