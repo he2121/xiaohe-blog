@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>MESI 协议引发的一些思考 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="某个下午偶尔间看到了 MESI 缓存一致性协议，引出了我不少相关的疑惑，写下此文记录
+ 通过这篇文章你能了解到的知识 🔗 MESI 协议是什么，解决了什么问题 指令重排 是什么，解决了什么问题 内存屏障 是什么，解决了什么 MESI 与 并发同步的区别  MESI 缓存一致性协议 🔗MESI 产生的前提 🔗 多级缓存的出现 多核 CPU 的出现  总之为了计算机的性能，现代计算机都具备上述两点的设计，下图为不同存储的 IO 速度对比
+MESI 解决的问题 🔗由于现在计算机都是多核 CPU 了，并且每一个 CPU 都有自己独立的缓存（如下图架构），这样就会有可能多个 cpu 操作同一份数据，导致各个 cpu 缓存中的同一份数据值不一致的情况。
+MESI 的具体设计 🔗MESI：由缓存行（缓存中操作的基本单位，类似于磁盘的页）的四个状态首字母组成:
+ Modified（修改）：这一行数据修改过了，与内存中的数据不一致了，这意味着如果其它 cpu 中的缓存具有这行数据，其状态要修改成 invalid Exclusive（独占）：只有一个 cache 读了这个数据行，并且没有修改过 Shared（共享）：有多个 cpu 的cahe 读了这个数据行，没有被修改过 Invalid（无效）：该缓存这一行的数据无效  状态流转 🔗缓存行的状态流转如下图，通过对各个缓存行状态位的控制，达到了多核 cpu 缓存中数据一致的目的
+一个例子
+ 现在有两个 cpu，假定其缓存都为空，内存中有一个 x = 0 的数据 cpu1 通过 bus 从内存中读取 x， 该缓存行状态设置为 E cpu2 通过 bus 从内存中读取 x，cpu 1 嗅探到地址冲突，两个 cpu 中 x 所在缓存行状态位设置为 S cpu1 需要修改其缓存中 x 的值，设置其 x 所在缓存行状态为 M，通知 cpu2 把 x 所在缓存行状态位设置为 I，再修改缓存中 x 的值  **模拟网站：**https://www.">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span></a>
+	
+	<a href="/xiaohe-blog/posts"></a>
+	<a href="/xiaohe-blog/tags"></a>
+	<a href="/xiaohe-blog/about"></a>
+
+	
+		<a href="/xiaohe-blog/tags">tag</a>
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e5%bb%ba%e7%ab%99">建站</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">MESI 协议引发的一些思考</h1>
+
+    <div class="tip">
+        <time datetime="2021-11-17 14:30:00 &#43;0800 CST"></time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>某个下午偶尔间看到了 MESI 缓存一致性协议，引出了我不少相关的疑惑，写下此文记录</p>
+</blockquote>
+<h2 id="通过这篇文章你能了解到的知识">通过这篇文章你能了解到的知识 <a href="#%e9%80%9a%e8%bf%87%e8%bf%99%e7%af%87%e6%96%87%e7%ab%a0%e4%bd%a0%e8%83%bd%e4%ba%86%e8%a7%a3%e5%88%b0%e7%9a%84%e7%9f%a5%e8%af%86" class="anchor">🔗</a></h2><ol>
+<li>MESI 协议是什么，解决了什么问题</li>
+<li>指令重排 是什么，解决了什么问题</li>
+<li>内存屏障 是什么，解决了什么</li>
+<li>MESI 与 并发同步的区别</li>
+</ol>
+<h2 id="mesi-缓存一致性协议">MESI 缓存一致性协议 <a href="#mesi-%e7%bc%93%e5%ad%98%e4%b8%80%e8%87%b4%e6%80%a7%e5%8d%8f%e8%ae%ae" class="anchor">🔗</a></h2><h3 id="mesi-产生的前提">MESI 产生的前提 <a href="#mesi-%e4%ba%a7%e7%94%9f%e7%9a%84%e5%89%8d%e6%8f%90" class="anchor">🔗</a></h3><ul>
+<li>多级缓存的出现</li>
+<li>多核 CPU 的出现</li>
+</ul>
+<p>总之为了计算机的性能，现代计算机都具备上述两点的设计，下图为不同存储的 IO 速度对比</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/computer_latency_at_human_scale_0-2021-11-18.png" alt="How to boost and scale PostgreSQL - from shared buffers to in-memory data  grids - GridGain Systems"  />
+</p></p>
+<h3 id="mesi-解决的问题">MESI 解决的问题 <a href="#mesi-%e8%a7%a3%e5%86%b3%e7%9a%84%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h3><p>由于现在计算机都是多核 CPU 了，并且每一个 CPU 都有自己独立的缓存（如下图架构），这样就会有可能多个 cpu 操作同一份数据，导致各个 cpu 缓存中的同一份数据值不一致的情况。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/v2-ddbc72f3c7e646a43c130ba1dbc359ba_720w-2021-11-18.jpg" alt="CPU多级缓存架构- 知乎"  />
+</p></p>
+<h3 id="mesi-的具体设计">MESI 的具体设计 <a href="#mesi-%e7%9a%84%e5%85%b7%e4%bd%93%e8%ae%be%e8%ae%a1" class="anchor">🔗</a></h3><p>MESI：由缓存行（缓存中操作的基本单位，类似于磁盘的页）的四个状态首字母组成:</p>
+<ol>
+<li><strong>M</strong>odified（修改）：这一行数据修改过了，与内存中的数据不一致了，这意味着如果其它 cpu 中的缓存具有这行数据，其状态要修改成 invalid</li>
+<li><strong>E</strong>xclusive（独占）：只有一个  cache 读了这个数据行，并且没有修改过</li>
+<li><strong>S</strong>hared（共享）：有多个 cpu 的cahe 读了这个数据行，没有被修改过</li>
+<li><strong>I</strong>nvalid（无效）：该缓存这一行的数据无效</li>
+</ol>
+<h4 id="状态流转">状态流转 <a href="#%e7%8a%b6%e6%80%81%e6%b5%81%e8%bd%ac" class="anchor">🔗</a></h4><p>缓存行的状态流转如下图，通过对各个缓存行状态位的控制，达到了多核 cpu 缓存中数据一致的目的</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/1569168000003-2021-11-18.png" alt="CPU缓存一致性协议-MESI - GreetingTech.com"  />
+</p></p>
+<p><strong>一个例子</strong></p>
+<ol>
+<li>现在有两个 cpu，假定其缓存都为空，内存中有一个 x = 0 的数据</li>
+<li>cpu1 通过 bus 从内存中读取 x， 该缓存行状态设置为 E</li>
+<li>cpu2 通过 bus 从内存中读取 x，cpu 1 嗅探到地址冲突，两个 cpu 中 x 所在缓存行状态位设置为 S</li>
+<li>cpu1  需要修改其缓存中 x 的值，设置其 x 所在缓存行状态为 M，通知 cpu2 把 x 所在缓存行状态位设置为 I，再修改缓存中 x 的值</li>
+</ol>
+<p>**模拟网站：**<a href="https://www.scss.tcd.ie/Jeremy.Jones/vivio/caches/MESIHelp.htm" target="_blank" rel="noopener">https://www.scss.tcd.ie/Jeremy.Jones/vivio/caches/MESIHelp.htm</a> （稍微有一些差异）</p>
+<h4 id="带来的问题">带来的问题 <a href="#%e5%b8%a6%e6%9d%a5%e7%9a%84%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h4><p>多个 cpu 的缓存状态置换是需要消耗时间，当一个 cpu 中缓存切换状态时，这个 CPU 需要等待其他 CPU 收到消息完成各自缓存中相应数据的状态切换并且发出回应消息。可能出现的阻塞都会导致各种各样的性能问题和稳定性问题。</p>
+<p>实际上，cpu 完全可以利用缓存行状态切换等待的这段时间去执行下一个指令，这就引出下文的指令重排</p>
+<h2 id="指令重排与内存屏障">指令重排与内存屏障 <a href="#%e6%8c%87%e4%bb%a4%e9%87%8d%e6%8e%92%e4%b8%8e%e5%86%85%e5%ad%98%e5%b1%8f%e9%9a%9c" class="anchor">🔗</a></h2><p>上文中提到 cpu 可以不等待当前指令结果，直接去执行下一条指令，这其实就被称之为指令重排。</p>
+<p>当然指令重排分为两个时期：编译时期，运行期。指令重排的目起都是为了追求性能，在以不改变原语义结果前提下乱序执行。这里的指令重排显然属于运行期，这里不讨论编译器发生的指令重排。</p>
+<h3 id="指令重排的实现">指令重排的实现 <a href="#%e6%8c%87%e4%bb%a4%e9%87%8d%e6%8e%92%e7%9a%84%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h3><ul>
+<li>存储缓存（store buffer）：
+<ul>
+<li>之前需要同步等待其它 cpu 返回的消息确认，然后修改缓存中的值</li>
+<li>现在直接把当前指令修改的结果放在存储缓存中，然后直接去执行下一次指令，等到异步收到其它 cpu 的确认消息后，再把存储缓存中要修改的值同步到缓存中</li>
+</ul>
+</li>
+<li>失效队列（invalidate queue）：
+<ul>
+<li>之前当 cpu 检测到其它 cpu 发出的失效通知时，需要当前 cpu 停止手上的工作，完成对应缓存行的状态切换，回复确认消息</li>
+<li>现在直接把失效通知放在失效队列中，立马返回确认消息，以后再慢慢处理失效队列里的消息</li>
+</ul>
+</li>
+</ul>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/1635748-20191226102541749-298329087-2021-11-18.png" alt="img"  />
+</p></p>
+<h3 id="指令重排带来的问题">指令重排带来的问题 <a href="#%e6%8c%87%e4%bb%a4%e9%87%8d%e6%8e%92%e5%b8%a6%e6%9d%a5%e7%9a%84%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h3><p><strong>并行环境下可见性问题</strong></p>
+<p>上述指令重排带来了并行环境下的可见性问题，因为上述的实现导致了处理器对数据的修改不是立即对其他内核可见的（store buffer 与 invalidate queue 都是异步处理的），这样在并发运行的程序下有可能会有数据不一致的产生。</p>
+<h3 id="内存屏障">内存屏障 <a href="#%e5%86%85%e5%ad%98%e5%b1%8f%e9%9a%9c" class="anchor">🔗</a></h3><p>cpu 并不知道什么指令能够重排序，什么指令不能够重排序，但 cpu 把这个任务交给了软件（程序员），这就是内存屏障。</p>
+<p>内存屏障又分为四种：LoadLoad Barriers（读屏障），StoreStore Barriers（写屏障），LoadStore Barriers，StoreLoad Barriers</p>
+<p>不同处理器对内存屏障的实现是不一样的，这里我们来分析下 x86 架构</p>
+<h4 id="读屏障">读屏障 <a href="#%e8%af%bb%e5%b1%8f%e9%9a%9c" class="anchor">🔗</a></h4><p><strong>作用</strong>：所有读屏障之前发生的内存更新，对读屏障之后的 load 操作都是可见的</p>
+<p><strong>cpu 实际操作：</strong> 把<strong>失效队列</strong>（invalidate queue）里的实效指令（I）全部执行</p>
+<h4 id="写屏障">写屏障 <a href="#%e5%86%99%e5%b1%8f%e9%9a%9c" class="anchor">🔗</a></h4><p><strong>作用</strong>：所有写屏障之前发生的内存更新（M）对之后的命令都是可见的</p>
+<p><strong>cpu 实际操作：<strong>等到</strong>存储缓存</strong>（store buffer）为空（所有更新已刷出），cpu 才能执行写屏障之后指令</p>
+<h4 id="full-屏障">Full 屏障 <a href="#full-%e5%b1%8f%e9%9a%9c" class="anchor">🔗</a></h4><p><strong>作用</strong>：上述二者之和</p>
+<p><strong>cpu 实际操作</strong>：上述二者之后</p>
+<h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>多核多级缓存计算机：提高单核无缓存计算机的性能，但会有缓存一致性问题</p>
+<p>MESI：解决多核计算机缓存一致性问题，引发性能慢的问题</p>
+<p>指令重排：缓解 MESI 性能问题，引出可见性问题（其实还是缓存不一致，无法保证实时性）</p>
+<p>内存屏障：把并发存在的可见性问题交给软件（程序员）去解决，软件来告诉 cpu 哪些指令不能重排序</p>
+<p>总之这一系列下来是为了提高了计算机性能和保证了缓存数据一致性</p>
+<h2 id="思考">思考 <a href="#%e6%80%9d%e8%80%83" class="anchor">🔗</a></h2><p>MESI 缓存一致性 与 并发同步的区别？</p>
+<p>一个是作用于 CPU（缓存)，一个作用于线程。一个 cpu 可以对应多个线程。实际上并发同步考虑的是线程与内存交互，并看不到中间还有缓存。</p>
+<p>我们先设想在单核机器上</p>
+<ul>
+<li>单核机器不存在缓存一致性问题，但还会存在多线程并发同步的问题</li>
+</ul>
+<p>假如在多核机器上</p>
+<ol>
+<li>
+<p>假设有 a，b 两个线程分别运行在 cpu1，cpu2 上，内存中有个变量 x，两个线程它们操作是对 x++ 。</p>
+</li>
+<li>
+<p>并发控制需要对 x++ 这一操作加锁，意思就是两个线程不能同时对 x 进行操作，两个线程运行 x++ 时间必须是串行的，即使它们分别在两个 cpu 上</p>
+</li>
+<li>
+<p>在并发控制中看到的是：a 线程对 x++，把 x=1 写入内存，<strong>然后</strong> b 线程读取内存中 x 的值， x++，把 x=2 写入内存</p>
+</li>
+<li>
+<p>然而在 cpu 看来，它是直接与缓存打交道的。如果没有 MESI 缓存一致性协议，它看到有可能的是：a 线程从 cpu1 缓存中读到 x=0， x++ ，把 x=1 写入缓存，然后 b 线程从 cpu2 的缓存中读到 x = 0， 把 x = 1 写入缓存。</p>
+</li>
+<li>
+<p>但实际上，并发控制是依赖 MESI 缓存一致性协议的。a 线程从 cpu1 的缓存中读到 x=0，x++，把 x=1 写入缓存，同时使 cpu2 上的 x=0 的缓存失效并且写回到内存。然后由于线程 2 中 x 的缓存是失效的，只能从内存中读取 x=1，x ++，把 x=2 写入内存 同时使 cpu1 上 x=1 的缓存失效。</p>
+</li>
+</ol>
+<p>总结来说并发控制保证多线程在临界区上串行执行，而在多核计算机中，又依赖缓存一致性保证结果的正确性。</p>
+<h2 id="参考资料">参考资料 <a href="#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99" class="anchor">🔗</a></h2><ol>
+<li><a href="https://zhuanlan.zhihu.com/p/370057417" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/370057417</a></li>
+<li><a href="https://www.cnblogs.com/hello-shf/p/12091591.html" target="_blank" rel="noopener">https://www.cnblogs.com/hello-shf/p/12091591.html</a></li>
+<li><a href="https://stackoverflow.com/questions/29880015/lock-prefix-vs-mesi-protocol" target="_blank" rel="noopener">https://stackoverflow.com/questions/29880015/lock-prefix-vs-mesi-protocol</a></li>
+<li><a href="https://www.zhihu.com/question/277395220" target="_blank" rel="noopener">https://www.zhihu.com/question/277395220</a></li>
+</ol>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/mesi">MESI</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80">计算机基础</a>
+            
+        </div>
+    
+    
+    
+  <div id="comment">
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "heganghuan-blog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2021 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+      <div class="powerby">
+        
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>
