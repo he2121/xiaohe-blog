@@ -6,7 +6,17 @@
     <description>Recent content in golang on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Tue, 09 Nov 2021 14:30:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/golang/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 17 Nov 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/golang/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 协程与调度器原理</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</link>
+      <pubDate>Wed, 17 Nov 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</guid>
+      <description>背景 🔗Go 语言可以说为并发而生。Go 从语言级别支持并发，通过轻量级协程 Goroutine 来实现程序并发运行，go关键字的强大与简洁是其它语言不可及的，接下来让我们一起来探索 Golang 中 Goroutine 与协程调度器设计的一些原理吧。
+Go 协程 🔗协程调度器 🔗参考 🔗 https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit https://stackoverflow.com/questions/68312082/when-will-go-scheduler-create-a-new-m-and-p https://cloud.tencent.com/developer/article/1819618 https://yizhi.ren/2019/06/03/goscheduler/ https://segmentfault.com/a/1190000040710568  </description>
+    </item>
+    
     <item>
       <title>Golang 常用日志库介绍</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</link>
