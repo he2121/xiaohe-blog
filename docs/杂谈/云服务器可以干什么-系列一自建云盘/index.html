@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>云服务器可以干什么-系列一（自建云盘） | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧
+ 项目介绍 🔗直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
+安装过程 🔗 登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &lt;PATH TO uploads&gt;:上传目录，如/sharedfolders &lt;PATH TO config&gt;: 配置文件夹，如/dockercnf/cloudreve/config &lt;PATH TO db&gt;: 数据库文件夹，如/dockercnf/cloudreve/db &lt;PATH TO avatar&gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
+在(/cloudreve)创建上述四个文件夹，如，
+mkdir -p &lt;PATH TO config&gt; 创建配置文件vim &lt;PATH TO config&gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
+# conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器
+docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # optional -e TZ=&#34;Asia/Shanghai&#34; \ # optional -p 5212:5212 \  --restart=unless-stopped \  -v &lt;PATH TO uploads&gt;:/cloudreve/uploads \  -v &lt;PATH TO config&gt;:/cloudreve/config \  -v &lt;PATH TO db&gt;:/cloudreve/db \  -v &lt;PATH TO avatar&gt;:/cloudreve/avatar \  xavierniu/cloudreve  服务器开放所需端口（5212）">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span></a>
+	
+	<a href="/xiaohe-blog/posts"></a>
+	<a href="/xiaohe-blog/tags"></a>
+	<a href="/xiaohe-blog/about"></a>
+
+	
+		<a href="/xiaohe-blog/tags">tag</a>
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e5%bb%ba%e7%ab%99">建站</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">云服务器可以干什么-系列一（自建云盘）</h1>
+
+    <div class="tip">
+        <time datetime="2021-11-21 20:39:11 &#43;0800 CST"></time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧</p>
+</blockquote>
+<h2 id="项目介绍">项目介绍 <a href="#%e9%a1%b9%e7%9b%ae%e4%bb%8b%e7%bb%8d" class="anchor">🔗</a></h2><p>直接放出今天的主角： <a href="https://github.com/cloudreve/Cloudreve" target="_blank" rel="noopener">cloudreve</a> 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。</p>
+<h2 id="安装过程">安装过程 <a href="#%e5%ae%89%e8%a3%85%e8%bf%87%e7%a8%8b" class="anchor">🔗</a></h2><ol>
+<li>登陆服务器，<a href="https://docs.docker.com/engine/install/centos/" target="_blank" rel="noopener">安装 docker</a></li>
+<li>以 <a href="https://hub.docker.com/r/xavierniu/cloudreve" target="_blank" rel="noopener">docker 镜像</a> 方式，部署服务</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">&lt;PATH TO uploads&gt;:上传目录，如/sharedfolders
+&lt;PATH TO config&gt;: 配置文件夹，如/dockercnf/cloudreve/config
+&lt;PATH TO db&gt;: 数据库文件夹，如/dockercnf/cloudreve/db
+&lt;PATH TO avatar&gt;: 头像文件夹，如/dockercnf/cloudreve/avatar
+</code></pre></div><p>新建目录（/cloudreve）</p>
+<p>在(/cloudreve)创建上述四个文件夹，如，</p>
+<pre tabindex="0"><code>mkdir -p &lt;PATH TO config&gt;
+</code></pre><p>创建配置文件<code>vim &lt;PATH TO config&gt;/conf.ini</code>（<em>该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档</em>）</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ini" data-lang="ini"><span style="color:#75715e"># conf.ini</span>
+<span style="color:#66d9ef">[Database]</span>
+<span style="color:#a6e22e">DBFile</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/cloudreve/db/cloudreve.db</span>
+</code></pre></div><p>启动cloudreve容器</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --name cloudreve <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -e PUID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
+  -e PGID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
+  -e TZ<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Asia/Shanghai&#34;</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
+  -p 5212:5212 <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  --restart<span style="color:#f92672">=</span>unless-stopped <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO uploads&gt;:/cloudreve/uploads <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO config&gt;:/cloudreve/config <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO db&gt;:/cloudreve/db <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO avatar&gt;:/cloudreve/avatar <span style="color:#ae81ff">\
+</span><span style="color:#ae81ff"></span>  xavierniu/cloudreve
+</code></pre></div><ol start="3">
+<li>
+<p>服务器开放所需端口（5212）</p>
+</li>
+<li>
+<p>docker logs -f cloudreve 查看cloudreve 日志，获取管理员账号，密码</p>
+</li>
+<li>
+<p>网页上访问 ip:5212</p>
+</li>
+</ol>
+<h3 id="后续">后续 <a href="#%e5%90%8e%e7%bb%ad" class="anchor">🔗</a></h3><ul>
+<li>此项目是一个 go 项目，可以学习一下</li>
+<li>存储有 1 G 的限额，不过项目开源应该可以修改</li>
+</ul>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8">云服务器</a>
+            
+        </div>
+    
+    
+    
+  <div id="comment">
+    
+    <div id="disqus_thread"></div>
+<script type="application/javascript">
+    var disqus_config = function () {
+    
+    
+    
+    };
+    (function() {
+        if (["localhost", "127.0.0.1"].indexOf(window.location.hostname) != -1) {
+            document.getElementById('disqus_thread').innerHTML = 'Disqus comments not available by default when the website is previewed locally.';
+            return;
+        }
+        var d = document, s = d.createElement('script'); s.async = true;
+        s.src = '//' + "heganghuan-blog" + '.disqus.com/embed.js';
+        s.setAttribute('data-timestamp', +new Date());
+        (d.head || d.body).appendChild(s);
+    })();
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+  </div>
+
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2021 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+      <div class="powerby">
+        
+      </div>
+    
+</footer>
+
+
+
+  </body>
+</html>
