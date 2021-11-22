@@ -13,9 +13,21 @@
       <pubDate>Wed, 17 Nov 2021 14:30:00 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</guid>
-      <description> 思考从容器上该如何设置 GOMAXPROCS 大小引发，这个数字设置多少合理，其到底限制了什么，cpu 核数，系统线程数还是协程数？
+      <description>思考从容器上该如何设置 GOMAXPROCS 大小引发，这个数字设置多少合理，其到底限制了什么，cpu 核数，系统线程数还是协程数？
  背景 🔗Go 语言可以说为并发而生。Go 从语言级别支持并发，通过轻量级协程 Goroutine 来实现程序并发运行，go关键字的强大与简洁是其它语言不可及的，接下来让我们一起来探索 Golang 中 Goroutine 与协程调度器设计的一些原理吧。
-Go 协程 🔗协程调度器 🔗参考 🔗 https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit https://stackoverflow.com/questions/68312082/when-will-go-scheduler-create-a-new-m-and-p https://cloud.tencent.com/developer/article/1819618 https://yizhi.ren/2019/06/03/goscheduler/ https://segmentfault.com/a/1190000040710568  </description>
+Go 协程 🔗概念 🔗进程: 操作系统分配系统资源（cpu 时间片，内存等）的最小单位
+线程：轻量级进程，是操作系统调度的最小单位
+协程：轻量级线程，协程的调度由程序控制
+怎么理解 🔗进程，线程的两个最小单位如何理解？ 🔗在早期面向进程设计的计算机结构中，进程就是操作系统分配系统资源与操作系统调度的最小单位
+但在现代的计算结构中，进程升级为线程的容器，多个线程共享一个进程内的系统资源，cpu 执行（调度）对象是线程
+轻量级进程与轻量级线程如何理解 🔗轻量级进程：如下图各个进程拥有独立的虚拟内存空间，里面的资源包括 栈，代码，数据，堆&amp;hellip; 而线程拥有独立的栈，但是共享进程全部的资源。在 linux 的实现中，进程与线程的底层数据结构是一致的，只是同一进程下线程会共享资源。
+轻量级线程：线程栈大小固定 8 M，协程栈：2 KB ，动态增长。一对线程里对应多个协程，可以减少线程的数量
+协程相对线程有什么优势 🔗 轻量级 （MB vs KB） 切换代价低 （调度由程序控制，不需要进入内核空间。需要保存上下文一般少一些） 切换频率低，协程协作式调度，线程调度由操作系统控制，需要保证公平性，当线程数量一多，切换频率相对比较高  协程调度器 🔗在 Golang 中，goroutine 调度是由 Golang 运行时（runtime）负责的，不需要程序员编写代码时关注协程的调度。
+GM 模型 🔗goroutine 的调度其实是一个生产者-消费者模型。
+生产者：程序起 goroutine（G）
+消费者：系统线程（M）去消费（执行）goroutine
+自然的，在生产者与消费者中间还需要有一个队列来暂存没有消费过的 goroutine。在 Go 1.1 版本，用的就是这种模型。
+GM 模型问题</description>
     </item>
     
     <item>
