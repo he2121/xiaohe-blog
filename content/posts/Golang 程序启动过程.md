@@ -93,6 +93,8 @@ TEXT _rt0_amd64(SB),NOSPLIT,$-8
 
 `rt0_go` 代码比较长，可分为两个部分，第一部分是系统参数获取和运行时检查。第二部分是 go 程序启动的核心，这里只详细介绍第二部分，总体启动流程如下
 
+![image-20211128225903380](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211128225903380-2021-11-28.png)
+
 ```mermaid
 graph TB
 	subgraph runtime.main
@@ -120,7 +122,6 @@ graph TB
 	end
 	
 ```
-
 go runtime 核心：
 
 1. `schedinit`：进行各种运行时组件初始化工作，这包括我们的调度器与内存分配器、回收器的初始化
