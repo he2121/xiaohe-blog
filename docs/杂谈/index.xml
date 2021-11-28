@@ -70,5 +70,15 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       <description>计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度 🔗 知乎 CSDN 掘金   todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
     </item>
     
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
+      <description>这里记录一些突然冒出的想法
+常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 介绍 MySQL 的 redo，undo log Git 实战操作  实战系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  面试系列 🔗    </description>
+    </item>
+    
   </channel>
 </rss>

@@ -6,7 +6,23 @@
     <description>Recent content in Posts on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 17 Nov 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 26 Nov 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 程序启动过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Fri, 26 Nov 2021 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</guid>
+      <description>go run main.go 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？
+ 一 编译 🔗 go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
+ 编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&amp;gt; 1(编译器)--汇编代码--&amp;gt; 2(汇编器)--.o目标程序--&amp;gt;3(链接器)--可执行文件--&amp;gt;4(结束) 二 操作系统加载 🔗 ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
+  从磁盘上把可执行程序读入内存；
+  创建进程和主线程；
+  为主线程分配栈空间；
+  把由用户在命令行输入的参数拷贝到主线程的栈；
+  把主线程放入操作系统的运行队列等待被调度执起来运行；</description>
+    </item>
+    
     <item>
       <title>Golang 协程与调度器原理</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</link>

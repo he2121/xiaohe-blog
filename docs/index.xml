@@ -6,7 +6,23 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 21 Nov 2021 20:39:11 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 26 Nov 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 程序启动过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Fri, 26 Nov 2021 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</guid>
+      <description>go run main.go 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？
+ 一 编译 🔗 go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
+ 编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&amp;gt; 1(编译器)--汇编代码--&amp;gt; 2(汇编器)--.o目标程序--&amp;gt;3(链接器)--可执行文件--&amp;gt;4(结束) 二 操作系统加载 🔗 ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
+  从磁盘上把可执行程序读入内存；
+  创建进程和主线程；
+  为主线程分配栈空间；
+  把由用户在命令行输入的参数拷贝到主线程的栈；
+  把主线程放入操作系统的运行队列等待被调度执起来运行；</description>
+    </item>
+    
     <item>
       <title>云服务器可以干什么-系列一（自建云盘）</title>
       <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88-%E7%B3%BB%E5%88%97%E4%B8%80%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</link>
@@ -20,16 +36,6 @@
 mkdir -p &amp;lt;PATH TO config&amp;gt; 创建配置文件vim &amp;lt;PATH TO config&amp;gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
 # conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器
 docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # optional -e TZ=&amp;#34;Asia/Shanghai&amp;#34; \ # optional -p 5212:5212 \  --restart=unless-stopped \  -v &amp;lt;PATH TO uploads&amp;gt;:/cloudreve/uploads \  -v &amp;lt;PATH TO config&amp;gt;:/cloudreve/config \  -v &amp;lt;PATH TO db&amp;gt;:/cloudreve/db \  -v &amp;lt;PATH TO avatar&amp;gt;:/cloudreve/avatar \  xavierniu/cloudreve  服务器开放所需端口（5212）</description>
-    </item>
-    
-    <item>
-      <title>读《置身事内：中国政府与经济发展》引发的思考</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E9%98%85%E8%AF%BB/%E8%AF%BB%E7%BD%AE%E8%BA%AB%E4%BA%8B%E5%86%85%E4%B8%AD%E5%9B%BD%E6%94%BF%E5%BA%9C%E4%B8%8E%E7%BB%8F%E6%B5%8E%E5%8F%91%E5%B1%95%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/</link>
-      <pubDate>Sun, 21 Nov 2021 00:08:32 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/%E9%98%85%E8%AF%BB/%E8%AF%BB%E7%BD%AE%E8%BA%AB%E4%BA%8B%E5%86%85%E4%B8%AD%E5%9B%BD%E6%94%BF%E5%BA%9C%E4%B8%8E%E7%BB%8F%E6%B5%8E%E5%8F%91%E5%B1%95%E5%BC%95%E5%8F%91%E7%9A%84%E6%80%9D%E8%80%83/</guid>
-      <description> 今天给大家推荐一本书《置身事内：中国政府与经济发展》，今年出版的新书，以其高质量刮起朋友圈一阵读书潮流
- </description>
     </item>
     
     <item>
@@ -186,6 +192,16 @@ Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
+      <description>这里记录一些突然冒出的想法
+常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 介绍 MySQL 的 redo，undo log Git 实战操作  实战系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  面试系列 🔗    </description>
     </item>
     
   </channel>

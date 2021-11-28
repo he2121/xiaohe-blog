@@ -30,6 +30,3 @@ path = "/xiaohe-blog/建站"
 [[params.links]]
 name = "杂谈"
 path = "/xiaohe-blog/杂谈"
-[[params.links]]
-name = "阅读"
-path = "/xiaohe-blog/阅读"
