@@ -40,17 +40,8 @@ func main() {
 - 关闭 channel: `close(ch)`
   一些对 channel 操作可能出现的一些边界条件情况如下图所示，其中 full channel 与 empty channel 在无缓冲和有缓冲 channel 下e的概念稍有不同，在下文中解释
 
-```mermaid
-graph LR
-	1(channel) --> 2(向 channel 发送消息)
-	1 --> 3(接受消息)
-	1 --> 4(关闭channel)
-	2 -- full channel--> 5(阻塞)
-	2 --closed channel--> 6(panic)
-	3 --empty channel-->5
-	3 --closed channel--> 7(读到零值)
-	4 --closed/nil channel--> 6
-```
+![mermaid-diagram-20211130225330](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/mermaid-diagram-20211130225330-2021-11-30.png)
+
 
 ## channel 实现
 
@@ -91,14 +82,7 @@ type hchan struct {
 
 一般的向 channel 发送消息流程如下图:
 
-```mermaid
- graph TB
-	1(向 channel 发送消息) --> 2{channel 是否 nil} --否--> 4{channel 是否 closed}--否--> 6{recvq 队列是否存在值}--否-->8{buf 是否未满} --否--> 10(阻塞协程,并放到 sendq 队列中)
-2 --是--> 3(阻塞)
-	4  --是--> 5(panic)
-	6 --是--> 7(队首出队,消息直接发送至该 goroutine 中)
-	8--是--> 9(消息拷贝到 buf sendx位置中,等待唤醒)
-```
+![mermaid-diagram-20211130230713](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/mermaid-diagram-20211130230713-2021-11-30.png)
 
 > 当然实际代码稍微复杂一些：在 channel 与 `select`,`case` 一起使用时，case 语句需要即时收到返回值，不能阻塞等待。因此需要一个非阻塞的模式，在 channel 为 full 时，不等待直接返回结果。
 
@@ -184,15 +168,7 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 
 > 此示意图也省略了考虑不阻塞的场景（与`select` ,`case`）
 
-```mermaid
-graph TB
-	1(向 channel 接受消息) --> 2{channel 是否 nil} --否--> 4{channel 是否 closed && buf 中元素为空}--否--> 6{sendq 队列是否存在值}--否-->8{buf 是否为空} --是--> 10(阻塞协程,并放到 recvq 队列中)
-2 --是--> 3(阻塞)
-	4  --是--> 5(返回零值)
-	6 --是--> 7(sendq 队首出队) --无缓冲 channel--> 11(将出队 goroutine 发送的消息拷贝到返回数据)
-	7 --缓冲 channel--> 12(将 buf 队首消息 copy 到返回数据,再将sendq出队的 goroutine 发送的消息拷贝到buf)
-	8--否--> 9(将 buf 队首消息 copy 到返回数据)
-```
+![image-20211130231739724](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211130231739724-2021-11-30.png)
 
 代码详情如下
 

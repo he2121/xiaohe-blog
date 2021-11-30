@@ -120,16 +120,10 @@ if (!doNotTrack) {
 <li>关闭 channel: <code>close(ch)</code>
 一些对 channel 操作可能出现的一些边界条件情况如下图所示，其中 full channel 与 empty channel 在无缓冲和有缓冲 channel 下e的概念稍有不同，在下文中解释</li>
 </ul>
-<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph LR
-	1(channel) --&gt; 2(向 channel 发送消息)
-	1 --&gt; 3(接受消息)
-	1 --&gt; 4(关闭channel)
-	2 -- full channel--&gt; 5(阻塞)
-	2 --closed channel--&gt; 6(panic)
-	3 --empty channel--&gt;5
-	3 --closed channel--&gt; 7(读到零值)
-	4 --closed/nil channel--&gt; 6
-</code></pre><h2 id="channel-实现">channel 实现 <a href="#channel-%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h2><h3 id="数据结构">数据结构 <a href="#%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h3><p>channel 的底层数据结构如下代码所示，个人认为主要由<strong>一个 buf 数组 + 2 个 goroutine 链表</strong>组成</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/mermaid-diagram-20211130225330-2021-11-30.png" alt="mermaid-diagram-20211130225330"  />
+</p></p>
+<h2 id="channel-实现">channel 实现 <a href="#channel-%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h2><h3 id="数据结构">数据结构 <a href="#%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h3><p>channel 的底层数据结构如下代码所示，个人认为主要由<strong>一个 buf 数组 + 2 个 goroutine 链表</strong>组成</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// src/runtime/chan.go
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">hchan</span> <span style="color:#66d9ef">struct</span> {
 	<span style="color:#a6e22e">qcount</span>   <span style="color:#66d9ef">uint</span>           <span style="color:#75715e">// chan 中元素个数
@@ -159,13 +153,10 @@ if (!doNotTrack) {
 <li><code>ch &lt;- num</code></li>
 </ul>
 <p>一般的向 channel 发送消息流程如下图:</p>
-<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid"> graph TB
-	1(向 channel 发送消息) --&gt; 2{channel 是否 nil} --否--&gt; 4{channel 是否 closed}--否--&gt; 6{recvq 队列是否存在值}--否--&gt;8{buf 是否未满} --否--&gt; 10(阻塞协程,并放到 sendq 队列中)
-2 --是--&gt; 3(阻塞)
-	4  --是--&gt; 5(panic)
-	6 --是--&gt; 7(队首出队,消息直接发送至该 goroutine 中)
-	8--是--&gt; 9(消息拷贝到 buf sendx位置中,等待唤醒)
-</code></pre><blockquote>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/mermaid-diagram-20211130230713-2021-11-30.png" alt="mermaid-diagram-20211130230713"  />
+</p></p>
+<blockquote>
 <p>当然实际代码稍微复杂一些：在 channel 与 <code>select</code>,<code>case</code> 一起使用时，case 语句需要即时收到返回值，不能阻塞等待。因此需要一个非阻塞的模式，在 channel 为 full 时，不等待直接返回结果。</p>
 </blockquote>
 <p>直接上代码，实现起来也比较简单，基本是入队出队操作，有兴趣的可以看一下</p>
@@ -259,14 +250,10 @@ if (!doNotTrack) {
 <blockquote>
 <p>此示意图也省略了考虑不阻塞的场景（与<code>select</code> ,<code>case</code>）</p>
 </blockquote>
-<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
-	1(向 channel 接受消息) --&gt; 2{channel 是否 nil} --否--&gt; 4{channel 是否 closed &amp;&amp; buf 中元素为空}--否--&gt; 6{sendq 队列是否存在值}--否--&gt;8{buf 是否为空} --是--&gt; 10(阻塞协程,并放到 recvq 队列中)
-2 --是--&gt; 3(阻塞)
-	4  --是--&gt; 5(返回零值)
-	6 --是--&gt; 7(sendq 队首出队) --无缓冲 channel--&gt; 11(将出队 goroutine 发送的消息拷贝到返回数据)
-	7 --缓冲 channel--&gt; 12(将 buf 队首消息 copy 到返回数据,再将sendq出队的 goroutine 发送的消息拷贝到buf)
-	8--否--&gt; 9(将 buf 队首消息 copy 到返回数据)
-</code></pre><p>代码详情如下</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211130231739724-2021-11-30.png" alt="image-20211130231739724"  />
+</p></p>
+<p>代码详情如下</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ep: 接受数据，block：是否阻塞式接受, selected: 是否有返回值(select 语句 并且 channel empty 无返回值) received: 此返回值是否是正常由发送者发送过来的数据
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">chanrecv</span>(<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span>, <span style="color:#a6e22e">ep</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>, <span style="color:#a6e22e">block</span> <span style="color:#66d9ef">bool</span>) (<span style="color:#a6e22e">selected</span>, <span style="color:#a6e22e">received</span> <span style="color:#66d9ef">bool</span>) {
   <span style="color:#75715e">// channel 为空

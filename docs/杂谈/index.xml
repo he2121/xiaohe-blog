@@ -80,5 +80,14 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
 常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log Git 实战操作记录  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗 vscode/jetbrain markdown image 插件 vscode/jetbrain 创造者中心 网页 Comment 社区 互联网创业组队 家教  面试系列 🔗    </description>
     </item>
     
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
+      <description>channel 🔗graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
+    </item>
+    
   </channel>
 </rss>
