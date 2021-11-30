@@ -9,11 +9,8 @@
 <meta name="description" content="go run main.go 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？
  一 编译 🔗 go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
  编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&gt; 1(编译器)--汇编代码--&gt; 2(汇编器)--.o目标程序--&gt;3(链接器)--可执行文件--&gt;4(结束) 二 操作系统加载 🔗 ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
-  从磁盘上把可执行程序读入内存；
-  创建进程和主线程；
-  为主线程分配栈空间；
-  把由用户在命令行输入的参数拷贝到主线程的栈；
-  把主线程放入操作系统的运行队列等待被调度执起来运行；">
+ 从磁盘上把可执行程序读入内存； 创建进程和主线程； 为主线程分配栈空间； 把由用户在命令行输入的参数拷贝到主线程的栈； 把主线程放入操作系统的运行队列等待被调度执起来运行；  START_THREAD(elf_ex, regs, elf_entry, bprm-&gt;p) 启动线程传入了 elf_entry 参数，这是程序的入口地址。
+这个 elf_entry 被写在 elf 可执行文件的 header 中">
 <meta name="generator" content="Hugo 0.89.2" />
 
 
@@ -100,7 +97,7 @@ if (!doNotTrack) {
       <blockquote>
 <p><code>go run main.go</code> 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？</p>
 </blockquote>
-<h3 id="一-编译">一 编译 <a href="#%e4%b8%80-%e7%bc%96%e8%af%91" class="anchor">🔗</a></h3><ul>
+<h2 id="一-编译">一 编译 <a href="#%e4%b8%80-%e7%bc%96%e8%af%91" class="anchor">🔗</a></h2><ul>
 <li><code>go build main.go</code></li>
 </ul>
 <p>我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 <a href="https://zhuanlan.zhihu.com/p/286088470" target="_blank" rel="noopener">ELF</a> 格式的可执行文件，linux 能直接执行这个文件。</p>
@@ -116,21 +113,11 @@ if (!doNotTrack) {
 </ul>
 <p>经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：</p>
 <ol>
-<li>
-<p>从磁盘上把可执行程序读入内存；</p>
-</li>
-<li>
-<p>创建进程和主线程；</p>
-</li>
-<li>
-<p>为主线程分配栈空间；</p>
-</li>
-<li>
-<p>把由用户在命令行输入的参数拷贝到主线程的栈；</p>
-</li>
-<li>
-<p>把主线程放入操作系统的运行队列等待被调度执起来运行；</p>
-</li>
+<li>从磁盘上把可执行程序读入内存；</li>
+<li>创建进程和主线程；</li>
+<li>为主线程分配栈空间；</li>
+<li>把由用户在命令行输入的参数拷贝到主线程的栈；</li>
+<li>把主线程放入操作系统的运行队列等待被调度执起来运行；</li>
 </ol>
 <p><code>START_THREAD(elf_ex, regs, elf_entry, bprm-&gt;p)</code> 启动线程传入了 <code>elf_entry</code> 参数，这是程序的入口地址。</p>
 <p>这个 <code>elf_entry</code> 被写在 elf 可执行文件的 header 中</p>
@@ -156,17 +143,17 @@ ELF Header:
   Number of section headers:         <span style="color:#ae81ff">25</span>
   Section header string table index: <span style="color:#ae81ff">3</span>
 </code></pre></div><p>并且通过反编译 可执行文件，可以看到这个地址对应的就是 _rt0_amd64_linux。</p>
-<pre tabindex="0"><code>$ objdump ./main -D &gt; tmp
-$ grep tmp '45d430'
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ objdump ./main -D &gt; tmp
+$ grep tmp <span style="color:#e6db74">&#39;45d430&#39;</span>
 000000000045d430 &lt;_rt0_amd64_linux&gt;:
-  45d430:	e9 2b c4 ff ff       	jmpq   459860 &lt;_rt0_amd64&gt;
-</code></pre><p>从此进入了 Go 程序的启动过程</p>
+  45d430:	e9 2b c4 ff ff       	jmpq   <span style="color:#ae81ff">459860</span> &lt;_rt0_amd64&gt;
+</code></pre></div><p>从此进入了 Go 程序的启动过程</p>
 <h2 id="go-程序启动">Go 程序启动 <a href="#go-%e7%a8%8b%e5%ba%8f%e5%90%af%e5%8a%a8" class="anchor">🔗</a></h2><p>Go 程序<a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/runtime/asm_amd64.s#L15" target="_blank" rel="noopener">启动位置</a>, 把栈上的入口参数存到寄存器中，接下来跳转到 <code>rt0_go</code> 启动函数</p>
-<pre tabindex="0"><code>TEXT _rt0_amd64(SB),NOSPLIT,$-8
-	MOVQ	0(SP), DI	// argc
-	LEAQ	8(SP), SI	// argv
-	JMP	runtime·rt0_go(SB)
-</code></pre><p><code>rt0_go</code> 代码比较长，可分为两个部分，第一部分是系统参数获取和运行时检查。第二部分是 go 程序启动的核心，这里只详细介绍第二部分，总体启动流程如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">TEXT _rt0_amd64<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>,NOSPLIT,$-<span style="color:#ae81ff">8</span>
+	MOVQ	0<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, DI	// argc
+	LEAQ	8<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, SI	// argv
+	JMP	runtime·rt0_go<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+</code></pre></div><p><code>rt0_go</code> 代码比较长，可分为两个部分，第一部分是系统参数获取和运行时检查。第二部分是 go 程序启动的核心，这里只详细介绍第二部分，总体启动流程如下</p>
 <p><p class="markdown-image">
   <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211128225903380-2021-11-28.png" alt="image-20211128225903380"  />
 </p></p>
@@ -194,12 +181,12 @@ $ grep tmp '45d430'
 	0(入口参数复制) --&gt; 1(tls 线程本地存储初始化,关联当前线程,m0与g0)--&gt; 2(check:运行时类型检查) --&gt; 3(args:argc,argv,内存物理页系统参数的获取) --&gt; 4(osinit:cpu核心获取)
 	4 --&gt; 5
 	end
-	
+
 </code></pre><p>go runtime 核心：</p>
 <ol>
 <li><code>schedinit</code>：进行各种运行时组件初始化工作，这包括我们的调度器与内存分配器、回收器的初始化</li>
-<li><code>newproc</code>：负责根据主 goroutine（即 main）入口地址创建可被运行时调度的执行单元，这里的main还不是用户的main函数，是 <code>runtime.main</code></li>
-<li><code>mstart</code>：开始启动调度器的调度循环, 执行队列中 入口方法是 <code>runtime.main</code> 的 G</li>
+<li><code>newproc</code>：负责根据主 goroutine（即 main）入口地址创建可被运行时调度的执行单元，这里的main还不是用户的main函数，是<code>runtime.main</code></li>
+<li><code>mstart</code>：开始启动调度器的调度循环, 执行队列中 入口方法是<code>runtime.main</code> 的 G</li>
 </ol>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">TEXT runtime<span style="color:#960050;background-color:#1e0010">·</span>rt0_go(SB),NOSPLIT,<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>
 	(...)
@@ -299,7 +286,7 @@ $ grep tmp '45d430'
     <span style="color:#f92672">...</span>
     <span style="color:#75715e">// 执行用户的main主函数
 </span><span style="color:#75715e"></span>    <span style="color:#a6e22e">main_main</span>()
-    
+  
     <span style="color:#f92672">...</span>
     <span style="color:#75715e">// 退出
 </span><span style="color:#75715e"></span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">0</span>)
@@ -308,7 +295,7 @@ $ grep tmp '45d430'
         <span style="color:#f92672">*</span><span style="color:#a6e22e">x</span> = <span style="color:#ae81ff">0</span>
     }
 }
-</code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>启动一个 Go 程序时，首先要经过操作系统的加载，通过可执行文件中 <code>Entry point address</code> 记录的地址，找到 go 程序启动入口: <code>_rt0_amd64</code> -&gt;  <code>rt0_go</code>。<code>rt0_go</code> 中 先进行了 go 程序的 runtime 的初始化，其中包括:调度器，栈，堆内存空间初始化，垃圾回收器的初始化，最后最后通过<code>newproc</code>和<code>mstart</code>调度执行<code>runtime.main</code>,完成一系列初始化过程，再然后才是执行用户的主函数。</p>
+</code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>启动一个 Go 程序时，首先要经过操作系统的加载，通过可执行文件中 <code>Entry point address</code> 记录的地址，找到 go 程序启动入口: <code>_rt0_amd64</code> -&gt;  <code>rt0_go</code>。<code>rt0_go</code> 中 先进行了 go 程序的 runtime 的初始化，其中包括:调度器，栈，堆内存空间初始化，垃圾回收器的初始化，最后最后通过 <code>newproc</code>和 <code>mstart</code>调度执行 <code>runtime.main</code>,完成一系列初始化过程，再然后才是执行用户的主函数。</p>
 <h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
 <li><a href="https://www.bookstack.cn/read/qcrao-Go-Questions/%E7%BC%96%E8%AF%91%E5%92%8C%E9%93%BE%E6%8E%A5-Go%20%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84.md" target="_blank" rel="noopener">https://www.bookstack.cn/read/qcrao-Go-Questions/%E7%BC%96%E8%AF%91%E5%92%8C%E9%93%BE%E6%8E%A5-Go%20%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84.md</a></li>
 <li><a href="https://eddycjy.com/posts/go/go-bootstrap0/" target="_blank" rel="noopener">https://eddycjy.com/posts/go/go-bootstrap0/</a></li>

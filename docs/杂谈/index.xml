@@ -58,7 +58,7 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
       <description>每周至少三篇博客，用这个监督下自己
-11.8 - 11.14 🔗 使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21 🔗 MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28 🔗   11.29 - 12.05 🔗   12.06 - 12.12 🔗   12.13 - 12.19 🔗   12.20 - 12.26 🔗   12.27 - 1.2 🔗</description>
+11.8 - 11.14 🔗 使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21 🔗 MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28 🔗 Golang 协程与调度器原理 Golang 程序启动过程  11.29 - 12.05 🔗   12.06 - 12.12 🔗   12.13 - 12.19 🔗   12.20 - 12.26 🔗   12.27 - 1.2 🔗</description>
     </item>
     
     <item>
@@ -76,8 +76,8 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
-      <description>这里记录一些突然冒出的想法
-常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 介绍 MySQL 的 redo，undo log Git 实战操作  实战系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  面试系列 🔗    </description>
+      <description>·这里记录一些突然冒出的想法
+常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log Git 实战操作记录  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗 vscode/jetbrain markdown image 插件 vscode/jetbrain 创造者中心 网页 Comment 社区 互联网创业组队 家教  面试系列 🔗    </description>
     </item>
     
   </channel>
