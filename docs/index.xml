@@ -6,7 +6,17 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 29 Nov 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 02 Dec 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 的骚操作：go:linkname</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</link>
+      <pubDate>Thu, 02 Dec 2021 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</guid>
+      <description>背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
+ time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) { sec, nsec = walltime() return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.</description>
+    </item>
+    
     <item>
       <title>Golang channel 原理介绍</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/golang-channel-%E4%BB%8B%E7%BB%8D/</link>
@@ -15,6 +25,15 @@
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang-channel-%E4%BB%8B%E7%BB%8D/</guid>
       <description>问题 🔗 从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() { ch := make(chan int,2) ch &amp;lt;- 1 close(ch) num1, ok1 := &amp;lt;- ch num2,ok2 := &amp;lt;- ch println(num1,ok1) println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介 🔗 Do not communicate by sharing memory; instead, share memory by communicating.
  不要通过共享内存来通信，而要通过通信来实现内存共享。这是 CSP（Communicating Sequential Processes）的思想，也是 Go 并发设计上的哲学。CSP 认为如果编程语言中把侧重点放在 processes 间的通信，那么并发编程会变得很简单，而 Go 中 channel 就是通信实体的实现，可以看作成一个协程间的消息队列。</description>
+    </item>
+    
+    <item>
+      <title>内存分配器介绍</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</link>
+      <pubDate>Mon, 29 Nov 2021 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</guid>
+      <description>参考 🔗 https://studygolang.com/articles/7212  </description>
     </item>
     
     <item>
@@ -217,7 +236,11 @@ Interface 🔗定义 🔗接口有两种定义：
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
       <description>·这里记录一些突然冒出的想法
-常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log Git 实战操作记录  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗 vscode/jetbrain markdown image 插件 vscode/jetbrain 创造者中心 网页 Comment 社区 互联网创业组队 家教  面试系列 🔗    </description>
+常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log 内存分配器 malloc Git 实战操作记录 Golang 中的 linkname Test suite 介绍 打点 普罗米修斯 介绍  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗  vscode/jetbrain markdown image 插件
+  vscode/jetbrain 创造者中心
+  网页 Comment 社区
+ diigo    互联网创业组队
+  家教</description>
     </item>
     
     <item>
