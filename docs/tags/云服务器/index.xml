@@ -14,8 +14,8 @@
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88-%E7%B3%BB%E5%88%97%E4%B8%80%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
       <description>最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧
- 项目介绍 🔗直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
-安装过程 🔗 登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
+ 项目介绍 直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
+安装过程  登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
 在(/cloudreve)创建上述四个文件夹，如，
 mkdir -p &amp;lt;PATH TO config&amp;gt; 创建配置文件vim &amp;lt;PATH TO config&amp;gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
 # conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器

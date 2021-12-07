@@ -6,24 +6,55 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 02 Dec 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 06 Dec 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Prometheus 快速入门-01</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</link>
+      <pubDate>Mon, 06 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</guid>
+      <description>Prometheus 是什么 Prometheus 是 SoundCloud 公司开源的系统监控告警工具。2016 年，继 k8s 后，作为第二个托管项目加入了云原生计算基金会。这个项目拥有着非常活跃的开发者和用户社区，随着云原生和 k8s的推广，越来越多的公司的运维都是使用 Prometheus + Grafana（可视化） 的这一套。
+Prometheus 以时序数据的形式收集和存储其指标，同时支持添加自定义 label 的可选键值对
+监控对象  硬件状态：电源状态、CPU 状态、机器温度、风扇状态&amp;hellip; 服务器基础：CPU，内存，磁盘，网络 使用情况 数据库: MySQL, ES &amp;hellip; 中间件：Nginx, MQ.. 应用：QPS，接口延时，线程数&amp;hellip;  Prometheus 优势 其他方案
+ Zabbix: 1998 年诞生&amp;hellip; 属于传统主机监控，主要用于物理主机，交换机，网络等监控 Graphite: 专注于两件事，存储时序数据， 可视化数据, 其它功能都要安装插件实现, Prometheus 功能丰富：趋势，查询&amp;hellip; InfluxDB: 时序数据库&amp;hellip; 监控部分自己搞，prometheus 不仅仅局限于存储时序数据 Nagios：90 年代诞生&amp;hellip; Sensu ：可以看作 Nagiosde 的升级版本 Open-falcon：小米开源，社区活跃度一般  优势
+ 云原生支持好，K8s 和 Etcd 等一列项目都提供了对 Prometheus 的原生支持，是目前容器监控最流行的方案 Prometheus 属于一站式监控告警平台，依赖少，功能齐全。 多维数据模型，聚合统计更方便 强大的查询语句  劣势</description>
+    </item>
+    
+    <item>
+      <title>vim 常见命令记录</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/tools/vim-%E5%B8%B8%E8%A7%81%E5%91%BD%E4%BB%A4%E8%AE%B0%E5%BD%95/</link>
+      <pubDate>Mon, 06 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/tools/vim-%E5%B8%B8%E8%A7%81%E5%91%BD%E4%BB%A4%E8%AE%B0%E5%BD%95/</guid>
+      <description>跳转到文件   头: gg
+  尾：G
+  50 行：50G
+  跳转到行首/尾   首: ^(shift + 6) / 0(包括空格)
+  尾：$(shift + 4)
+  跳转到下一个单词：w 复制   复制一行：yy
+  向下复制 10 hang：10yy
+  粘贴：p 撤销：u 翻页   下一页：ctr + f
+  上一页：ctr + b
+  搜索  : ?  </description>
+    </item>
+    
     <item>
       <title>Golang 的骚操作：go:linkname</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</link>
       <pubDate>Thu, 02 Dec 2021 17:10:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</guid>
-      <description>背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</guid>
+      <description>背景  在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
  time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) { sec, nsec = walltime() return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.</description>
     </item>
     
     <item>
       <title>Golang channel 原理介绍</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang-channel-%E4%BB%8B%E7%BB%8D/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-channel-%E4%BB%8B%E7%BB%8D/</link>
       <pubDate>Mon, 29 Nov 2021 17:10:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang-channel-%E4%BB%8B%E7%BB%8D/</guid>
-      <description>问题 🔗 从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() { ch := make(chan int,2) ch &amp;lt;- 1 close(ch) num1, ok1 := &amp;lt;- ch num2,ok2 := &amp;lt;- ch println(num1,ok1) println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介 🔗 Do not communicate by sharing memory; instead, share memory by communicating.
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-channel-%E4%BB%8B%E7%BB%8D/</guid>
+      <description>问题  从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() { ch := make(chan int,2) ch &amp;lt;- 1 close(ch) num1, ok1 := &amp;lt;- ch num2,ok2 := &amp;lt;- ch println(num1,ok1) println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介  Do not communicate by sharing memory; instead, share memory by communicating.
  不要通过共享内存来通信，而要通过通信来实现内存共享。这是 CSP（Communicating Sequential Processes）的思想，也是 Go 并发设计上的哲学。CSP 认为如果编程语言中把侧重点放在 processes 间的通信，那么并发编程会变得很简单，而 Go 中 channel 就是通信实体的实现，可以看作成一个协程间的消息队列。</description>
     </item>
     
@@ -33,18 +64,18 @@
       <pubDate>Mon, 29 Nov 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</guid>
-      <description>参考 🔗 https://studygolang.com/articles/7212  </description>
+      <description>参考  https://studygolang.com/articles/7212  </description>
     </item>
     
     <item>
       <title>Golang 程序启动过程</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</link>
       <pubDate>Fri, 26 Nov 2021 17:10:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</guid>
       <description>go run main.go 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？
- 一 编译 🔗 go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
- 编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&amp;gt; 1(编译器)--汇编代码--&amp;gt; 2(汇编器)--.o目标程序--&amp;gt;3(链接器)--可执行文件--&amp;gt;4(结束) 二 操作系统加载 🔗 ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
+ 一 编译  go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
+ 编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&amp;gt; 1(编译器)--汇编代码--&amp;gt; 2(汇编器)--.o目标程序--&amp;gt;3(链接器)--可执行文件--&amp;gt;4(结束) 二 操作系统加载  ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
  从磁盘上把可执行程序读入内存； 创建进程和主线程； 为主线程分配栈空间； 把由用户在命令行输入的参数拷贝到主线程的栈； 把主线程放入操作系统的运行队列等待被调度执起来运行；  START_THREAD(elf_ex, regs, elf_entry, bprm-&amp;gt;p) 启动线程传入了 elf_entry 参数，这是程序的入口地址。
 这个 elf_entry 被写在 elf 可执行文件的 header 中</description>
     </item>
@@ -65,8 +96,8 @@
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88-%E7%B3%BB%E5%88%97%E4%B8%80%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
       <description>最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧
- 项目介绍 🔗直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
-安装过程 🔗 登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
+ 项目介绍 直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
+安装过程  登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
 在(/cloudreve)创建上述四个文件夹，如，
 mkdir -p &amp;lt;PATH TO config&amp;gt; 创建配置文件vim &amp;lt;PATH TO config&amp;gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
 # conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器
@@ -75,21 +106,21 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
     
     <item>
       <title>Golang 协程与调度器原理</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</link>
       <pubDate>Wed, 17 Nov 2021 14:30:00 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</guid>
       <description>思考从容器上该如何设置 GOMAXPROCS 大小引发，这个数字设置多少合理，其到底限制了什么，cpu 核数，系统线程数还是协程数？
- 背景 🔗Go 语言可以说为并发而生。Go 从语言级别支持并发，通过轻量级协程 Goroutine 来实现程序并发运行，go关键字的强大与简洁是其它语言不可及的，接下来让我们一起来探索 Golang 中 Goroutine 与协程调度器设计的一些原理吧。
-Go 协程 🔗概念 🔗进程: 操作系统分配系统资源（cpu 时间片，内存等）的最小单位
+ 背景 Go 语言可以说为并发而生。Go 从语言级别支持并发，通过轻量级协程 Goroutine 来实现程序并发运行，go关键字的强大与简洁是其它语言不可及的，接下来让我们一起来探索 Golang 中 Goroutine 与协程调度器设计的一些原理吧。
+Go 协程 概念 进程: 操作系统分配系统资源（cpu 时间片，内存等）的最小单位
 线程：轻量级进程，是操作系统调度的最小单位
 协程：轻量级线程，协程的调度由程序控制
-怎么理解 🔗进程，线程的两个最小单位如何理解？ 🔗在早期面向进程设计的计算机结构中，进程就是操作系统分配系统资源与操作系统调度的最小单位
+怎么理解 进程，线程的两个最小单位如何理解？ 在早期面向进程设计的计算机结构中，进程就是操作系统分配系统资源与操作系统调度的最小单位
 但在现代的计算结构中，进程升级为线程的容器，多个线程共享一个进程内的系统资源，cpu 执行（调度）对象是线程
-轻量级进程与轻量级线程如何理解 🔗轻量级进程：如下图各个进程拥有独立的虚拟内存空间，里面的资源包括 栈，代码，数据，堆&amp;hellip; 而线程拥有独立的栈，但是共享进程全部的资源。在 linux 的实现中，进程与线程的底层数据结构是一致的，只是同一进程下线程会共享资源。
+轻量级进程与轻量级线程如何理解 轻量级进程：如下图各个进程拥有独立的虚拟内存空间，里面的资源包括 栈，代码，数据，堆&amp;hellip; 而线程拥有独立的栈，但是共享进程全部的资源。在 linux 的实现中，进程与线程的底层数据结构是一致的，只是同一进程下线程会共享资源。
 轻量级线程：线程栈大小固定 8 M，协程栈：2 KB ，动态增长。一对线程里对应多个协程，可以减少线程的数量
-协程相对线程有什么优势 🔗 轻量级 （MB vs KB） 切换代价低 （调度由程序控制，不需要进入内核空间。需要保存上下文一般少一些） 切换频率低，协程协作式调度，线程调度由操作系统控制，需要保证公平性，当线程数量一多，切换频率相对比较高  协程调度器 🔗在 Golang 中，goroutine 调度是由 Golang 运行时（runtime）负责的，不需要程序员编写代码时关注协程的调度。
-GM 模型 🔗goroutine 的调度其实是一个生产者-消费者模型。
+协程相对线程有什么优势  轻量级 （MB vs KB） 切换代价低 （调度由程序控制，不需要进入内核空间。需要保存上下文一般少一些） 切换频率低，协程协作式调度，线程调度由操作系统控制，需要保证公平性，当线程数量一多，切换频率相对比较高  协程调度器 在 Golang 中，goroutine 调度是由 Golang 运行时（runtime）负责的，不需要程序员编写代码时关注协程的调度。
+GM 模型 goroutine 的调度其实是一个生产者-消费者模型。
 生产者：程序起 goroutine（G）
 消费者：系统线程（M）去消费（执行）goroutine
 自然的，在生产者与消费者中间还需要有一个队列来暂存没有消费过的 goroutine。在 Go 1.1 版本，用的就是这种模型。
@@ -103,10 +134,10 @@ GM 模型问题</description>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/mesi%E5%8D%8F%E8%AE%AE%E5%BC%95%E5%8F%91%E7%9A%84%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83/</guid>
       <description>某个下午偶尔间看到了 MESI 缓存一致性协议，引出了我不少相关的疑惑，写下此文记录
- 通过这篇文章你能了解到的知识 🔗 MESI 协议是什么，解决了什么问题 指令重排 是什么，解决了什么问题 内存屏障 是什么，解决了什么 MESI 与 并发同步的区别  MESI 缓存一致性协议 🔗MESI 产生的前提 🔗 多级缓存的出现 多核 CPU 的出现  总之为了计算机的性能，现代计算机都具备上述两点的设计，下图为不同存储的 IO 速度对比
-MESI 解决的问题 🔗由于现在计算机都是多核 CPU 了，并且每一个 CPU 都有自己独立的缓存（如下图架构），这样就会有可能多个 cpu 操作同一份数据，导致各个 cpu 缓存中的同一份数据值不一致的情况。
-MESI 的具体设计 🔗MESI：由缓存行（缓存中操作的基本单位，类似于磁盘的页）的四个状态首字母组成:
- Modified（修改）：这一行数据修改过了，与内存中的数据不一致了，这意味着如果其它 cpu 中的缓存具有这行数据，其状态要修改成 invalid Exclusive（独占）：只有一个 cache 读了这个数据行，并且没有修改过 Shared（共享）：有多个 cpu 的cahe 读了这个数据行，没有被修改过 Invalid（无效）：该缓存这一行的数据无效  状态流转 🔗缓存行的状态流转如下图，通过对各个缓存行状态位的控制，达到了多核 cpu 缓存中数据一致的目的
+ 通过这篇文章你能了解到的知识  MESI 协议是什么，解决了什么问题 指令重排 是什么，解决了什么问题 内存屏障 是什么，解决了什么 MESI 与 并发同步的区别  MESI 缓存一致性协议 MESI 产生的前提  多级缓存的出现 多核 CPU 的出现  总之为了计算机的性能，现代计算机都具备上述两点的设计，下图为不同存储的 IO 速度对比
+MESI 解决的问题 由于现在计算机都是多核 CPU 了，并且每一个 CPU 都有自己独立的缓存（如下图架构），这样就会有可能多个 cpu 操作同一份数据，导致各个 cpu 缓存中的同一份数据值不一致的情况。
+MESI 的具体设计 MESI：由缓存行（缓存中操作的基本单位，类似于磁盘的页）的四个状态首字母组成:
+ Modified（修改）：这一行数据修改过了，与内存中的数据不一致了，这意味着如果其它 cpu 中的缓存具有这行数据，其状态要修改成 invalid Exclusive（独占）：只有一个 cache 读了这个数据行，并且没有修改过 Shared（共享）：有多个 cpu 的cahe 读了这个数据行，没有被修改过 Invalid（无效）：该缓存这一行的数据无效  状态流转 缓存行的状态流转如下图，通过对各个缓存行状态位的控制，达到了多核 cpu 缓存中数据一致的目的
 一个例子
  现在有两个 cpu，假定其缓存都为空，内存中有一个 x = 0 的数据 cpu1 通过 bus 从内存中读取 x， 该缓存行状态设置为 E cpu2 通过 bus 从内存中读取 x，cpu 1 嗅探到地址冲突，两个 cpu 中 x 所在缓存行状态位设置为 S cpu1 需要修改其缓存中 x 的值，设置其 x 所在缓存行状态为 M，通知 cpu2 把 x 所在缓存行状态位设置为 I，再修改缓存中 x 的值  **模拟网站：**https://www.</description>
     </item>
@@ -117,23 +148,23 @@ MESI 的具体设计 🔗MESI：由缓存行（缓存中操作的基本单位，
       <pubDate>Sat, 13 Nov 2021 00:08:32 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</guid>
-      <description>起因 🔗两天没写博客了，但想要坚持下去这个习惯。技术文章太费头发了，因此起一个新系列，记录下自己的理财吧（水一下）。
-回顾 🔗启蒙 🔗最初的相遇要追溯到下面那张图
+      <description>起因 两天没写博客了，但想要坚持下去这个习惯。技术文章太费头发了，因此起一个新系列，记录下自己的理财吧（水一下）。
+回顾 启蒙 最初的相遇要追溯到下面那张图
 关键词: &amp;ldquo;2018-02-09&amp;quot;，&amp;ldquo;10.00&amp;rdquo;
 当时的我对理财并没有概念，可能只是偶尔听说这个东西能赚钱，就入手了十块，最终我以10.40 的价格卖出，净赚 0.4。可我认为这并不是我的理财起点，因为当时我还只是个学生，生活费还不够呢，哪有闲钱买这个，事实也证明接下来的一年，我再也没有关注和操作基金了。
-起点 🔗直到一年后，我的理财之旅才真正开始。
+起点 直到一年后，我的理财之旅才真正开始。
 关键词：&amp;quot;2019-02-26&amp;quot;， “100.00”
 背景：
 看上面大盘，经过 2018 年的大跌后，2019 年初开始强势反弹了。当然当时我不可能了解这个，当时我开始操作基金是因为：
  已经涨过一轮了，行情火热，消息已经传递到我这普通人耳边了 当时在知乎看了许多指数基金的帖子，自己也对这些有兴趣，感觉稳赚不赔 当时已就读研究生了，有一些闲钱以及在可预见的未来都会攒下一些钱（也就千数量级吧）  从此正式入坑，一开始都是买一些指数基金（中证 500，沪深 300，上证 50 &amp;hellip; ）。其实都是小打小闹，一两千还买来卖去。
 随着 2019 年的行情越来越好，我也赚了一些，并且在 2019 年 4 月，当时由于自己要用钱，卖出一大部分基金，歪打正着躲过了一次回调。后面胆子也就大了起来，一直加仓，由于自己对互联网比较看好，也不只买指数基金了，开始尝试一些互联网，信息之类的基金。
 到 2019 年末，我已经在基金中投入了一万左右了，并且持有了十几只基（各种类型都试下水）。
-冒险 🔗时间来到了 2020 年春节，此刻我已经可以算得上一个资深基民了，每天都得关注一下基金。然而春节假期中有一件意想不到的大事发生了 - 新冠。
+冒险 时间来到了 2020 年春节，此刻我已经可以算得上一个资深基民了，每天都得关注一下基金。然而春节假期中有一件意想不到的大事发生了 - 新冠。
 节后开盘指数就开始猛跌，随后我就把我仅剩的几千全部加仓，但还是跌，很快我的 2019 年利润没了，并且开始亏损了。
 当时三四月份疫情已经控制得不错了，我的判断是疫情很快就会结束，必须加仓！我问家人借了一万加仓。当时我比较看好新能源，并且由于眼红之前没上大涨半导体的车，这次加仓主要这两个品类，当然由于跌得太狠，我没敢一次性加仓进去，一直慢慢加。
 很幸运这次我赌对了（虽然疫情没有结束，但走势明显是一波小牛市），最高峰时期发生在 2021 春节，当时 2 万多点的本金，我已经赚了一万多了，新能源盈利已经接近100%了！
 而不幸的是，当时的胜利已经让我失去理智，骄傲自大了。冒险成为了我理财的最大障碍，我现在的交易也很难克服自己内心的冲动。而当时的我已经在基金中得不到满足，我开始盯上了 A 股。
-癫狂 🔗2021 春节后 大盘也经历了一些回调，我也一如既往的加仓，我加仓太早，这期间吐回不少盈利。
+癫狂 2021 春节后 大盘也经历了一些回调，我也一如既往的加仓，我加仓太早，这期间吐回不少盈利。
 但这期间，由于我刚开始工作一段时间和一些其它原因要用钱。没能坚持到涨回去，我就把基金基本全卖了。其实当时股票里也有一些钱，但我已经不想再操作基金了，准备以后只操作股票。
 下图就是我基金的最终战果了，有遗憾（新能源从最多 90% 的盈利，到卖出只有 40% 多的盈利），但其实成绩也还算可以了。
 之前的操作如果还能勉强说正常，后面操作就比较癫狂了。
@@ -142,14 +173,14 @@ MESI 的具体设计 🔗MESI：由缓存行（缓存中操作的基本单位，
     
     <item>
       <title>MySQL binlog 设计</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/mysql/mysqlbinlog%E8%AE%BE%E8%AE%A1/</link>
       <pubDate>Wed, 10 Nov 2021 18:33:24 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/mysqlbinlog%E8%AE%BE%E8%AE%A1/</guid>
-      <description>通过这篇文章你能了解到的知识 🔗 binlog 是什么 binlog 的作用 binlog 的三种类型，以及各自优缺点 binlog 文件的结构与内容  binlog 是什么 🔗Binary Log，顾名思义是一种二进制格式的日志。具体来说，binlog 日志是一组包含了对 MySQL server 实例进行数据修改（update/delete/insert/...）信息的文件。
-binlog 作用 🔗 用于复制，如主从复制 数据恢复  binlog 类型 🔗 基于语句 (Statement-based)的日志记录 (SBL): 事件包含产生数据变化的SQL语句。 基于行 (Row-based) 的日志记录(RBL): 描述单个行的变化 混合 (Mixed)：上述两者结合使用, 以 SBL 为主，特殊情况下切换到 RBL  binlog 为什么会有这三种类型？
+      <guid>https://he2121.github.io/xiaohe-blog/posts/mysql/mysqlbinlog%E8%AE%BE%E8%AE%A1/</guid>
+      <description>通过这篇文章你能了解到的知识  binlog 是什么 binlog 的作用 binlog 的三种类型，以及各自优缺点 binlog 文件的结构与内容  binlog 是什么 Binary Log，顾名思义是一种二进制格式的日志。具体来说，binlog 日志是一组包含了对 MySQL server 实例进行数据修改（update/delete/insert/...）信息的文件。
+binlog 作用  用于复制，如主从复制 数据恢复  binlog 类型  基于语句 (Statement-based)的日志记录 (SBL): 事件包含产生数据变化的SQL语句。 基于行 (Row-based) 的日志记录(RBL): 描述单个行的变化 混合 (Mixed)：上述两者结合使用, 以 SBL 为主，特殊情况下切换到 RBL  binlog 为什么会有这三种类型？
 一开始只有 statement-based，但 statement-based 存在不少问题，后面才有的 row 与 mixed。
-SBL 优点 🔗 产生的日志文件少， io 次数少  SBL 缺点 🔗  在一些不安全的语句上，主从复制做不到数据一致，比如
+SBL 优点  产生的日志文件少， io 次数少  SBL 缺点   在一些不安全的语句上，主从复制做不到数据一致，比如
   含有系统函数的语句，可能会在副本上返回不同的值，如 RAND(), USER(),UUID(), SYSDATE() .</description>
     </item>
     
@@ -160,7 +191,7 @@ SBL 优点 🔗 产生的日志文件少， io 次数少  SBL 缺点 🔗  在�
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
       <description>每周至少三篇博客，用这个监督下自己
-11.8 - 11.14 🔗 使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21 🔗 MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28 🔗 Golang 协程与调度器原理 Golang 程序启动过程  11.29 - 12.05 🔗   12.06 - 12.12 🔗   12.13 - 12.19 🔗   12.20 - 12.26 🔗   12.27 - 1.2 🔗</description>
+11.8 - 11.14  使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21  MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28  Golang 协程与调度器原理 Golang 程序启动过程  11.29 - 12.05  Golang channel Golang linkname  12.06 - 12.12    12.13 - 12.19    12.20 - 12.26    12.27 - 1.2 </description>
     </item>
     
     <item>
@@ -169,17 +200,17 @@ SBL 优点 🔗 产生的日志文件少， io 次数少  SBL 缺点 🔗  在�
       <pubDate>Wed, 10 Nov 2021 00:38:28 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/convert%E8%B5%84%E6%BA%90%E9%9B%86%E5%90%88/</guid>
-      <description>json2go 🔗 https://mholt.github.io/json-to-go/  sql2go 🔗 https://sql2go.ricestdiotech.com/  curl2go 🔗 https://mholt.github.io/curl-to-go/  curl2all 🔗 https://curlconverter.com/  yaml2go 🔗 https://yaml2go.prasadg.dev/  toml2go 🔗 https://xuri.me/toml-to-go/  数据转换大集合(json、xml、html、yaml、toml、csv、xlsx、png、pdf&amp;hellip;) 🔗 https://www.convertsimple.com/  sql2es 🔗 https://sqltoelasticsearch.azurewebsites.net/  time convert 🔗 https://www.epochconverter.com/  base 64 encode/decode 🔗 https://www.base64decode.org/  欢迎评论补充 🔗- ...  </description>
+      <description>json2go  https://mholt.github.io/json-to-go/  sql2go  https://sql2go.ricestdiotech.com/  curl2go  https://mholt.github.io/curl-to-go/  curl2all  https://curlconverter.com/  yaml2go  https://yaml2go.prasadg.dev/  toml2go  https://xuri.me/toml-to-go/  数据转换大集合(json、xml、html、yaml、toml、csv、xlsx、png、pdf&amp;hellip;)  https://www.convertsimple.com/  sql2es  https://sqltoelasticsearch.azurewebsites.net/  time convert  https://www.epochconverter.com/  base 64 encode/decode  https://www.base64decode.org/  欢迎评论补充 - ...  </description>
     </item>
     
     <item>
       <title>Golang 常用日志库介绍</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</link>
       <pubDate>Tue, 09 Nov 2021 14:30:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</guid>
-      <description>前言 🔗为什么需要日志 🔗 调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&amp;hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
-Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</guid>
+      <description>前言 为什么需要日志  调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&amp;hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
+Go 标准库 Log 使用 我们常使用 Go log 以下三组函数：
  Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
 示例如下:
 package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日志信息1&amp;#34;) log.Print(&amp;#34;日志信息2&amp;#34;) log.Panicln(&amp;#34;日志信息3&amp;#34;) log.Fatalln(&amp;#34;日志信息4&amp;#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.</description>
@@ -191,10 +222,10 @@ package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日
       <pubDate>Mon, 08 Nov 2021 20:39:11 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</guid>
-      <description>前言 🔗作为一名程序员，并且是一名有追求的程序员，技术影响力 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
-Hugo 与 GitHub Pages 简介 🔗Hugo: 世界上最快的网站建设框架，将 Markdown 文件生成 HTML 静态页面。
+      <description>前言 作为一名程序员，并且是一名有追求的程序员，技术影响力 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
+Hugo 与 GitHub Pages 简介 Hugo: 世界上最快的网站建设框架，将 Markdown 文件生成 HTML 静态页面。
 GitHub Pages GitHub 提供的静态网页托管服务，不需要额外的服务器来部署你的博客系统了。
-搭建过程 🔗 安装 Hugo  Mac 直接使用以下命令二进制安装
+搭建过程  安装 Hugo  Mac 直接使用以下命令二进制安装
 brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clone 到本地
   使用 Hugo 初始化 Clone 下来的仓库
   hugo new site xiaohe-blog --force 生成文件目录应该如下:
@@ -207,23 +238,23 @@ brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clon
       <pubDate>Mon, 08 Nov 2021 20:39:11 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</guid>
-      <description>计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度 🔗 知乎 CSDN 掘金   todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
+      <description>计划  每周至少三篇博客 持续至少两年 更新到各大平台  平台  自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度  知乎 CSDN 掘金   todo  vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
     </item>
     
     <item>
       <title>Go 反射解析与实战</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/go-%E5%8F%8D%E5%B0%84%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/</link>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/go-%E5%8F%8D%E5%B0%84%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/</link>
       <pubDate>Mon, 30 Aug 2021 17:10:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/go-%E5%8F%8D%E5%B0%84%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/</guid>
-      <description>前言 🔗日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
-什么是反射 🔗 在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/go-%E5%8F%8D%E5%B0%84%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/</guid>
+      <description>前言 日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
+什么是反射  在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
  来自维基百科
 在 Golang 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、
 执行它们的方法，
-反射能够干什么 🔗反射是元编程的一个关键策略
- java spring golang json 序列化与反序列化 go orm 框架 &amp;hellip;  反射的缺点 🔗 性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Golang 反射解析 🔗要搞清楚反射，得先简要了解一下 interface
-Interface 🔗定义 🔗接口有两种定义：
+反射能够干什么 反射是元编程的一个关键策略
+ java spring golang json 序列化与反序列化 go orm 框架 &amp;hellip;  反射的缺点  性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Golang 反射解析 要搞清楚反射，得先简要了解一下 interface
+Interface 定义 接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
@@ -236,11 +267,10 @@ Interface 🔗定义 🔗接口有两种定义：
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
       <description>·这里记录一些突然冒出的想法
-常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log 内存分配器 malloc Git 实战操作记录 Golang 中的 linkname Test suite 介绍 打点 普罗米修斯 介绍  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗  vscode/jetbrain markdown image 插件
+常规技术文章  Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log 内存分配器 malloc Git 实战操作记录 Golang 中的 linkname Test suite 介绍 打点 prometheus普罗米修斯 介绍 分布式服务追踪 jaeger 介绍  造轮子系列  手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目   vscode/jetbrain markdown image 插件
   vscode/jetbrain 创造者中心
   网页 Comment 社区
- diigo    互联网创业组队
-  家教</description>
+ diigo    互联网创业组队</description>
     </item>
     
     <item>
@@ -249,7 +279,7 @@ Interface 🔗定义 🔗接口有两种定义：
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
-      <description>channel 🔗graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
+      <description>channel graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
     </item>
     
   </channel>

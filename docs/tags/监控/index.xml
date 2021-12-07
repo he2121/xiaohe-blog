@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>监控 on 小贺的博客</title>
+    <link>https://he2121.github.io/xiaohe-blog/tags/%E7%9B%91%E6%8E%A7/</link>
+    <description>Recent content in 监控 on 小贺的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 06 Dec 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/%E7%9B%91%E6%8E%A7/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Prometheus 快速入门-01</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</link>
+      <pubDate>Mon, 06 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</guid>
+      <description>Prometheus 是什么 Prometheus 是 SoundCloud 公司开源的系统监控告警工具。2016 年，继 k8s 后，作为第二个托管项目加入了云原生计算基金会。这个项目拥有着非常活跃的开发者和用户社区，随着云原生和 k8s的推广，越来越多的公司的运维都是使用 Prometheus + Grafana（可视化） 的这一套。
+Prometheus 以时序数据的形式收集和存储其指标，同时支持添加自定义 label 的可选键值对
+监控对象  硬件状态：电源状态、CPU 状态、机器温度、风扇状态&amp;hellip; 服务器基础：CPU，内存，磁盘，网络 使用情况 数据库: MySQL, ES &amp;hellip; 中间件：Nginx, MQ.. 应用：QPS，接口延时，线程数&amp;hellip;  Prometheus 优势 其他方案
+ Zabbix: 1998 年诞生&amp;hellip; 属于传统主机监控，主要用于物理主机，交换机，网络等监控 Graphite: 专注于两件事，存储时序数据， 可视化数据, 其它功能都要安装插件实现, Prometheus 功能丰富：趋势，查询&amp;hellip; InfluxDB: 时序数据库&amp;hellip; 监控部分自己搞，prometheus 不仅仅局限于存储时序数据 Nagios：90 年代诞生&amp;hellip; Sensu ：可以看作 Nagiosde 的升级版本 Open-falcon：小米开源，社区活跃度一般  优势
+ 云原生支持好，K8s 和 Etcd 等一列项目都提供了对 Prometheus 的原生支持，是目前容器监控最流行的方案 Prometheus 属于一站式监控告警平台，依赖少，功能齐全。 多维数据模型，聚合统计更方便 强大的查询语句  劣势</description>
+    </item>
+    
+  </channel>
+</rss>

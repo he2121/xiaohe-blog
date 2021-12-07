@@ -14,8 +14,8 @@
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88-%E7%B3%BB%E5%88%97%E4%B8%80%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
       <description>最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧
- 项目介绍 🔗直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
-安装过程 🔗 登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
+ 项目介绍 直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
+安装过程  登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
 在(/cloudreve)创建上述四个文件夹，如，
 mkdir -p &amp;lt;PATH TO config&amp;gt; 创建配置文件vim &amp;lt;PATH TO config&amp;gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
 # conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器
@@ -28,23 +28,23 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       <pubDate>Sat, 13 Nov 2021 00:08:32 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</guid>
-      <description>起因 🔗两天没写博客了，但想要坚持下去这个习惯。技术文章太费头发了，因此起一个新系列，记录下自己的理财吧（水一下）。
-回顾 🔗启蒙 🔗最初的相遇要追溯到下面那张图
+      <description>起因 两天没写博客了，但想要坚持下去这个习惯。技术文章太费头发了，因此起一个新系列，记录下自己的理财吧（水一下）。
+回顾 启蒙 最初的相遇要追溯到下面那张图
 关键词: &amp;ldquo;2018-02-09&amp;quot;，&amp;ldquo;10.00&amp;rdquo;
 当时的我对理财并没有概念，可能只是偶尔听说这个东西能赚钱，就入手了十块，最终我以10.40 的价格卖出，净赚 0.4。可我认为这并不是我的理财起点，因为当时我还只是个学生，生活费还不够呢，哪有闲钱买这个，事实也证明接下来的一年，我再也没有关注和操作基金了。
-起点 🔗直到一年后，我的理财之旅才真正开始。
+起点 直到一年后，我的理财之旅才真正开始。
 关键词：&amp;quot;2019-02-26&amp;quot;， “100.00”
 背景：
 看上面大盘，经过 2018 年的大跌后，2019 年初开始强势反弹了。当然当时我不可能了解这个，当时我开始操作基金是因为：
  已经涨过一轮了，行情火热，消息已经传递到我这普通人耳边了 当时在知乎看了许多指数基金的帖子，自己也对这些有兴趣，感觉稳赚不赔 当时已就读研究生了，有一些闲钱以及在可预见的未来都会攒下一些钱（也就千数量级吧）  从此正式入坑，一开始都是买一些指数基金（中证 500，沪深 300，上证 50 &amp;hellip; ）。其实都是小打小闹，一两千还买来卖去。
 随着 2019 年的行情越来越好，我也赚了一些，并且在 2019 年 4 月，当时由于自己要用钱，卖出一大部分基金，歪打正着躲过了一次回调。后面胆子也就大了起来，一直加仓，由于自己对互联网比较看好，也不只买指数基金了，开始尝试一些互联网，信息之类的基金。
 到 2019 年末，我已经在基金中投入了一万左右了，并且持有了十几只基（各种类型都试下水）。
-冒险 🔗时间来到了 2020 年春节，此刻我已经可以算得上一个资深基民了，每天都得关注一下基金。然而春节假期中有一件意想不到的大事发生了 - 新冠。
+冒险 时间来到了 2020 年春节，此刻我已经可以算得上一个资深基民了，每天都得关注一下基金。然而春节假期中有一件意想不到的大事发生了 - 新冠。
 节后开盘指数就开始猛跌，随后我就把我仅剩的几千全部加仓，但还是跌，很快我的 2019 年利润没了，并且开始亏损了。
 当时三四月份疫情已经控制得不错了，我的判断是疫情很快就会结束，必须加仓！我问家人借了一万加仓。当时我比较看好新能源，并且由于眼红之前没上大涨半导体的车，这次加仓主要这两个品类，当然由于跌得太狠，我没敢一次性加仓进去，一直慢慢加。
 很幸运这次我赌对了（虽然疫情没有结束，但走势明显是一波小牛市），最高峰时期发生在 2021 春节，当时 2 万多点的本金，我已经赚了一万多了，新能源盈利已经接近100%了！
 而不幸的是，当时的胜利已经让我失去理智，骄傲自大了。冒险成为了我理财的最大障碍，我现在的交易也很难克服自己内心的冲动。而当时的我已经在基金中得不到满足，我开始盯上了 A 股。
-癫狂 🔗2021 春节后 大盘也经历了一些回调，我也一如既往的加仓，我加仓太早，这期间吐回不少盈利。
+癫狂 2021 春节后 大盘也经历了一些回调，我也一如既往的加仓，我加仓太早，这期间吐回不少盈利。
 但这期间，由于我刚开始工作一段时间和一些其它原因要用钱。没能坚持到涨回去，我就把基金基本全卖了。其实当时股票里也有一些钱，但我已经不想再操作基金了，准备以后只操作股票。
 下图就是我基金的最终战果了，有遗憾（新能源从最多 90% 的盈利，到卖出只有 40% 多的盈利），但其实成绩也还算可以了。
 之前的操作如果还能勉强说正常，后面操作就比较癫狂了。
@@ -58,7 +58,7 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
       <description>每周至少三篇博客，用这个监督下自己
-11.8 - 11.14 🔗 使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21 🔗 MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28 🔗 Golang 协程与调度器原理 Golang 程序启动过程  11.29 - 12.05 🔗   12.06 - 12.12 🔗   12.13 - 12.19 🔗   12.20 - 12.26 🔗   12.27 - 1.2 🔗</description>
+11.8 - 11.14  使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21  MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28  Golang 协程与调度器原理 Golang 程序启动过程  11.29 - 12.05  Golang channel Golang linkname  12.06 - 12.12    12.13 - 12.19    12.20 - 12.26    12.27 - 1.2 </description>
     </item>
     
     <item>
@@ -67,7 +67,7 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       <pubDate>Mon, 08 Nov 2021 20:39:11 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</guid>
-      <description>计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度 🔗 知乎 CSDN 掘金   todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
+      <description>计划  每周至少三篇博客 持续至少两年 更新到各大平台  平台  自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度  知乎 CSDN 掘金   todo  vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
     </item>
     
     <item>
@@ -77,11 +77,10 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
       <description>·这里记录一些突然冒出的想法
-常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log 内存分配器 malloc Git 实战操作记录 Golang 中的 linkname Test suite 介绍 打点 普罗米修斯 介绍  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗  vscode/jetbrain markdown image 插件
+常规技术文章  Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log 内存分配器 malloc Git 实战操作记录 Golang 中的 linkname Test suite 介绍 打点 prometheus普罗米修斯 介绍 分布式服务追踪 jaeger 介绍  造轮子系列  手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目   vscode/jetbrain markdown image 插件
   vscode/jetbrain 创造者中心
   网页 Comment 社区
- diigo    互联网创业组队
-  家教</description>
+ diigo    互联网创业组队</description>
     </item>
     
     <item>
@@ -90,7 +89,7 @@ docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # 
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
-      <description>channel 🔗graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
+      <description>channel graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
     </item>
     
   </channel>
