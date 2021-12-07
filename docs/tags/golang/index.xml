@@ -13,7 +13,7 @@
       <pubDate>Thu, 02 Dec 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</guid>
-      <description>背景  在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
+      <description>背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
  time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) { sec, nsec = walltime() return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.</description>
     </item>
     
@@ -23,7 +23,7 @@
       <pubDate>Mon, 29 Nov 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-channel-%E4%BB%8B%E7%BB%8D/</guid>
-      <description>问题  从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() { ch := make(chan int,2) ch &amp;lt;- 1 close(ch) num1, ok1 := &amp;lt;- ch num2,ok2 := &amp;lt;- ch println(num1,ok1) println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介  Do not communicate by sharing memory; instead, share memory by communicating.
+      <description>问题 🔗 从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() { ch := make(chan int,2) ch &amp;lt;- 1 close(ch) num1, ok1 := &amp;lt;- ch num2,ok2 := &amp;lt;- ch println(num1,ok1) println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介 🔗 Do not communicate by sharing memory; instead, share memory by communicating.
  不要通过共享内存来通信，而要通过通信来实现内存共享。这是 CSP（Communicating Sequential Processes）的思想，也是 Go 并发设计上的哲学。CSP 认为如果编程语言中把侧重点放在 processes 间的通信，那么并发编程会变得很简单，而 Go 中 channel 就是通信实体的实现，可以看作成一个协程间的消息队列。</description>
     </item>
     
@@ -34,8 +34,8 @@
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B/</guid>
       <description>go run main.go 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？
- 一 编译  go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
- 编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&amp;gt; 1(编译器)--汇编代码--&amp;gt; 2(汇编器)--.o目标程序--&amp;gt;3(链接器)--可执行文件--&amp;gt;4(结束) 二 操作系统加载  ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
+ 一 编译 🔗 go build main.go  我们写的 go 代码都是编译成可执行文件去机器上直接执行的，在 linux 平台上是 ELF 格式的可执行文件，linux 能直接执行这个文件。
+ 编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&amp;gt; 1(编译器)--汇编代码--&amp;gt; 2(汇编器)--.o目标程序--&amp;gt;3(链接器)--可执行文件--&amp;gt;4(结束) 二 操作系统加载 🔗 ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
  从磁盘上把可执行程序读入内存； 创建进程和主线程； 为主线程分配栈空间； 把由用户在命令行输入的参数拷贝到主线程的栈； 把主线程放入操作系统的运行队列等待被调度执起来运行；  START_THREAD(elf_ex, regs, elf_entry, bprm-&amp;gt;p) 启动线程传入了 elf_entry 参数，这是程序的入口地址。
 这个 elf_entry 被写在 elf 可执行文件的 header 中</description>
     </item>
@@ -47,16 +47,16 @@
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang%E5%8D%8F%E7%A8%8B%E4%B8%8E%E8%B0%83%E5%BA%A6%E5%99%A8%E5%8E%9F%E7%90%86/</guid>
       <description>思考从容器上该如何设置 GOMAXPROCS 大小引发，这个数字设置多少合理，其到底限制了什么，cpu 核数，系统线程数还是协程数？
- 背景 Go 语言可以说为并发而生。Go 从语言级别支持并发，通过轻量级协程 Goroutine 来实现程序并发运行，go关键字的强大与简洁是其它语言不可及的，接下来让我们一起来探索 Golang 中 Goroutine 与协程调度器设计的一些原理吧。
-Go 协程 概念 进程: 操作系统分配系统资源（cpu 时间片，内存等）的最小单位
+ 背景 🔗Go 语言可以说为并发而生。Go 从语言级别支持并发，通过轻量级协程 Goroutine 来实现程序并发运行，go关键字的强大与简洁是其它语言不可及的，接下来让我们一起来探索 Golang 中 Goroutine 与协程调度器设计的一些原理吧。
+Go 协程 🔗概念 🔗进程: 操作系统分配系统资源（cpu 时间片，内存等）的最小单位
 线程：轻量级进程，是操作系统调度的最小单位
 协程：轻量级线程，协程的调度由程序控制
-怎么理解 进程，线程的两个最小单位如何理解？ 在早期面向进程设计的计算机结构中，进程就是操作系统分配系统资源与操作系统调度的最小单位
+怎么理解 🔗进程，线程的两个最小单位如何理解？ 🔗在早期面向进程设计的计算机结构中，进程就是操作系统分配系统资源与操作系统调度的最小单位
 但在现代的计算结构中，进程升级为线程的容器，多个线程共享一个进程内的系统资源，cpu 执行（调度）对象是线程
-轻量级进程与轻量级线程如何理解 轻量级进程：如下图各个进程拥有独立的虚拟内存空间，里面的资源包括 栈，代码，数据，堆&amp;hellip; 而线程拥有独立的栈，但是共享进程全部的资源。在 linux 的实现中，进程与线程的底层数据结构是一致的，只是同一进程下线程会共享资源。
+轻量级进程与轻量级线程如何理解 🔗轻量级进程：如下图各个进程拥有独立的虚拟内存空间，里面的资源包括 栈，代码，数据，堆&amp;hellip; 而线程拥有独立的栈，但是共享进程全部的资源。在 linux 的实现中，进程与线程的底层数据结构是一致的，只是同一进程下线程会共享资源。
 轻量级线程：线程栈大小固定 8 M，协程栈：2 KB ，动态增长。一对线程里对应多个协程，可以减少线程的数量
-协程相对线程有什么优势  轻量级 （MB vs KB） 切换代价低 （调度由程序控制，不需要进入内核空间。需要保存上下文一般少一些） 切换频率低，协程协作式调度，线程调度由操作系统控制，需要保证公平性，当线程数量一多，切换频率相对比较高  协程调度器 在 Golang 中，goroutine 调度是由 Golang 运行时（runtime）负责的，不需要程序员编写代码时关注协程的调度。
-GM 模型 goroutine 的调度其实是一个生产者-消费者模型。
+协程相对线程有什么优势 🔗 轻量级 （MB vs KB） 切换代价低 （调度由程序控制，不需要进入内核空间。需要保存上下文一般少一些） 切换频率低，协程协作式调度，线程调度由操作系统控制，需要保证公平性，当线程数量一多，切换频率相对比较高  协程调度器 🔗在 Golang 中，goroutine 调度是由 Golang 运行时（runtime）负责的，不需要程序员编写代码时关注协程的调度。
+GM 模型 🔗goroutine 的调度其实是一个生产者-消费者模型。
 生产者：程序起 goroutine（G）
 消费者：系统线程（M）去消费（执行）goroutine
 自然的，在生产者与消费者中间还需要有一个队列来暂存没有消费过的 goroutine。在 Go 1.1 版本，用的就是这种模型。
@@ -69,8 +69,8 @@ GM 模型问题</description>
       <pubDate>Tue, 09 Nov 2021 14:30:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang%E6%97%A5%E5%BF%97%E5%BA%93%E4%BB%8B%E7%BB%8D/</guid>
-      <description>前言 为什么需要日志  调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&amp;hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
-Go 标准库 Log 使用 我们常使用 Go log 以下三组函数：
+      <description>前言 🔗为什么需要日志 🔗 调试开发 程序运行日志 用户行为日志  不同的目的决定了日志输出的格式、频率。作为开发人员，调试开发阶段打印日志目的是输出尽可能全的信息（如上下文，变量值&amp;hellip;），辅助开发测试，因此日志格式要易读，打印频率要高。而在程序运行时，日志格式倾向于结构化（便于分析与搜索），而且为了性能和聚焦于关键信息（如error ），打印频率更偏低。
+Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
  Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
 示例如下:
 package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日志信息1&amp;#34;) log.Print(&amp;#34;日志信息2&amp;#34;) log.Panicln(&amp;#34;日志信息3&amp;#34;) log.Fatalln(&amp;#34;日志信息4&amp;#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.</description>
@@ -82,14 +82,14 @@ package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日
       <pubDate>Mon, 30 Aug 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/go-%E5%8F%8D%E5%B0%84%E8%A7%A3%E6%9E%90%E4%B8%8E%E5%AE%9E%E6%88%98/</guid>
-      <description>前言 日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
-什么是反射  在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
+      <description>前言 🔗日常写业务时，我们很少会用到反射，导致大部分人对 go 的反射还比较陌生。 虽然并不推荐在业务代码中写反射代码，但是了解它，能够让我们更好的去理解许多框架的逻辑，以及能够让自己具备有初步实现一个通用第三方 SDK 的能力。
+什么是反射 🔗 在计算机学中，反射是指计算机程序在运行时（runtime）可以访问、检测和修改它本身状态或行为的一种能力。用比喻来说，反射就是程序在运行的时候能够“观察”并且修改自己的行为。
  来自维基百科
 在 Golang 中，其实就是编译时是 interface{}，不知道其具体的类型，要在运行中反射获取类型、更新检查他们的值、
 执行它们的方法，
-反射能够干什么 反射是元编程的一个关键策略
- java spring golang json 序列化与反序列化 go orm 框架 &amp;hellip;  反射的缺点  性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Golang 反射解析 要搞清楚反射，得先简要了解一下 interface
-Interface 定义 接口有两种定义：
+反射能够干什么 🔗反射是元编程的一个关键策略
+ java spring golang json 序列化与反序列化 go orm 框架 &amp;hellip;  反射的缺点 🔗 性能 可读性 go 作为静态语言，编译时能检查出不少问题，但反射跳过这检查，可能在运行中 panic  Golang 反射解析 🔗要搞清楚反射，得先简要了解一下 interface
+Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
