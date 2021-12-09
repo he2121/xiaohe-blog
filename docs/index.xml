@@ -6,7 +6,25 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 06 Dec 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 08 Dec 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Prometheus 快速入门-02</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-02/</link>
+      <pubDate>Wed, 08 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-02/</guid>
+      <description>数据模型 🔗Prometheus 底层将所有数据存储为时间序列: 即以相同 metric 和 label 维度聚合的带时间戳的流。
+时序格式 🔗下面格式表示一个 metric 和 label 的时序数据集合
+&amp;lt;metric name&amp;gt;{&amp;lt;label name&amp;gt;=&amp;lt;label value&amp;gt;, ...} 例如，一个时间序列的度量名称 api_http_requests_total 和 label 方法=&amp;ldquo;POST&amp;rdquo; 和handler=&amp;quot;/messages&amp;quot;可以写成这样:
+api_http_requests_total{method=&amp;#34;POST&amp;#34;, handler=&amp;#34;/messages&amp;#34;} 采样 🔗Prometheus 通过 pull 收到各个 metric 的实际数据，样本形成实际的时间序列数据，每个样本包括:
+  float64值
+  一个毫秒精度时间戳
+  小结 🔗 Prometheus 以 metric 和 label 的维度聚合时序数据 Prometheus 以 pull 方式，收集各个监控目标上 metric 的值与时间戳  Metric 类型 🔗Prometheus Metric 有四种类型：Counter，Gauge，Histogram，Summary
+Counter 🔗  特性：只增不减
+  适用：服务请求数、已完成任务数、错误出现次数等
+  示例：http 请求数</description>
+    </item>
+    
     <item>
       <title>Prometheus 快速入门-01</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/prometheus-%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</link>

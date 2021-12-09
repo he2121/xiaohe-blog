@@ -127,7 +127,7 @@ if (!doNotTrack) {
 <li>Sever：抓取(pull 模式)和存储时序数据，提供查询接口</li>
 <li><a href="https://prometheus.io/docs/instrumenting/exporters/" target="_blank" rel="noopener">Exporter</a>：服务监控上报数据，如 MySQL、Redis、Node Exporter</li>
 <li><a href="https://github.com/prometheus/alertmanager" target="_blank" rel="noopener">AlertManger</a>：告警通知</li>
-<li><a href="https://github.com/prometheus/pushgateway" target="_blank" rel="noopener">Pushgetaway</a>: 支持主动向 Sever push 数据，适用于生命周期短暂的批处理的任务。</li>
+<li><a href="https://github.com/prometheus/pushgateway" target="_blank" rel="noopener">Pushgetaway</a>: 支持主动向 Sever push 数据，适用于生命周期短暂/批处理的任务。</li>
 </ol>
 <p><p class="markdown-image">
   <img src="https://prometheus.io/assets/architecture.png" alt="Prometheus architecture"  />
@@ -194,6 +194,7 @@ if (!doNotTrack) {
 <h2 id="下期预告">下期预告 <a href="#%e4%b8%8b%e6%9c%9f%e9%a2%84%e5%91%8a" class="anchor">🔗</a></h2><ol>
 <li>Prometheus 数据类型介绍</li>
 <li>Prometheus 查询语句 PromQL 介绍</li>
+<li>使用 Prometheus Go client sdk 打点上报自定义指标</li>
 </ol>
 <h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
 <li><a href="https://prometheus.io/" target="_blank" rel="noopener">https://prometheus.io/</a></li>

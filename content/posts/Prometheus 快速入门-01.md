@@ -45,7 +45,7 @@ tags: ["prometheus", "cloud native","监控"]
 1. Sever：抓取(pull 模式)和存储时序数据，提供查询接口
 2. [Exporter](https://prometheus.io/docs/instrumenting/exporters/)：服务监控上报数据，如 MySQL、Redis、Node Exporter
 3. [AlertManger](https://github.com/prometheus/alertmanager)：告警通知
-4. [Pushgetaway](https://github.com/prometheus/pushgateway): 支持主动向 Sever push 数据，适用于生命周期短暂的批处理的任务。
+4. [Pushgetaway](https://github.com/prometheus/pushgateway): 支持主动向 Sever push 数据，适用于生命周期短暂/批处理的任务。
 
 ![Prometheus architecture](https://prometheus.io/assets/architecture.png)
 
@@ -104,6 +104,7 @@ node exporter 提供的监控数据都以 `node_`开头，下图是 Prometheus �
 
 1. Prometheus 数据类型介绍
 2. Prometheus 查询语句 PromQL 介绍
+2. 使用 Prometheus Go client sdk 打点上报自定义指标 
 
 ## 参考
 
