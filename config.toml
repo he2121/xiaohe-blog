@@ -1,9 +1,9 @@
 baseURL = 'https://he2121.github.io/xiaohe-blog/'
 languageCode = 'zh-cn'
-defaultContentLanguage = 'cn'
+defaultContentLanguage = 'zh'
 title = '小贺的博客'
 publishDir = 'docs'
-theme = 'github.com/nodejh/hugo-theme-mini'
+theme = 'mini'
 
 googleAnalytics = 'G-FY1WNXTY3L'
 disqusShortname = 'heganghuan-blog'
@@ -16,17 +16,11 @@ author = '小贺'
 bio = 'Golang 工程师'
 description = "小贺的博客"
 enableGoogleAnalytics = true
-enableComments = true
+enableComments = false
 hiddenPostSummaryInHomePage = true
-[[params.links]]
-name = "tag"
-path = "/xiaohe-blog/tags"
 [[params.links]]
 name = "算法"
 path = "/xiaohe-blog/算法"
-[[params.links]]
-name = "建站"
-path = "/xiaohe-blog/建站"
 [[params.links]]
 name = "杂谈"
 path = "/xiaohe-blog/杂谈"
