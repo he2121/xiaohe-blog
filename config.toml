@@ -18,6 +18,8 @@ description = "小贺的博客"
 enableGoogleAnalytics = true
 enableComments = false
 hiddenPostSummaryInHomePage = true
+showPowerBy = false
+
 [[params.links]]
 name = "算法"
 path = "/xiaohe-blog/算法"
