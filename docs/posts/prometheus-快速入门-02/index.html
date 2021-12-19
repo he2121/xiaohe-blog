@@ -116,7 +116,7 @@ if (!doNotTrack) {
 </ul>
 <h3 id="小结">小结 <a href="#%e5%b0%8f%e7%bb%93" class="anchor">🔗</a></h3><ul>
 <li>Prometheus 以 metric 和 label 的维度聚合时序数据</li>
-<li>Prometheus 以 pull 方式，收集各个监控目标上 metric 的值与时间戳</li>
+<li>Prometheus 以 pull 方式，收集各个监控目标上 metric  的值与时间戳</li>
 </ul>
 <h2 id="metric-类型">Metric 类型 <a href="#metric-%e7%b1%bb%e5%9e%8b" class="anchor">🔗</a></h2><p>Prometheus Metric 有四种类型：Counter，Gauge，Histogram，Summary</p>
 <h3 id="counter">Counter <a href="#counter" class="anchor">🔗</a></h3><ul>
@@ -171,7 +171,7 @@ go_goroutines <span style="color:#ae81ff">35</span>
 </span><span style="color:#75715e"></span><span style="color:#a6e22e">SetToCurrentTime</span>()
 </code></pre></div><h3 id="histogram直方图">Histogram（直方图） <a href="#histogram%e7%9b%b4%e6%96%b9%e5%9b%be" class="anchor">🔗</a></h3><ul>
 <li><strong>特性</strong>：一段时间范围内对数据进行采样，对其指定区间以及总数进行统计</li>
-<li><strong>适用</strong>：页面的响应时间分布、resp 的 body 大小分布等&hellip;</li>
+<li><strong>适用</strong>：页面的响应时间分布、resp 的 body 尺寸分布等&hellip;</li>
 <li><strong>示例</strong>：http 请求延时</li>
 </ul>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"><span style="color:#75715e"># HELP prometheus_http_request_duration_seconds Histogram of latencies for HTTP requests.</span>
@@ -230,7 +230,9 @@ go_gc_duration_seconds_count <span style="color:#ae81ff">295</span>
 <h2 id="pormql-使用">PormQL 使用 <a href="#pormql-%e4%bd%bf%e7%94%a8" class="anchor">🔗</a></h2><h3 id="pormql-查询返回数据类型">PormQL 查询返回数据类型 <a href="#pormql-%e6%9f%a5%e8%af%a2%e8%bf%94%e5%9b%9e%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b" class="anchor">🔗</a></h3><ol>
 <li><strong>瞬时向量（Instant vector）</strong>: 包含一组时序数据，默认返回<strong>最新时间点的值</strong></li>
 </ol>
-<p>查询语句，格式与上述提到的<a href="#%e6%97%b6%e5%ba%8f%e6%a0%bc%e5%bc%8f">时序格式</a>一致，例如</p>
+<ul>
+<li>查询语句</li>
+</ul>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">// 例子1 查询 http 接口请求数
 http_requests_total
 // 例子2 查询 http 接口请求数，限定 hanlder
@@ -245,7 +247,7 @@ http_requests_total<span style="color:#f92672">{</span>handler<span style="color
 <li><strong>范围向量（Range vector）</strong>: 一组时序数据，每个时序有多个值（限定在一段时间内，不同时间点的值）</li>
 </ol>
 <ul>
-<li>查询语句，</li>
+<li>查询语句</li>
 </ul>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">// 例子1 查询 http <span style="color:#ae81ff">5</span> 分钟内 上报数据
 http_requests_total<span style="color:#f92672">[</span>5m<span style="color:#f92672">]</span>
@@ -287,7 +289,7 @@ http_requests_total<span style="color:#f92672">{</span>code<span style="color:#f
 sum<span style="color:#f92672">(</span>http_requests_total<span style="color:#f92672">{</span>code<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;200&#34;</span><span style="color:#f92672">})</span> // 各个时序数据里的值求和
 topk<span style="color:#f92672">(</span>5, http_requests_total<span style="color:#f92672">{</span>code<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;200&#34;</span><span style="color:#f92672">})</span> // 只要值在前 <span style="color:#ae81ff">5</span> 的时序数据
 </code></pre></div><ul>
-<li><a href="https://prometheus.io/docs/prometheus/latest/querying/functions/" target="_blank" rel="noopener">内置函数 </a> 如 <code>abs,floor, rate</code>, 不同函数有着不同的操作对象，例如 <code>rate</code> 针对与范围向量，瞬时向量没有增长率</li>
+<li><a href="https://prometheus.io/docs/prometheus/latest/querying/functions/" target="_blank" rel="noopener">内置函数 </a> 如 <code>abs,floor, rate</code>, 不同函数有着不同的操作对象，例如 <code>rate</code> 针对与范围向量，瞬时向量增长率</li>
 </ul>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">floor<span style="color:#f92672">(</span>avg<span style="color:#f92672">(</span>http_requests_total<span style="color:#f92672">{</span>code<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;200&#34;</span><span style="color:#f92672">}))</span>	// 向下取整
 ceil<span style="color:#f92672">(</span>avg<span style="color:#f92672">(</span>http_requests_total<span style="color:#f92672">{</span>code<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;200&#34;</span><span style="color:#f92672">}))</span>	// 向上取整
@@ -325,11 +327,11 @@ rate<span style="color:#f92672">(</span>http_requests_total<span style="color:#f
 </code></pre></div><ul>
 <li>如何利用 prometheus 监控这两个接口请求量与接口时延呢</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go get github.com/prometheus/client_golang/prometheus
-</code></pre></div><ol>
+<ol>
 <li>向外暴露 exporter 地址，下述例子使用默认的 exporter 提供了一些 go 程序的基本监控，如 go 协程数，垃圾回收时间..</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/metrics&#34;</span>, <span style="color:#a6e22e">promhttp</span>.<span style="color:#a6e22e">Handler</span>())
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go get github.com/prometheus/client_golang/prometheus
+</code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handle</span>(<span style="color:#e6db74">&#34;/metrics&#34;</span>, <span style="color:#a6e22e">promhttp</span>.<span style="color:#a6e22e">Handler</span>())
 <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
 	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:1235&#34;</span>, <span style="color:#66d9ef">nil</span>)
 }()

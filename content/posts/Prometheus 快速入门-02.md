@@ -33,7 +33,7 @@ Prometheus 通过 pull 收到各个 metric 的实际数据，样本形成实际�
 ### 小结
 
 - Prometheus 以 metric 和 label 的维度聚合时序数据
-- Prometheus 以 pull 方式，收集各个监控目标上 metric 的值与时间戳
+- Prometheus 以 pull 方式，收集各个监控目标上 metric  的值与时间戳
 
 ## Metric 类型
 
@@ -94,7 +94,7 @@ SetToCurrentTime()
 ### Histogram（直方图）
 
 - **特性**：一段时间范围内对数据进行采样，对其指定区间以及总数进行统计
-- **适用**：页面的响应时间分布、resp 的 body 大小分布等...
+- **适用**：页面的响应时间分布、resp 的 body 尺寸分布等...
 - **示例**：http 请求延时
 
 ```bash
@@ -169,7 +169,7 @@ Observe(float64)
 
 1.  **瞬时向量（Instant vector）**: 包含一组时序数据，默认返回**最新时间点的值**
 
-查询语句，格式与上述提到的[时序格式](#时序格式)一致，例如
+- 查询语句
 
 ```bash
 // 例子1 查询 http 接口请求数
@@ -184,7 +184,7 @@ http_requests_total{handler="/api/comments"}
 
 2. **范围向量（Range vector）**: 一组时序数据，每个时序有多个值（限定在一段时间内，不同时间点的值）
 
-- 查询语句，
+- 查询语句
 
 ```bash
 // 例子1 查询 http 5 分钟内 上报数据
@@ -229,7 +229,7 @@ sum(http_requests_total{code="200"}) // 各个时序数据里的值求和
 topk(5, http_requests_total{code="200"}) // 只要值在前 5 的时序数据
 ```
 
-- [内置函数 ](https://prometheus.io/docs/prometheus/latest/querying/functions/) 如 `abs,floor, rate`, 不同函数有着不同的操作对象，例如 `rate` 针对与范围向量，瞬时向量没有增长率
+- [内置函数 ](https://prometheus.io/docs/prometheus/latest/querying/functions/) 如 `abs,floor, rate`, 不同函数有着不同的操作对象，例如 `rate` 针对与范围向量，瞬时向量增长率
 
 ```bash
 floor(avg(http_requests_total{code="200"}))	// 向下取整
@@ -277,11 +277,11 @@ func api2(w http.ResponseWriter, r *http.Request) {
 
 - 如何利用 prometheus 监控这两个接口请求量与接口时延呢
 
+1. 向外暴露 exporter 地址，下述例子使用默认的 exporter 提供了一些 go 程序的基本监控，如 go 协程数，垃圾回收时间..
+
 ```bash
 go get github.com/prometheus/client_golang/prometheus
 ```
-
-1. 向外暴露 exporter 地址，下述例子使用默认的 exporter 提供了一些 go 程序的基本监控，如 go 协程数，垃圾回收时间..
 
 ```go
 http.Handle("/metrics", promhttp.Handler())

@@ -6,7 +6,16 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 10 Dec 2021 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 16 Dec 2021 20:39:11 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>云服务器可以干什么系列：vscode 远程开发调试</title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95/</link>
+      <pubDate>Thu, 16 Dec 2021 20:39:11 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95/</guid>
+      <description>为什么需要远程开发调试 🔗 本地开发环境设置复杂 本地操作系统 windows/mac 开发体验、兼容不佳 多设备共享一个开发环境，切换设备开发体验好  如何设置 🔗 本地已安装 vscode，并以安装好开发语言插件（代码提示，补全&amp;hellip;） ssh 能连接上远程开发机，并且远程开发机安装好开发环境（如安装好 Git，Go） vacode 插件市场搜索安装 Remote Development  cmd + shift + p 搜索 Remote-SSH: Add New SSH Host 输入 ssh user@IP 添加 ssh 连接记录。 cmd + shift + p 搜索 Remote-SSH: Connect to Host，选择需要连接的 IP 进行连接。然后弹出的 vscode 界面即是远程开发的环境了  </description>
+    </item>
+    
     <item>
       <title>内存分配器介绍</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</link>
@@ -117,11 +126,11 @@ Prometheus 以时序数据的形式收集和存储其指标，同时支持添加
     </item>
     
     <item>
-      <title>云服务器可以干什么-系列一（自建云盘）</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88-%E7%B3%BB%E5%88%97%E4%B8%80%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</link>
+      <title>云服务器可以干什么系列：自建云盘</title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</link>
       <pubDate>Sun, 21 Nov 2021 20:39:11 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88-%E7%B3%BB%E5%88%97%E4%B8%80%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
       <description>最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧
  项目介绍 🔗直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
 安装过程 🔗 登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
