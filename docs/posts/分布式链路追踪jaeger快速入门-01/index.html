@@ -6,7 +6,13 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
 <meta name="viewport" content="width=device-width,minimum-scale=1">
-<meta name="description" content="Jaeger 是什么 🔗参考 🔗 https://github.com/jaegertracing/jaeger https://www.jaegertracing.io/docs/1.29/   ">
+<meta name="description" content="Logging，Metrics 与 Tracing 关系 🔗同：都是为了提高基础设施和应用程序的可观测性
+区别：
+   &mdash;- Logging Metrics Tracing     特点 记录离散的事件 记录可聚合的数据 记录请求范围内的信息   典型指标 用户自行打印的调试信息&hellip; QPS, 接口时延分布 一个具体 RPC 调用中的过程：各个服务的耗时占比   典型应用 ELK(收集，分析), log4j（记录）&hellip; Prometheus&hellip; Dapper, OpenZipkin,Jaeger&hellip;    它们之间有重叠，但各自关注的重点不同
+OpenTracing 是什么 🔗 当今乃是微服务的天下，Tracing 是给跨进程、服务的追踪提供了一种解决方案 OpenTracing API 提供了一个标准的、厂商中立的规范。其允许系统中存在多种分布式追踪方案 - 只要符合规范  OpenTracing 数据模型 🔗Trace(调用链)：一个调用链代表一个事务或者流程在（分布式）系统中的执行过程。在OpenTracing标准中，调用链是多个Span组成的一个有向无环图（Directed Acyclic Graph，简称DAG）
+Span(跨度)：一个名字、有时间的操作，代表工作流程的一个部分。span 上一般有以下信息：span 名字，span 起始时间、结束时间，tag，log，span context，span 之间的引用关系。
+SpanContext：伴随着分布式的跟踪信息，它通过网络或通过消息总线透传上下文信息。span 上下文包含 tracing 标识符、span 标识符以及追踪系统需要传播给下游服务的任何其他数据。
+span 之间的关系：">
 <meta name="generator" content="Hugo 0.89.2" />
 
 
@@ -71,7 +77,7 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          6字
+          133字
         </span>
         <span class="split">
           ·
@@ -91,10 +97,98 @@ if (!doNotTrack) {
 
 
     <div class="content">
-      <h2 id="jaeger-是什么">Jaeger 是什么 <a href="#jaeger-%e6%98%af%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h2><h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
+      <h3 id="loggingmetrics-与-tracing-关系">Logging，Metrics 与 Tracing 关系 <a href="#loggingmetrics-%e4%b8%8e-tracing-%e5%85%b3%e7%b3%bb" class="anchor">🔗</a></h3><p><strong>同</strong>：都是为了提高基础设施和应用程序的<strong>可观测性</strong></p>
+<p><strong>区别</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>&mdash;-</th>
+<th>Logging</th>
+<th>Metrics</th>
+<th>Tracing</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>特点</td>
+<td>记录离散的事件</td>
+<td>记录可聚合的数据</td>
+<td>记录请求范围内的信息</td>
+</tr>
+<tr>
+<td>典型指标</td>
+<td>用户自行打印的调试信息&hellip;</td>
+<td>QPS, 接口时延分布</td>
+<td>一个具体 RPC 调用中的过程：各个服务的耗时占比</td>
+</tr>
+<tr>
+<td>典型应用</td>
+<td>ELK(收集，分析), log4j（记录）&hellip;</td>
+<td>Prometheus&hellip;</td>
+<td>Dapper, OpenZipkin,Jaeger&hellip;</td>
+</tr>
+</tbody>
+</table>
+<p>它们之间有重叠，但各自关注的重点不同</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/p5876-2021-12-20.png" alt="img"  />
+</p></p>
+<h3 id="opentracing-是什么">OpenTracing 是什么 <a href="#opentracing-%e6%98%af%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h3><ul>
+<li>当今乃是<strong>微服务</strong>的天下，Tracing 是给跨进程、服务的追踪提供了一种解决方案</li>
+<li>OpenTracing API 提供了一个标准的、厂商中立的规范。其允许系统中存在多种分布式追踪方案 - 只要符合规范</li>
+</ul>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/p5878-2021-12-20.png" alt="img"  />
+</p></p>
+<h3 id="opentracing-数据模型">OpenTracing 数据模型 <a href="#opentracing-%e6%95%b0%e6%8d%ae%e6%a8%a1%e5%9e%8b" class="anchor">🔗</a></h3><p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/tracing1_0-2021-12-20.png" alt="Mental Model"  />
+</p></p>
+<p><strong>Trace(调用链)</strong>：一个调用链代表一个事务或者流程在（分布式）系统中的执行过程。在OpenTracing标准中，调用链是多个Span组成的一个有向无环图（Directed Acyclic Graph，简称DAG）</p>
+<p><strong>Span(跨度)</strong>：一个名字、有时间的操作，代表工作流程的一个部分。span 上一般有以下信息：span 名字，span 起始时间、结束时间，tag，log，span context，span 之间的引用关系。</p>
+<p><strong>SpanContext</strong>：伴随着分布式的跟踪信息，它通过网络或通过消息总线透传上下文信息。span 上下文包含 tracing 标识符、span 标识符以及追踪系统需要传播给下游服务的任何其他数据。</p>
+<p>span 之间的关系：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">单个Trace中Span间的因果关系
+
+
+        <span style="color:#f92672">[</span>Span A<span style="color:#f92672">]</span>  ←←←<span style="color:#f92672">(</span>The root span<span style="color:#f92672">)</span>
+            |
+     +------+------+
+     |             |
+ <span style="color:#f92672">[</span>Span B<span style="color:#f92672">]</span>      <span style="color:#f92672">[</span>Span C<span style="color:#f92672">]</span> ←←←<span style="color:#f92672">(</span>Span C是Span A的子节点，ChildOf<span style="color:#f92672">)</span>
+     |             |
+ <span style="color:#f92672">[</span>Span D<span style="color:#f92672">]</span>      +---+-------+
+               |           |
+           <span style="color:#f92672">[</span>Span E<span style="color:#f92672">]</span>    <span style="color:#f92672">[</span>Span F<span style="color:#f92672">]</span> &gt;&gt;&gt; <span style="color:#f92672">[</span>Span G<span style="color:#f92672">]</span> &gt;&gt;&gt; <span style="color:#f92672">[</span>Span H<span style="color:#f92672">]</span>
+                                       ↑
+                                       ↑
+                                       ↑
+                         （Span G在Span F后被调用, FollowsFrom）
+</code></pre></div><h3 id="jaeger-是什么">Jaeger 是什么 <a href="#jaeger-%e6%98%af%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h3><p>Jaeger 受 Dapper 和 OpenZipkin 的启发，是 Uber的开源分布式追踪系统，已同和 k8s，Prometheus 等著名项目成为云原生计算基金会 CNCF 所支持的项目。它用于监控和排除基于微服务的分布式系统的故障，包括:</p>
+<ul>
+<li>分布式上下文传播</li>
+<li>分布式事务监控</li>
+<li>根因分析</li>
+<li>服务依赖分析</li>
+<li>性能/延时优化</li>
+</ul>
+<p><strong>特性：</strong></p>
+<ol>
+<li>兼容 OpenTracing</li>
+<li>高扩展性</li>
+<li>支持多个存储组件：Cassandra， Elasticsearch，内存&hellip;</li>
+<li>现代 web 界面</li>
+<li>云原生部署</li>
+<li>系统拓扑图</li>
+</ol>
+<p><strong>整体架构</strong></p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/Distributed_Tracing_Header-2021-12-20.png" alt="Evolving Distributed Tracing at Uber Engineering - Uber Engineering Blog"  />
+</p></p>
+<h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
 <li><a href="https://github.com/jaegertracing/jaeger" target="_blank" rel="noopener">https://github.com/jaegertracing/jaeger</a></li>
 <li><a href="https://www.jaegertracing.io/docs/1.29/" target="_blank" rel="noopener">https://www.jaegertracing.io/docs/1.29/</a></li>
-<li></li>
+<li><a href="https://opentracing.io/" target="_blank" rel="noopener">https://opentracing.io/</a></li>
+<li><a href="https://github.com/yurishkuro/opentracing-tutorial/tree/master/go" target="_blank" rel="noopener">https://github.com/yurishkuro/opentracing-tutorial/tree/master/go</a></li>
 </ol>
 
     </div>

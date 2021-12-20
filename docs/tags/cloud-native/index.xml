@@ -13,7 +13,13 @@
       <pubDate>Thu, 09 Dec 2021 14:30:00 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AAjaeger%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</guid>
-      <description>Jaeger 是什么 🔗参考 🔗 https://github.com/jaegertracing/jaeger https://www.jaegertracing.io/docs/1.29/   </description>
+      <description>Logging，Metrics 与 Tracing 关系 🔗同：都是为了提高基础设施和应用程序的可观测性
+区别：
+   &amp;mdash;- Logging Metrics Tracing     特点 记录离散的事件 记录可聚合的数据 记录请求范围内的信息   典型指标 用户自行打印的调试信息&amp;hellip; QPS, 接口时延分布 一个具体 RPC 调用中的过程：各个服务的耗时占比   典型应用 ELK(收集，分析), log4j（记录）&amp;hellip; Prometheus&amp;hellip; Dapper, OpenZipkin,Jaeger&amp;hellip;    它们之间有重叠，但各自关注的重点不同
+OpenTracing 是什么 🔗 当今乃是微服务的天下，Tracing 是给跨进程、服务的追踪提供了一种解决方案 OpenTracing API 提供了一个标准的、厂商中立的规范。其允许系统中存在多种分布式追踪方案 - 只要符合规范  OpenTracing 数据模型 🔗Trace(调用链)：一个调用链代表一个事务或者流程在（分布式）系统中的执行过程。在OpenTracing标准中，调用链是多个Span组成的一个有向无环图（Directed Acyclic Graph，简称DAG）
+Span(跨度)：一个名字、有时间的操作，代表工作流程的一个部分。span 上一般有以下信息：span 名字，span 起始时间、结束时间，tag，log，span context，span 之间的引用关系。
+SpanContext：伴随着分布式的跟踪信息，它通过网络或通过消息总线透传上下文信息。span 上下文包含 tracing 标识符、span 标识符以及追踪系统需要传播给下游服务的任何其他数据。
+span 之间的关系：</description>
     </item>
     
     <item>
