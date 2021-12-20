@@ -82,7 +82,163 @@ Jaeger 受 Dapper 和 OpenZipkin 的启发，是 Uber的开源分布式追踪系
 
 ![Evolving Distributed Tracing at Uber Engineering - Uber Engineering Blog](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/Distributed_Tracing_Header-2021-12-20.png)
 
+### Geting Start
 
+1. docker 启动 jaeger collector
+
+```bash
+docker run -d --name jaeger \
+  -e COLLECTOR_ZIPKIN_HOST_PORT=:9411 \
+  -p 5775:5775/udp \
+  -p 6831:6831/udp \
+  -p 6832:6832/udp \
+  -p 5778:5778 \
+  -p 16686:16686 \
+  -p 14268:14268 \
+  -p 14250:14250 \
+  -p 9411:9411 \
+  jaegertracing/all-in-one:1.28
+```
+
+2. UI 界面：http://localhost:16686
+3. 应用程序中使用 jaeger-client 直接上报数据，这里的 demo 例子没有使用 jaeger-agent 
+
+如下有一个简单的 web 应用：具有两个接口 api1 和 api2 
+
+```go
+package main
+
+import (
+	"net/http"
+)
+
+func main() {
+	// web 示例
+	http.HandleFunc("/api1", http.HandlerFunc(api1))
+	http.HandleFunc("/api2", http.HandlerFunc(api2))
+	err := http.ListenAndServe(":1234", nil)
+	if err != nil {
+		panic(err)
+	}
+}
+```
+
+```go
+package main
+
+import (
+	"fmt"
+	"net/http"
+)
+
+func api1(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hello api1")
+}
+
+func api2(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hello api2")
+}
+```
+
+使用 jaeger client 监控每一个接口，引用以下两个包
+
+```bash
+ go get github.com/uber/jaeger-client-go
+go get github.com/opentracing/opentracing-go
+```
+
+jaeger client 的初始化，和 简单使用
+
+```Go
+package main
+
+import (
+	"net/http"
+
+	"github.com/opentracing/opentracing-go"
+	"github.com/uber/jaeger-client-go/config"
+)
+
+func main() {
+  // 初始化 jaeger client，参数需要服务名，采样机制，上报数据地址
+	tracing, closer, err := config.Configuration{
+		ServiceName: "hello.service",
+		Sampler:     &config.SamplerConfig{Type: "const", Param: 1},
+		Reporter:    &config.ReporterConfig{CollectorEndpoint: "http://localhost:14268/api/traces"},
+	}.NewTracer()
+	if err != nil {
+		panic(err)
+	}
+	defer closer.Close()
+  // 设置成全局默认
+	opentracing.SetGlobalTracer(tracing)
+	// web 示例
+	http.HandleFunc("/api1", jaegerTracing(http.HandlerFunc(api1)))
+	http.HandleFunc("/api2", jaegerTracing(http.HandlerFunc(api2)))
+	err = http.ListenAndServe(":1234", nil)
+	if err != nil {
+		panic(err)
+	}
+}
+
+// 添加jaeger 分布式追踪中间件
+func jaegerTracing(handler http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+    // 记录 tracing 中的一个 span 上报
+		span := opentracing.StartSpan(r.URL.String())
+    // span 结束
+		defer span.Finish()
+		handler.ServeHTTP(w, r)
+	}
+}
+
+```
+
+jaeger 的作用是追踪服务间的调用关系，上述使用意义不大，以下是模拟多服务调用使用 jaeger 的作用
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+	"time"
+
+	"github.com/opentracing/opentracing-go"
+)
+
+func api1(w http.ResponseWriter, r *http.Request) {
+	// 根 ctx
+	ctx := context.Background()
+	// 记录 sever1.api 的调动耗时等信息
+	span, c := opentracing.StartSpanFromContext(ctx, "server1.api1")
+	defer span.Finish()
+	fmt.Println("hello api1")
+	time.Sleep(time.Second)
+	// 模拟一个跨服务的调用，ctx 上下文信息传递
+	service2XXX(c)
+}
+
+func service2XXX(ctx context.Context) {
+	// 从 ctx 获取 span， 这样就能把在一条调用链的 span 聚合在一起
+	span, c := opentracing.StartSpanFromContext(ctx, "server2.XXX")
+	defer span.Finish()
+	time.Sleep(time.Second * 2)
+	fmt.Println("hello server2 xxx", c)
+}
+
+func api2(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hello api2")
+}
+
+```
+
+**效果如下**
+
+![image-20211221004524655](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211221004524655-2021-12-21.png)
+
+[demo 仓库](https://github.com/he2121/demos/tree/master/jaeger)
 
 ## 参考
 
