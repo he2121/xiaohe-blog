@@ -6,7 +6,22 @@
     <description>Recent content in golang on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 02 Dec 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/golang/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 22 Dec 2021 16:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/golang/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 汇编介绍</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E6%B1%87%E7%BC%96%E4%BB%8B%E7%BB%8D/</link>
+      <pubDate>Wed, 22 Dec 2021 16:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E6%B1%87%E7%BC%96%E4%BB%8B%E7%BB%8D/</guid>
+      <description>在阅读 Golang 源代码时，总是被其中的汇编代码卡住，读起来不流畅。今天来简要了解下 Golang 中的汇编语言。
+ 汇编分类 🔗按指令集架构分类（针对 CPU） 🔗  x86汇编(32bit):这种架构常被称为i386, x86
+  x86汇编(64bit), 这种架构常被称为 AMD64, Intel64, x86-64, x64, 它是 AMD 设计的, 是 x86 架构的 64 位扩展, 后来公开
+  ARM汇编, ARM处理器由于高性能, 低耗电, 常用于嵌入式, 移动设备.
+  &amp;hellip;
+  按汇编格式分类（针对人的阅读习惯） 🔗 Intel 格式 AT&amp;amp;T 格式  平时我们说 golang 中汇编属于 plan9 风格，是按第二种方式分类的，其阅读风格（符号）与 Intel 与 AT&amp;amp;T 都有不同。plan9 汇编作者是 unix 操作系统的同一批人，bell 实验室所开发的。
+Go汇编语言是基于 plan9 汇编，但是现实世界还有这么多不同架构的 CPU 在这。所以 golang 汇编在 plan9 风格下，同一个方法还有不同指令集架构的多种实现。</description>
+    </item>
+    
     <item>
       <title>Golang 的骚操作：go:linkname</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</link>

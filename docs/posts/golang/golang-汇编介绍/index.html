@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>Golang 汇编介绍 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="在阅读 Golang 源代码时，总是被其中的汇编代码卡住，读起来不流畅。今天来简要了解下 Golang 中的汇编语言。
+ 汇编分类 🔗按指令集架构分类（针对 CPU） 🔗  x86汇编(32bit):这种架构常被称为i386, x86
+  x86汇编(64bit), 这种架构常被称为 AMD64, Intel64, x86-64, x64, 它是 AMD 设计的, 是 x86 架构的 64 位扩展, 后来公开
+  ARM汇编, ARM处理器由于高性能, 低耗电, 常用于嵌入式, 移动设备.
+  &hellip;
+  按汇编格式分类（针对人的阅读习惯） 🔗 Intel 格式 AT&amp;T 格式  平时我们说 golang 中汇编属于 plan9 风格，是按第二种方式分类的，其阅读风格（符号）与 Intel 与 AT&amp;T 都有不同。plan9 汇编作者是 unix 操作系统的同一批人，bell 实验室所开发的。
+Go汇编语言是基于 plan9 汇编，但是现实世界还有这么多不同架构的 CPU 在这。所以 golang 汇编在 plan9 风格下，同一个方法还有不同指令集架构的多种实现。">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Golang 汇编介绍</h1>
+
+    <div class="tip">
+      <div>2021年12月22日</div>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          719字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          4分钟 读完
+        </span>
+        <div class="views">
+          <span class="views">
+              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fgolang%2fgolang-%25E6%25B1%2587%25E7%25BC%2596%25E4%25BB%258B%25E7%25BB%258D%2f" alt="Views"/>
+          </span>
+      </div>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>在阅读 Golang 源代码时，总是被其中的汇编代码卡住，读起来不流畅。今天来简要了解下 Golang 中的汇编语言。</p>
+</blockquote>
+<h2 id="汇编分类">汇编分类 <a href="#%e6%b1%87%e7%bc%96%e5%88%86%e7%b1%bb" class="anchor">🔗</a></h2><h4 id="按指令集架构分类针对-cpu">按指令集架构分类（针对 CPU） <a href="#%e6%8c%89%e6%8c%87%e4%bb%a4%e9%9b%86%e6%9e%b6%e6%9e%84%e5%88%86%e7%b1%bb%e9%92%88%e5%af%b9-cpu" class="anchor">🔗</a></h4><ol>
+<li>
+<p><strong>x86汇编(32bit)</strong>:这种架构常被称为<code>i386</code>, <code>x86</code></p>
+</li>
+<li>
+<p><strong>x86汇编(64bit)</strong>, 这种架构常被称为 <code>AMD64</code>, <code>Intel64</code>, <code>x86-64</code>, <code>x64</code>, 它是 AMD 设计的, 是 x86 架构的 64 位扩展, 后来公开</p>
+</li>
+<li>
+<p><strong>ARM汇编</strong>, ARM处理器由于高性能, 低耗电, 常用于嵌入式, 移动设备.</p>
+</li>
+<li>
+<p>&hellip;</p>
+</li>
+</ol>
+<h4 id="按汇编格式分类针对人的阅读习惯">按汇编格式分类（针对人的阅读习惯） <a href="#%e6%8c%89%e6%b1%87%e7%bc%96%e6%a0%bc%e5%bc%8f%e5%88%86%e7%b1%bb%e9%92%88%e5%af%b9%e4%ba%ba%e7%9a%84%e9%98%85%e8%af%bb%e4%b9%a0%e6%83%af" class="anchor">🔗</a></h4><ol>
+<li><strong>Intel 格式</strong></li>
+<li><strong>AT&amp;T 格式</strong></li>
+</ol>
+<p>平时我们说 golang 中汇编属于 <strong>plan9 风格</strong>，是按第二种方式分类的，其阅读风格（符号）与 Intel 与 AT&amp;T 都有不同。plan9 汇编作者是 unix 操作系统的同一批人，bell 实验室所开发的。</p>
+<p>Go汇编语言是基于 <a href="https://www.symbolcrash.com/2021/03/02/go-assembly-on-the-arm64/" target="_blank" rel="noopener">plan9 汇编</a>，但是现实世界还有这么多不同架构的 CPU 在这。所以 golang 汇编在 plan9 风格下，同一个方法还有不同指令集架构的多种实现。</p>
+<h2 id="在哪能看到-golang-汇编代码">在哪能看到 Golang 汇编代码 <a href="#%e5%9c%a8%e5%93%aa%e8%83%bd%e7%9c%8b%e5%88%b0-golang-%e6%b1%87%e7%bc%96%e4%bb%a3%e7%a0%81" class="anchor">🔗</a></h2><ol>
+<li>Golang 源代码中，如<code>src/runtime/asm_amd64.s</code> ，<code>src/math/big/</code>	&hellip;</li>
+<li><code>go tool compile -S main.go</code>,把自己编写的代码编译成汇编代码。如：在我的 Mac Intel 机器上，<code>amd64</code>的架构，汇编代码生成如下:</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cat main.go 
+package main
+
+func main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+        a, b :<span style="color:#f92672">=</span> 0, <span style="color:#ae81ff">0</span>
+        println<span style="color:#f92672">(</span>a + b<span style="color:#f92672">)</span>
+<span style="color:#f92672">}</span>
+$ go tool compile -S main.go 
+<span style="color:#e6db74">&#34;&#34;</span>.main STEXT size<span style="color:#f92672">=</span><span style="color:#ae81ff">66</span> args<span style="color:#f92672">=</span>0x0 locals<span style="color:#f92672">=</span>0x10 funcid<span style="color:#f92672">=</span>0x0
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        TEXT    <span style="color:#e6db74">&#34;&#34;</span>.main<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>, ABIInternal, $16-0
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        CMPQ    SP, 16<span style="color:#f92672">(</span>R14<span style="color:#f92672">)</span>
+        0x0004 <span style="color:#ae81ff">00004</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        PCDATA  $0, $-<span style="color:#ae81ff">2</span>
+        0x0004 <span style="color:#ae81ff">00004</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        JLS     <span style="color:#ae81ff">57</span>
+        0x0006 <span style="color:#ae81ff">00006</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        PCDATA  $0, $-<span style="color:#ae81ff">1</span>
+        0x0006 <span style="color:#ae81ff">00006</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        SUBQ    $16, SP
+        0x000a <span style="color:#ae81ff">00010</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        MOVQ    BP, 8<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>
+        0x000f <span style="color:#ae81ff">00015</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        LEAQ    8<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, BP
+        0x0014 <span style="color:#ae81ff">00020</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        FUNCDATA        $0, gclocals·33cdeccccebe80329f1fdbee7f5874cb<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+        0x0014 <span style="color:#ae81ff">00020</span> <span style="color:#f92672">(</span>main.go:3<span style="color:#f92672">)</span>        FUNCDATA        $1, gclocals·33cdeccccebe80329f1fdbee7f5874cb<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+        0x0014 <span style="color:#ae81ff">00020</span> <span style="color:#f92672">(</span>main.go:5<span style="color:#f92672">)</span>        PCDATA  $1, $0
+        0x0014 <span style="color:#ae81ff">00020</span> <span style="color:#f92672">(</span>main.go:5<span style="color:#f92672">)</span>        CALL    runtime.printlock<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+        0x0019 <span style="color:#ae81ff">00025</span> <span style="color:#f92672">(</span>main.go:5<span style="color:#f92672">)</span>        XORL    AX, AX
+...
+
+</code></pre></div><h2 id="go-汇编基础语法">Go 汇编基础语法 <a href="#go-%e6%b1%87%e7%bc%96%e5%9f%ba%e7%a1%80%e8%af%ad%e6%b3%95" class="anchor">🔗</a></h2><h3 id="1-寄存器">1. 寄存器 <a href="#1-%e5%af%84%e5%ad%98%e5%99%a8" class="anchor">🔗</a></h3><h4 id="通用寄存器">通用寄存器 <a href="#%e9%80%9a%e7%94%a8%e5%af%84%e5%ad%98%e5%99%a8" class="anchor">🔗</a></h4><p>寄存器与物理机架构相关, 不同的架构有不同的物理寄存器。</p>
+<p>在 <code>amd64</code> 架构上提供了 16 个通用寄存器给用户使用</p>
+<p>plan9 汇编语言提供了如下映射，在汇编语言中直接引用就可使用物理寄存器了。</p>
+<table>
+<thead>
+<tr>
+<th>amd64</th>
+<th>rax</th>
+<th>rbx</th>
+<th>rcx</th>
+<th>rdx</th>
+<th>rdi</th>
+<th>rsi</th>
+<th>rbp</th>
+<th>rsp</th>
+<th>r8</th>
+<th>r9</th>
+<th>r10</th>
+<th>r11</th>
+<th>r12</th>
+<th>r13</th>
+<th>r14</th>
+<th>rip</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Plan9</td>
+<td>AX</td>
+<td>BX</td>
+<td>CX</td>
+<td>DX</td>
+<td>DI</td>
+<td>SI</td>
+<td>BP</td>
+<td>SP</td>
+<td>R8</td>
+<td>R9</td>
+<td>R10</td>
+<td>R11</td>
+<td>R12</td>
+<td>R13</td>
+<td>R14</td>
+<td>PC</td>
+</tr>
+</tbody>
+</table>
+<p>如上文的例子中使用到了：<code>SP</code>,<code>AX</code>,<code>R14</code>,<code>BP</code></p>
+<h4 id="虚拟寄存器">虚拟寄存器 <a href="#%e8%99%9a%e6%8b%9f%e5%af%84%e5%ad%98%e5%99%a8" class="anchor">🔗</a></h4><p>Go 汇编引入了 4 个 虚拟寄存器</p>
+<ul>
+<li><code>FP</code>: Frame pointer: arguments and locals. 	 帧指针，快速访问函数的参数和返回值</li>
+<li><code>PC</code>: Program counter: jumps and branches.   程序计数器，指向下一条指令的地址。在 <code>amd64</code> 其实就是 rip 寄存器</li>
+<li><code>SB</code>: Static base pointer: global symbols.          静态基址指针，全局符号。</li>
+<li><code>SP</code>: Stack pointer: the highest address within the local stack frame. 栈指针, 指向局部变量</li>
+</ul>
+<p><strong>用法</strong>：</p>
+<ul>
+<li>
+<p>FP：<code>0(FP)</code> 表示第一个<strong>参数</strong>，<code>8(FP)</code> 表示第二个参数(AMD64 架构)。<code>first_arg+0(FP)</code> 表示把第一个参数地址绑定到符号 first_arg</p>
+</li>
+<li>
+<p>SP：<code>localvar0-8(SP)</code>  在 plan9 中表示函数中第一个<strong>局部变量</strong>。物理寄存器中也有 SP，硬件 SP 才是真正表示 栈顶位置。所以为了<strong>区分 SP</strong> 到底是指硬件 SP 还是指虚拟寄存器。plan9 代码中需要以特定的格式来区分。eg：<code>symbol+offset(SP)</code> 表示虚拟寄存器 SP。<code>offset(SP)</code> 则表示硬件 SP。如上述例子中的 <code>8(SP)</code> 指的是硬件 SP</p>
+</li>
+<li>
+<p>PC：除个别跳转治理，一般用不到</p>
+</li>
+<li>
+<p>SB：表示全局内存起点。<code>foo(SB)</code> 表示符号 foo 作为内存地址使用。这种形式用于声明全局函数、数据。<code>foo+4(SB)</code>表示 foo 往后 4 字节的地址。<code>&lt;&gt; </code>限制符号只能在当前源文件使用</p>
+</li>
+</ul>
+<p>从网上偷的图：</p>
+<p><p class="markdown-image">
+  <img src="https://blogimagee.oss-cn-beijing.aliyuncs.com/images/ch3-3-arch-amd64-02.ditaa.png" alt="图源《Go语言高级编程》"  />
+</p></p>
+<h3 id="2-指令">2. 指令 <a href="#2-%e6%8c%87%e4%bb%a4" class="anchor">🔗</a></h3><h4 id="1-变量声明">1. 变量声明 <a href="#1-%e5%8f%98%e9%87%8f%e5%a3%b0%e6%98%8e" class="anchor">🔗</a></h4><p><strong>格式:</strong>  使用 <code>DATA</code> 与 <code>GLOBL</code> 来声明一个全局变量</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-GO" data-lang="GO"><span style="color:#a6e22e">DATA</span> <span style="color:#a6e22e">symbol</span><span style="color:#f92672">+</span><span style="color:#a6e22e">offset</span>(<span style="color:#a6e22e">SB</span>)<span style="color:#f92672">/</span><span style="color:#a6e22e">width</span>, <span style="color:#a6e22e">value</span>
+<span style="color:#a6e22e">GLOBL</span> <span style="color:#a6e22e">symbol</span>(<span style="color:#a6e22e">SB</span>), <span style="color:#a6e22e">flag</span>, <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#a6e22e">size</span>
+</code></pre></div><p><strong>表示意义</strong>：</p>
+<ul>
+<li>
+<p>DATA 部分: 对 <code>symbol</code> 变量中的字节赋值，把 <code>offset</code> 到 <code>offset + width</code> 位置的字节赋值为 <code>value</code>。</p>
+</li>
+<li>
+<p>GLOBL 部分：必须在 DATA 后，表示声明了一个大小为<code>size</code> 的全局变量<code>symbol</code>。<a href="https://go.dev/doc/asm#directives" target="_blank" rel="noopener"><code>flag</code></a>代表变量一些属性，如 <code>RODATA</code>指只读。在 GLOBL 中加入 <code>&lt;&gt;</code>, 如 <code>GLOBL bio&lt;&gt;(SB), RODATA, $16</code>  也是表示这个全局变量只在本文件中生效。</p>
+</li>
+</ul>
+<p><strong>实际例子：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-GO" data-lang="GO"><span style="color:#75715e">// src/runtime/asm_amd64.s, 这里声明的 argc，argv 是 Go 程序的入参
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">DATA</span> <span style="color:#a6e22e">_rt0_amd64_lib_argc</span>&lt;&gt;(<span style="color:#a6e22e">SB</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">8</span>, <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>
+<span style="color:#a6e22e">GLOBL</span> <span style="color:#a6e22e">_rt0_amd64_lib_argc</span>&lt;&gt;(<span style="color:#a6e22e">SB</span>),<span style="color:#a6e22e">NOPTR</span>, <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">8</span>
+<span style="color:#a6e22e">DATA</span> <span style="color:#a6e22e">_rt0_amd64_lib_argv</span>&lt;&gt;(<span style="color:#a6e22e">SB</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">8</span>, <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>
+<span style="color:#a6e22e">GLOBL</span> <span style="color:#a6e22e">_rt0_amd64_lib_argv</span>&lt;&gt;(<span style="color:#a6e22e">SB</span>),<span style="color:#a6e22e">NOPTR</span>, <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">8</span>
+</code></pre></div><p><code>NOPTR</code> 这个表示不是指针，不需要垃圾回收扫描</p>
+<p><strong>局部变量</strong>：其在栈帧中，不需要声明。直接依靠 <code>offset</code>取出使用。例如<code>0(FP)</code> 代表函数第一个参数，<code>localvar0-8(SP)</code> 函数中第一个局部变量。</p>
+<h4 id="2-函数声明">2. 函数声明 <a href="#2-%e5%87%bd%e6%95%b0%e5%a3%b0%e6%98%8e" class="anchor">🔗</a></h4><p><strong>格式：</strong></p>
+<p><code>TEXT pkgname·funname(SB),flag,$framesize-argsize</code></p>
+<p><strong>表示意义：</strong></p>
+<p><code>pkgname</code> :可以省略，最好省略。不然修改包名还要级联修改；</p>
+<p><code>funname</code>: 声明的函数名</p>
+<p><code>flag</code>: 标志位，如 <code>NOSPLIT</code>，我们知道 Go Runtime 会追踪每个 stack 的使用情况，然后动态自增。而<code>NOSPLIT </code>标志位禁止检查，节省开销，但是写程序的人要保证这个函数是安全的。</p>
+<p><code>framesize</code>: 函数栈帧大小 = 局部变量 + 调用其它函数参数空间的总大小</p>
+<p><code>argsize</code>: 一些参考资料说这里是 <strong>参数+返回值</strong>大小，但在实验中已有些许差异。这个应该和 GO 1.7 的更新有关，<a href="https://go.googlesource.com/proposal/&#43;/master/design/40724-register-calling.md" target="_blank" rel="noopener">GO1.7 基于寄存器的调用规约</a>       <a href="https://xargin.com/go1-17-new-calling-convention/" target="_blank" rel="noopener">GO 1.7 的优化</a></p>
+<ul>
+<li>GO 1.7 之前 参数+返回值都存在栈帧中</li>
+<li>GO 1.7 更新后， 优先使用 9 个 通用寄存器传递参数与返回值，超出部分再存在栈中。并且寄存器中返回值会覆盖参数中的值</li>
+<li>参数 + 返回值少于 9 个，argsize 值是参数的大小</li>
+<li>返回值 &gt; 9 个，argsize = 参数大小 + 返回值超出 9 个的部分</li>
+</ul>
+<p><strong>实际例子：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ cat main.go
+package main
+
+func main<span style="color:#f92672">()</span> <span style="color:#f92672">{</span>
+<span style="color:#f92672">}</span>
+
+func add<span style="color:#f92672">(</span>a int64, b int64<span style="color:#f92672">)</span> int64 <span style="color:#f92672">{</span>
+        <span style="color:#66d9ef">return</span> a + b
+<span style="color:#f92672">}</span>
+
+$ go tool compile -S main.go
+<span style="color:#e6db74">&#34;&#34;</span>.main STEXT nosplit size<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span> args<span style="color:#f92672">=</span>0x0 locals<span style="color:#f92672">=</span>0x0 funcid<span style="color:#f92672">=</span>0x0
+...
+<span style="color:#e6db74">&#34;&#34;</span>.add STEXT nosplit size<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> args<span style="color:#f92672">=</span>0x10 locals<span style="color:#f92672">=</span>0x0 funcid<span style="color:#f92672">=</span>0x0
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:6<span style="color:#f92672">)</span>        TEXT    <span style="color:#e6db74">&#34;&#34;</span>.add<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>, NOSPLIT|ABIInternal, $0-16
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:6<span style="color:#f92672">)</span>        FUNCDATA        $0, gclocals·33cdeccccebe80329f1fdbee7f5874cb<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:6<span style="color:#f92672">)</span>        FUNCDATA        $1, gclocals·33cdeccccebe80329f1fdbee7f5874cb<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:6<span style="color:#f92672">)</span>        FUNCDATA        $5, <span style="color:#e6db74">&#34;&#34;</span>.add.arginfo1<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+        0x0000 <span style="color:#ae81ff">00000</span> <span style="color:#f92672">(</span>main.go:7<span style="color:#f92672">)</span>        ADDQ    BX, AX
+        0x0003 <span style="color:#ae81ff">00003</span> <span style="color:#f92672">(</span>main.go:7<span style="color:#f92672">)</span>        RET
+        ...
+
+</code></pre></div><p>上述例子：函数内不需存放局部变量，framesize = 0， 两个 int64 的参数，argsize = 16</p>
+<h4 id="3-常见操作指令">3. 常见操作指令 <a href="#3-%e5%b8%b8%e8%a7%81%e6%93%8d%e4%bd%9c%e6%8c%87%e4%bb%a4" class="anchor">🔗</a></h4><p><a href="http://68k.hax.com/" target="_blank" rel="noopener">自主查询链接</a></p>
+<p>下面介绍下常见的</p>
+<h5 id="1-数据搬运">1. 数据搬运 <a href="#1-%e6%95%b0%e6%8d%ae%e6%90%ac%e8%bf%90" class="anchor">🔗</a></h5><ul>
+<li><code>MOV</code> 指令：其后缀表示搬运长度, <code>$NUM</code> 表示具体的数字，如下面例子</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">MOVB</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">DI</span>      	<span style="color:#75715e">// 1 byte,  DI=1
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">MOVW</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0x10</span>, <span style="color:#a6e22e">BX</span>   	<span style="color:#75715e">// 2 bytes, BX=10
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">MOVD</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">DX</span>      	<span style="color:#75715e">// 4 bytes, DX=1
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">MOVQ</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#f92672">-</span><span style="color:#ae81ff">10</span>, <span style="color:#a6e22e">AX</span>     <span style="color:#75715e">// 8 bytes, AX=-10
+</span></code></pre></div><ul>
+<li><code>LEA</code>, 将有效地址加载到指定的地址寄存器中</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ret+24(FP) 这代表了第三个函数参数，是个地址
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">LEAQ</span>	<span style="color:#a6e22e">ret</span><span style="color:#f92672">+</span><span style="color:#ae81ff">24</span>(<span style="color:#a6e22e">FP</span>), <span style="color:#a6e22e">AX</span>	<span style="color:#75715e">// 把 ret+24(FP) 地址移到 AX 寄存器中
+</span></code></pre></div><h5 id="2-计算指令">2. 计算指令 <a href="#2-%e8%ae%a1%e7%ae%97%e6%8c%87%e4%bb%a4" class="anchor">🔗</a></h5><ul>
+<li><code>ADD</code>，<code>SUB</code>,<code>IMULQ</code>，如下面例子</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">ADDQ</span>  <span style="color:#a6e22e">AX</span>, <span style="color:#a6e22e">BX</span>   <span style="color:#75715e">// BX += AX
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">SUBQ</span>  <span style="color:#a6e22e">AX</span>, <span style="color:#a6e22e">BX</span>   <span style="color:#75715e">// BX -= AX
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">IMULQ</span> <span style="color:#a6e22e">AX</span>, <span style="color:#a6e22e">BX</span>   <span style="color:#75715e">// BX *= AX
+</span></code></pre></div><ul>
+<li>可以利用计算指令来调整栈空间，我们知道 <code>SP</code> 指向栈顶位置，调整 <code>SP</code>中的值即可。</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 栈空间: 高地址向低地址
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">SUBQ</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0x18</span>, <span style="color:#a6e22e">SP</span> <span style="color:#75715e">// 对 SP 做减法，为函数分配函数栈帧
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">ADDQ</span> <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0x18</span>, <span style="color:#a6e22e">SP</span> <span style="color:#75715e">// 对 SP 做加法，清除函数栈帧
+</span></code></pre></div><h5 id="3-条件跳转无条件跳转">3. 条件跳转/无条件跳转 <a href="#3-%e6%9d%a1%e4%bb%b6%e8%b7%b3%e8%bd%ac%e6%97%a0%e6%9d%a1%e4%bb%b6%e8%b7%b3%e8%bd%ac" class="anchor">🔗</a></h5><ul>
+<li><code>JMP</code>， <code>JZ</code>,<code>JLS</code> &hellip;</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 无条件跳转
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JMP</span> <span style="color:#a6e22e">addr</span>   <span style="color:#75715e">// 跳转到地址，地址可为代码中的地址，不过实际上手写不会出现这种东西
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JMP</span> <span style="color:#a6e22e">label</span>  <span style="color:#75715e">// 跳转到标签，可以跳转到同一函数内的标签位置
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JMP</span> <span style="color:#ae81ff">2</span>(<span style="color:#a6e22e">PC</span>)  <span style="color:#75715e">// 以当前指令为基础，向前/后跳转 x 行
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JMP</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">2</span>(<span style="color:#a6e22e">PC</span>) <span style="color:#75715e">// 同上
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">// 有条件跳转
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JZ</span> <span style="color:#a6e22e">target</span> <span style="color:#75715e">// 如果 zero flag 被 set 过，则跳转
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JLS</span> <span style="color:#a6e22e">num</span>		<span style="color:#75715e">// 如果上一行的比较结果，左边小于右边则执行跳到 num 地址处
+</span></code></pre></div><h5 id="4-其它">4. 其它 <a href="#4-%e5%85%b6%e5%ae%83" class="anchor">🔗</a></h5><ul>
+<li>
+<p>比较：<code>CMP</code>, 与挑战指令搭配使用</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">CMPQ</span>	<span style="color:#a6e22e">BX</span>, <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>	<span style="color:#75715e">// 比较与 BX 与 0 的大小
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">JNE</span>	<span style="color:#ae81ff">3</span>(<span style="color:#a6e22e">PC</span>)			<span style="color:#75715e">// 左边小于右边则执行跳到当前 PC 指令后第三条指令的位置
+</span></code></pre></div></li>
+<li>
+<p>位运算： <code>AND</code>,<code>OR</code>,<code>XOR</code></p>
+</li>
+</ul>
+<h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>经过这篇文章，相信你已经能大致读懂一些简单的汇编程序了。这里推荐几个源代码的汇编阅读。</p>
+<ul>
+<li>Go 程序的起点：<code>src/runtime/asm_amd64.s</code> 中的 <code>rt0_go(SB)</code> 函数</li>
+<li>Go 原子包：<code>src/runtime/internal/atomic_amd64.s</code> 中的 Case 函数</li>
+</ul>
+<h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
+<li><a href="https://segmentfault.com/a/1190000039978109" target="_blank" rel="noopener">https://segmentfault.com/a/1190000039978109</a></li>
+<li><a href="https://go.dev/doc/asm" target="_blank" rel="noopener">https://go.dev/doc/asm</a></li>
+<li><a href="https://medium.com/martinomburajr/go-tools-the-compiler-part-1-assembly-language-and-go-ffc42cbf579d" target="_blank" rel="noopener">https://medium.com/martinomburajr/go-tools-the-compiler-part-1-assembly-language-and-go-ffc42cbf579d</a></li>
+<li><a href="https://xargin.com/go-and-plan9-asm/" target="_blank" rel="noopener">https://xargin.com/go-and-plan9-asm/</a></li>
+<li><a href="https://kcode.icu/posts/go/2021-03-20-go-%E4%BD%BF%E7%94%A8%E7%9A%84-plan9-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%88%9D%E6%8E%A2/" target="_blank" rel="noopener">https://kcode.icu/posts/go/2021-03-20-go-%E4%BD%BF%E7%94%A8%E7%9A%84-plan9-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%88%9D%E6%8E%A2/</a></li>
+<li><a href="https://mioto.me/2021/01/plan9-assembly/" target="_blank" rel="noopener">https://mioto.me/2021/01/plan9-assembly/</a></li>
+<li><a href="https://www.symbolcrash.com/2021/03/02/go-assembly-on-the-arm64/" target="_blank" rel="noopener">https://www.symbolcrash.com/2021/03/02/go-assembly-on-the-arm64/</a></li>
+</ol>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/golang">golang</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+<script src="https://utteranc.es/client.js"
+        repo="he2121/xiaohe-blog"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2021 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>
