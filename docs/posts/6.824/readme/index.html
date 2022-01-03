@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>6.824 README | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="MIT6.824-2021 🔗MIT6.824 Distributed Systems Engineering 2021 个人学习记录 仓库地址 官方地址
+B 站视频学习
+个人博客在线阅读
+声明：
+ 不生产知识，只是知识的搬运工 遵循协议实验代码不公开，但博客中会记录个人实现思路 在每个翻译文档开头都放了原链接，若翻译不行（我也大部分都是翻译器复制的），请直接查看原文档  文件夹说明：
+docs-cn --&gt; 官方 note，lab 中文翻译 my-blog	--&gt; 个人学习过程想法，笔记记录，lab 实现等相关博客 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
+如有文档中存在错误/想参与此项目（翻译文档/实验实现思路），请：
+ 直接提 issue / mr 发邮件联系 1070259395@qq.com 6.824 讨论群【todo】  导航目录: 已完成（个人实现部分）：
+ Lab1-MapReduce-实现过程 Lab2A&amp;2B-Raft-leader选举与日志同步-实现过程 Lab2C-Raft-持久化状态与日志同步优化-实现过程 Lab2D-Raft-快照-实现过程  已完成（翻译部分）：
+ Lecture-01-笔记-MapReduce-翻译 Lecture-02-笔记-Go并发-翻译 Lecture-06-笔记-Raft(1)-翻译 Lab1-实验文档-MapReduce-翻译 Lab2-实验文档-Raft-翻译  Todo（翻译部分）：
+ Lecture-07-笔记-Raft(2)-翻译 Lab3-实验文档 &hellip;  Todo（个人实现部分）：
+ lab 3 lab 4  如有帮助到你，期待一颗 star">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">6.824 README</h1>
+
+    <div class="tip">
+      <div>2022年1月3日</div>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          62字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          1分钟 读完
+        </span>
+        <div class="views">
+          <span class="views">
+              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2f6.824%2freadme%2f" alt="Views"/>
+          </span>
+      </div>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <h1 id="mit6824-2021">MIT6.824-2021 <a href="#mit6824-2021" class="anchor">🔗</a></h1><p>MIT6.824 Distributed Systems Engineering 2021 个人学习记录
+<a href="https://github.com/he2121/MIT6.824-2021" target="_blank" rel="noopener">仓库地址</a>
+<a href="https://pdos.csail.mit.edu/6.824/schedule.html" target="_blank" rel="noopener">官方地址</a></p>
+<p><a href="https://www.bilibili.com/video/BV1R7411t71W?from=search&amp;seid=17776370395477379090&amp;spm_id_from=333.337.0.0" target="_blank" rel="noopener">B 站视频学习</a></p>
+<p><a href="https://he2121.github.io/xiaohe-blog/tags/6.824/" target="_blank" rel="noopener">个人博客在线阅读</a></p>
+<p>声明：</p>
+<ul>
+<li>不生产知识，只是知识的搬运工</li>
+<li>遵循协议实验<strong>代码</strong>不公开，但博客中会记录个人实现思路</li>
+<li>在每个翻译文档开头都放了原链接，若翻译不行（我也大部分都是翻译器复制的），请直接查看原文档</li>
+</ul>
+<p>文件夹说明：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docs-cn   --&gt;   官方 note，lab 中文翻译
+my-blog		--&gt;   个人学习过程想法，笔记记录，lab 实现等相关博客
+</code></pre></div><p>个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。</p>
+<p>如有文档中存在错误/想参与此项目（翻译文档/<strong>实验实现思路</strong>），请：</p>
+<ul>
+<li>直接提 issue / mr</li>
+<li>发邮件联系 <a href="mailto:1070259395@qq.com">1070259395@qq.com</a></li>
+<li>6.824 讨论群【todo】</li>
+</ul>
+<p>导航目录:
+已完成（个人实现部分）：</p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/tree/main/my-blog" target="_blank" rel="noopener">Lab1-MapReduce-实现过程</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/my-blog/6.824-lab2A%202B%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B.md" target="_blank" rel="noopener">Lab2A&amp;2B-Raft-leader选举与日志同步-实现过程</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/my-blog/6.824-lab2C%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B.md" target="_blank" rel="noopener">Lab2C-Raft-持久化状态与日志同步优化-实现过程</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/my-blog/6.824-lab2D%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B.md" target="_blank" rel="noopener">Lab2D-Raft-快照-实现过程</a></li>
+</ul>
+<p>已完成（翻译部分）：</p>
+<ul>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lec-note-01.md" target="_blank" rel="noopener">Lecture-01-笔记-MapReduce-翻译</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lec-note-02.md" target="_blank" rel="noopener">Lecture-02-笔记-Go并发-翻译</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lect-note-06.md" target="_blank" rel="noopener">Lecture-06-笔记-Raft(1)-翻译</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-01.md" target="_blank" rel="noopener">Lab1-实验文档-MapReduce-翻译</a></li>
+<li><input checked="" disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-02.md" target="_blank" rel="noopener">Lab2-实验文档-Raft-翻译</a></li>
+</ul>
+<p>Todo（翻译部分）：</p>
+<ul>
+<li><input disabled="" type="checkbox"> <a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lect-note-07.md" target="_blank" rel="noopener">Lecture-07-笔记-Raft(2)-翻译</a></li>
+<li><input disabled="" type="checkbox"> Lab3-实验文档</li>
+<li><input disabled="" type="checkbox"> &hellip;</li>
+</ul>
+<p>Todo（个人实现部分）：</p>
+<ul>
+<li><input disabled="" type="checkbox"> lab 3</li>
+<li><input disabled="" type="checkbox"> lab 4</li>
+</ul>
+<p>如有帮助到你，期待一颗 star</p>
+<p>参考</p>
+<ul>
+<li>
+<p><a href="https://mit-public-courses-cn-translatio.gitbook.io/mit6-824/lecture-01-introduction/1.3-fen-bu-shi-xi-tong-de-chou-xiang-he-shi-xian-gong-ju-abstraction-and-implementation" target="_blank" rel="noopener">https://mit-public-courses-cn-translatio.gitbook.io/mit6-824/lecture-01-introduction/1.3-fen-bu-shi-xi-tong-de-chou-xiang-he-shi-xian-gong-ju-abstraction-and-implementation</a></p>
+</li>
+<li>
+<p><a href="https://github.com/feixiao/Distributed-Systems" target="_blank" rel="noopener">https://github.com/feixiao/Distributed-Systems</a></p>
+</li>
+</ul>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/6.824">6.824</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+<script src="https://utteranc.es/client.js"
+        repo="he2121/xiaohe-blog"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2022 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>

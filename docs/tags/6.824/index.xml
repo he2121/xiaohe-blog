@@ -8,6 +8,26 @@
     <language>zh-cn</language>
     <lastBuildDate>Mon, 03 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/6.824/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>6.824 README</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/6.824/readme/</link>
+      <pubDate>Mon, 03 Jan 2022 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/readme/</guid>
+      <description>MIT6.824-2021 🔗MIT6.824 Distributed Systems Engineering 2021 个人学习记录 仓库地址 官方地址
+B 站视频学习
+个人博客在线阅读
+声明：
+ 不生产知识，只是知识的搬运工 遵循协议实验代码不公开，但博客中会记录个人实现思路 在每个翻译文档开头都放了原链接，若翻译不行（我也大部分都是翻译器复制的），请直接查看原文档  文件夹说明：
+docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学习过程想法，笔记记录，lab 实现等相关博客 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
+如有文档中存在错误/想参与此项目（翻译文档/实验实现思路），请：
+ 直接提 issue / mr 发邮件联系 1070259395@qq.com 6.824 讨论群【todo】  导航目录: 已完成（个人实现部分）：
+ Lab1-MapReduce-实现过程 Lab2A&amp;amp;2B-Raft-leader选举与日志同步-实现过程 Lab2C-Raft-持久化状态与日志同步优化-实现过程 Lab2D-Raft-快照-实现过程  已完成（翻译部分）：
+ Lecture-01-笔记-MapReduce-翻译 Lecture-02-笔记-Go并发-翻译 Lecture-06-笔记-Raft(1)-翻译 Lab1-实验文档-MapReduce-翻译 Lab2-实验文档-Raft-翻译  Todo（翻译部分）：
+ Lecture-07-笔记-Raft(2)-翻译 Lab3-实验文档 &amp;hellip;  Todo（个人实现部分）：
+ lab 3 lab 4  如有帮助到你，期待一颗 star</description>
+    </item>
+    
+    <item>
       <title>Lab2D-Raft-快照-实现过程</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2d%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</link>
       <pubDate>Mon, 03 Jan 2022 14:30:00 +0800</pubDate>
