@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>Lab2C-Raft-持久化状态与日志同步优化-实现过程 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="如果你把 Lab 2B 一步步调过来了，2C 对于你几乎没有难度
+ 实现前准备 🔗必看 🔗 raft论文 Safety、持久化、AppendEntries 优化 Lab2-实验文档-Raft-翻译Lab2-实验文档-Raft-翻译 2C  Lab 2C 目标 🔗 持久化 state，使 server 重启时能够恢复 优化 AppendEntires RPC 被拒绝的次数，之前我们使用 prevLogIndex - 1 来慢慢匹配日志的位置，很明显性能不够  LAB 2C 实现 🔗持久化 state 🔗需要持久化的 state 在图 2 中进行了说明，分别是：
+  currentTerm：当前任期, 这个肯定需要持久化
+  voteFor：这里持久化的目的是，避免一次任期投两次票
+  logs：日志，重启回复需要重新执行一次命令
+  因此代码中修改了上述三个变量的地方都要进行一次持久化。
+持久化一般到磁盘中，但在这个 lab，使用了 persister 来模拟，方便测试。
+ 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) { if data == nil || len(data) &lt; 1 { // bootstrap without any state?">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Lab2C-Raft-持久化状态与日志同步优化-实现过程</h1>
+
+    <div class="tip">
+      <div>2022年1月1日</div>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          343字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          2分钟 读完
+        </span>
+        <div class="views">
+          <span class="views">
+              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2f6.824%2f6.824-lab2c%25E5%25AE%259E%25E7%258E%25B0%25E8%25BF%2587%25E7%25A8%258B%2f" alt="Views"/>
+          </span>
+      </div>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>如果你把 Lab 2B 一步步调过来了，2C 对于你几乎没有难度</p>
+</blockquote>
+<h2 id="实现前准备">实现前准备 <a href="#%e5%ae%9e%e7%8e%b0%e5%89%8d%e5%87%86%e5%a4%87" class="anchor">🔗</a></h2><h3 id="必看">必看 <a href="#%e5%bf%85%e7%9c%8b" class="anchor">🔗</a></h3><ul>
+<li><a href="https://raft.github.io/raft.pdf" target="_blank" rel="noopener">raft论文</a> Safety、持久化、AppendEntries 优化</li>
+<li><a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-02.md" target="_blank" rel="noopener">Lab2-实验文档-Raft-翻译</a><a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-02.md" target="_blank" rel="noopener">Lab2-实验文档-Raft-翻译</a> 2C</li>
+</ul>
+<h2 id="lab-2c-目标">Lab 2C 目标 <a href="#lab-2c-%e7%9b%ae%e6%a0%87" class="anchor">🔗</a></h2><ol>
+<li>持久化 state，使 server 重启时能够恢复</li>
+<li>优化 <code>AppendEntires</code> RPC 被拒绝的次数，之前我们使用 prevLogIndex - 1 来慢慢匹配日志的位置，很明显性能不够</li>
+</ol>
+<h2 id="lab-2c-实现">LAB 2C 实现 <a href="#lab-2c-%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h2><h3 id="持久化-state">持久化 state <a href="#%e6%8c%81%e4%b9%85%e5%8c%96-state" class="anchor">🔗</a></h3><p>需要持久化的 state 在图 2 中进行了说明，分别是：</p>
+<ul>
+<li>
+<p><code>currentTerm</code>：当前任期, 这个肯定需要持久化</p>
+</li>
+<li>
+<p><code>voteFor</code>：这里持久化的目的是，避免一次任期投两次票</p>
+</li>
+<li>
+<p><code>logs</code>：日志，重启回复需要重新执行一次命令</p>
+</li>
+</ul>
+<p>因此代码中<strong>修改</strong>了上述三个变量的地方都要进行一次持久化。</p>
+<p>持久化一般到磁盘中，但在这个 lab，使用了 <code>persister</code> 来模拟，方便测试。</p>
+<ol>
+<li>读取持久化状态</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">//
+</span><span style="color:#75715e">// restore previously persisted state.
+</span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) {
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> len(<span style="color:#a6e22e">data</span>) &lt; <span style="color:#ae81ff">1</span> { <span style="color:#75715e">// bootstrap without any state?
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span>
+	}
+	<span style="color:#75715e">// Your code here (2C).
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Example:
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
+	<span style="color:#a6e22e">d</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>)
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">voteFor</span> <span style="color:#66d9ef">int</span>
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+	   <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+	  <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;反序列化状态失败&#34;</span>)
+	} <span style="color:#66d9ef">else</span> {
+	  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">currentTerm</span>
+	  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">voteFor</span>
+	  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">logs</span>
+	  <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
+	}
+}
+</code></pre></div><ol start="2">
+<li>持久化数据代码</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">persist</span>() {
+	<span style="color:#75715e">// Your code here (2C).
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Example:
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
+	<span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span>{
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;序列化状态失败&#34;</span>)
+	}
+	<span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Bytes</span>()
+	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">SaveRaftState</span>(<span style="color:#a6e22e">data</span>)
+}
+</code></pre></div><ol start="3">
+<li>
+<p>在修改了相关 state 的地方加入持久化调用，例如：</p>
+</li>
+<li>
+<p><code>Start(command interface{}) (int, int, bool)</code> 中给 append leader log</p>
+</li>
+<li>
+<p>RPC hander 收到 args 的 term 比当前大，需要更新 term 时</p>
+</li>
+<li>
+<p>RPC reply 的 term 比当前 term 大，需要更新 term 时</p>
+</li>
+<li>
+<p>转变成 Follower，重置 voteFor 时</p>
+</li>
+<li>
+<p><code>AppendEntries</code> handler 中 append log 时</p>
+</li>
+</ol>
+<h3 id="优化-appendentries-rpc-被拒绝的次数">优化 <code>AppendEntries</code> RPC 被拒绝的次数 <a href="#%e4%bc%98%e5%8c%96-appendentries-rpc-%e8%a2%ab%e6%8b%92%e7%bb%9d%e7%9a%84%e6%ac%a1%e6%95%b0" class="anchor">🔗</a></h3><p>当一个 Follower 远远落后 Leader 时，需要经过大量被拒绝 <code>AppendEntries</code> 的请求，才能找到匹配开始发送日志中的位置。这里两个可能优化的方向。</p>
+<ol>
+<li>当 Follower 中 Logs 数量小于 leader 中时，直接使用 Follower 的 LastLogIndex 作为下一次匹配的位置，而不是慢慢的减一。</li>
+<li>当 Follower 的 LastLogTerm 不等于 leader 的 LastLogTerm，直接使用 Follower 上一个 term 的位置匹配。</li>
+</ol>
+<p>实现代码:</p>
+<ol>
+<li>返回值中增加一个字段，代表下一次匹配的位置</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesReply</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+	<span style="color:#a6e22e">Success</span> <span style="color:#66d9ef">bool</span>
+	<span style="color:#a6e22e">ConflictIndex</span> <span style="color:#66d9ef">int</span>	<span style="color:#75715e">// 优化
+</span><span style="color:#75715e"></span>}
+</code></pre></div><ol start="2">
+<li>位于 AppendEntries handler, 修改直接返回 false 部分的代码，返回下一次匹配的位置</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 
+</span><span style="color:#75715e">// ...
+</span><span style="color:#75715e">// 调用者需要减少 PrevLogIndex，重试
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() &lt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>{
+		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+		<span style="color:#66d9ef">return</span>
+	}
+	<span style="color:#a6e22e">prevTerm</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>).<span style="color:#a6e22e">Term</span>
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">prevTerm</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogTerm</span> {
+		<span style="color:#a6e22e">index</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>
+		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">prevTerm</span> {
+			<span style="color:#a6e22e">index</span> <span style="color:#f92672">--</span>
+		}
+		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span> = <span style="color:#a6e22e">index</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+		<span style="color:#66d9ef">return</span>
+	}
+	<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> = <span style="color:#66d9ef">true</span>
+	<span style="color:#75715e">// ...
+</span></code></pre></div><ol start="3">
+<li>使用下一次匹配的位置进行匹配</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ...			
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> {
+  <span style="color:#75715e">// ...
+</span><span style="color:#75715e"></span>	}<span style="color:#66d9ef">else</span> {
+	<span style="color:#75715e">// 实际上把重试的机制推到了下次心跳
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span>
+}
+<span style="color:#75715e">// ....
+</span></code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>这部分实现代码比较简单：1. 持久化状态 2. 一个匹配位置的优化</p>
+<p>但 2C 测试样例比较复杂，在这一部分发现了许多之前没测出来的 bug，也加深了我对 Raft 的理解。</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/6.824">6.824</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/lab">lab</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/raft">raft</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+<script src="https://utteranc.es/client.js"
+        repo="he2121/xiaohe-blog"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2022 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>

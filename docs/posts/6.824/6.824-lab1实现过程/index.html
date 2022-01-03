@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>Lab1-MapReduce-实现过程 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="最近在学习 MIT 6.824 分布式系统课程，以 lab 维度记录自己的学习心得。
+ 前置准备 🔗6.824 官方课程安排链接
+基础技能 🔗 Go Git  实验前必看 🔗 MapReduce 论文 Lecture-01-笔记-MapReduce-翻译 Lab1-实验文档-MapReduce-翻译这个是重点，跟着这个做实验  选看 🔗 课程视频 Lecture-02-笔记-Go并发-翻译  建议 🔗个人认为看视频比较花费时间，对自己比较自信的话，直接看课程笔记了解一下即可。
+对于实验一 MapReduce 需要我们需要先学习 lecture 1 与 2 的内容。
+ Lecture 1 前半段是课程介绍，大致了解就行。后半段讲的 MapReduce，需仔细学习。 Lecture 2 讲的 Go 多线程 与 RPC，如果已经对 Go 比较熟悉，这里可跳过。  实验过程 🔗1. 实验环境 🔗 跟着 lab1 中的 Getting started（入门），跑通实验环境(go build不出错 ) 熟悉 main/mrsequential.go 代码  在 MapReduce 这个实验中中，使用了 Go 的 plugin（此处应有文档介绍） 把实际的应用程序做成了可插拔式的。但由于 Go 的 plugin 现在比较鸡肋，在 Mac/windows 开发环境中可能会出现各种奇怪问题。建议使用 远程开发 进行开发。">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/%e7%ae%97%e6%b3%95">算法</a>
+	
+		<a href="/xiaohe-blog/%e6%9d%82%e8%b0%88">杂谈</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Lab1-MapReduce-实现过程</h1>
+
+    <div class="tip">
+      <div>2021年12月16日</div>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          1312字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          7分钟 读完
+        </span>
+        <div class="views">
+          <span class="views">
+              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2f6.824%2f6.824-lab1%25E5%25AE%259E%25E7%258E%25B0%25E8%25BF%2587%25E7%25A8%258B%2f" alt="Views"/>
+          </span>
+      </div>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>最近在学习 MIT 6.824 分布式系统课程，以 lab 维度记录自己的学习心得。</p>
+</blockquote>
+<h2 id="前置准备">前置准备 <a href="#%e5%89%8d%e7%bd%ae%e5%87%86%e5%a4%87" class="anchor">🔗</a></h2><p><a href="https://pdos.csail.mit.edu/6.824/schedule.html" target="_blank" rel="noopener">6.824 官方课程安排链接</a></p>
+<h3 id="基础技能">基础技能 <a href="#%e5%9f%ba%e7%a1%80%e6%8a%80%e8%83%bd" class="anchor">🔗</a></h3><ol>
+<li>Go</li>
+<li>Git</li>
+</ol>
+<h3 id="实验前必看">实验前必看 <a href="#%e5%ae%9e%e9%aa%8c%e5%89%8d%e5%bf%85%e7%9c%8b" class="anchor">🔗</a></h3><ol>
+<li><a href="http://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf" target="_blank" rel="noopener">MapReduce 论文</a></li>
+<li><a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lec-note-01.md" target="_blank" rel="noopener">Lecture-01-笔记-MapReduce-翻译</a></li>
+<li><a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-01.md" target="_blank" rel="noopener">Lab1-实验文档-MapReduce-翻译</a>这个是<strong>重点</strong>，跟着这个做实验</li>
+</ol>
+<h3 id="选看">选看 <a href="#%e9%80%89%e7%9c%8b" class="anchor">🔗</a></h3><ul>
+<li><a href="https://www.bilibili.com/video/BV1R7411t71W?" target="_blank" rel="noopener">课程视频</a></li>
+<li><a href="https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lec-note-02.md" target="_blank" rel="noopener">Lecture-02-笔记-Go并发-翻译</a></li>
+</ul>
+<h3 id="建议">建议 <a href="#%e5%bb%ba%e8%ae%ae" class="anchor">🔗</a></h3><p>个人认为看视频比较花费时间，对自己比较自信的话，直接看课程笔记了解一下即可。</p>
+<p>对于实验一 MapReduce 需要我们需要先学习 lecture 1 与 2 的内容。</p>
+<ul>
+<li>Lecture 1 前半段是课程介绍，大致了解就行。后半段讲的 MapReduce，需仔细学习。</li>
+<li>Lecture 2 讲的 Go 多线程 与 RPC，如果已经对 Go 比较熟悉，这里可跳过。</li>
+</ul>
+<h2 id="实验过程">实验过程 <a href="#%e5%ae%9e%e9%aa%8c%e8%bf%87%e7%a8%8b" class="anchor">🔗</a></h2><h3 id="1-实验环境">1. 实验环境 <a href="#1-%e5%ae%9e%e9%aa%8c%e7%8e%af%e5%a2%83" class="anchor">🔗</a></h3><ul>
+<li>跟着 <a href="">lab1</a> 中的 Getting started（入门），跑通实验环境(<code>go build</code>不出错 )</li>
+<li>熟悉 <code>main/mrsequential.go</code> 代码</li>
+</ul>
+<p>在 MapReduce 这个实验中中，使用了 Go 的 plugin（此处应有<a href="https://zhuanlan.zhihu.com/p/391197032" target="_blank" rel="noopener">文档</a>介绍） 把实际的应用程序做成了可插拔式的。但由于 Go 的 plugin  现在比较鸡肋，在 Mac/windows 开发环境中可能会出现各种奇怪问题。建议使用 <a href="">远程开发</a> 进行开发。</p>
+<h3 id="2-实验分析">2. 实验分析 <a href="#2-%e5%ae%9e%e9%aa%8c%e5%88%86%e6%9e%90" class="anchor">🔗</a></h3><ul>
+<li>阅读 lab1 中的 <a href="">your job(你的工作)</a> 部分，分析需求，以下是我的分析：</li>
+</ul>
+<h4 id="需求拆解">需求拆解 <a href="#%e9%9c%80%e6%b1%82%e6%8b%86%e8%a7%a3" class="anchor">🔗</a></h4><ol>
+<li>
+<p>需要<strong>编写两个程序</strong> coordinator 与 worker，编写代码位置分别在<code>mr/coordinator.go</code> 、<code>mr/worker.go</code></p>
+<ul>
+<li>
+<p>coordinator：1. 分配可用 map 和 reduce 任务到 worker。 2. 接受 worker 返回的消息，更新任务与自身的状态。</p>
+</li>
+<li>
+<p>worker：1. 获取任务，处理 map/reduce 任务。2. 通知 coordinator 任务已完成</p>
+</li>
+</ul>
+</li>
+<li>
+<p>coordinator 与 worker 之间使用 <strong>RPC 通信</strong>，RPC 消息结构编写位置在 <code>mr/rpc.go</code></p>
+</li>
+<li>
+<p><strong>两种任务</strong>：map 和 reduce</p>
+<ul>
+<li>reduce 任务必须在等 map 任务全完成后才能进行。</li>
+<li>map 任务输入：pg-xxx.txt</li>
+<li>map 任务输出：map 任务输出是中间文件，其中间文件是 reduce 任务的输入，按 reduce 任务分桶，如下图所示。</li>
+<li>reduce 任务输入: 是一组中间文件（m 个），如果这是第 n 个 reduce 任务，则其中间文件名都是以 n 结尾的</li>
+<li>reduce 任务输出：第 n 个 reduce ，其 输出格式是 mr-out-n</li>
+</ul>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211230164941058-2021-12-30.png" alt="image-20211230164941058"  />
+</p></p>
+</li>
+<li>
+<p><strong>两个 RPC 接口</strong></p>
+<ol>
+<li><code>GetTask()</code>  worker 向 coordinator 获取一个任务进行处理，这个任务可能是 map 或者 reduce 任务, 需要包含输入路径等信息</li>
+<li><code>TaskDone()</code> worker 通知 coordinator 这个任务已完成</li>
+</ol>
+</li>
+</ol>
+<h4 id="时序图">时序图 <a href="#%e6%97%b6%e5%ba%8f%e5%9b%be" class="anchor">🔗</a></h4><pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">sequenceDiagram
+	loop map 任务
+  worker -&gt;&gt; coordinate: GetTask
+  Note over worker,coordinate: 分配空闲或者超时的任务出去
+	coordinate -&gt;&gt; worker: Map Task 
+	worker -&gt;&gt; coordinate: TaskDone
+	coordinate -&gt;&gt; worker: 
+	worker -&gt;&gt; coordinate: ...
+  end
+ 
+  loop reduce 任务
+    worker -&gt;&gt; coordinate: GetTask
+  	Note over worker,coordinate: 分配空闲或者超时的任务出去
+		coordinate -&gt;&gt; worker: reduce Task 
+		worker -&gt;&gt; coordinate: TaskDone
+		coordinate -&gt;&gt; worker: 
+		worker -&gt;&gt; coordinate: ...
+  end
+
+</code></pre><h3 id="3-lab-实现">3. lab 实现 <a href="#3-lab-%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h3><blockquote>
+<p>你可以从修改 <code>mr/worker</code> 的 <code>worker()</code> 方法入手：给 coodinator 发送一个获取任务执行的 RPC 请求。然后修改 <code>mr/coodinator.go</code>文件，回复这个 RPC 请求一个可用的 map 任务。然后修改 <code>Worker</code>以读取该任务输入文件，并调用应用程序 <code>Map</code>函数处理，如<code>mrsequential.go</code>中的处理过程</p>
+</blockquote>
+<ol>
+<li>从 worker 的请求逻辑入手，会类似于下面的过程</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">for</span> {
+			<span style="color:#75715e">// 获取 任务, RPC 请求
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">task</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">GetTask</span>()
+  		<span style="color:#75715e">// handler 任务
+</span><span style="color:#75715e"></span>  		<span style="color:#a6e22e">doTask</span>(<span style="color:#a6e22e">task</span>)
+  		<span style="color:#75715e">// 任务处理完成，RPC 请求
+</span><span style="color:#75715e"></span>  		<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">TaskDone</span>(<span style="color:#a6e22e">task</span>)
+}
+			
+</code></pre></div><ol start="2">
+<li>RPC 通信需要传递 Task 结构体，task 结构体中需要包括什么信息？
+<ol>
+<li>任务类型：map / reduce</li>
+<li>任务输入路径</li>
+<li>这个任务在 coodinator 全局任务数组的位置（coordinator）</li>
+<li>&hellip;</li>
+</ol>
+</li>
+</ol>
+<p>总体规划下来：<strong>RPC 消息格式被定义如下</strong>（包括 task 结构，GetTask 请求参数， TaskDone 参数）:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Task</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">TaskType</span> <span style="color:#a6e22e">TaskType</span>		<span style="color:#75715e">// 任务类型： map/reduce
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">FileName</span> <span style="color:#66d9ef">string</span>			<span style="color:#75715e">// map 任务输入，文件名：pg-bing_ernest.txt
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">FileNames</span> []<span style="color:#66d9ef">string</span>		<span style="color:#75715e">// reduce 任务输入
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">NReduce</span> <span style="color:#66d9ef">int</span>				<span style="color:#75715e">// reduce 任务数量
+</span><span style="color:#75715e"></span>	<span style="color:#75715e">// 以下字段 coordinator 使用
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">Index</span> <span style="color:#66d9ef">int</span>				<span style="color:#75715e">// 在 coodinator task 数组中的位置
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">State</span> 	<span style="color:#a6e22e">TaskState</span>		<span style="color:#75715e">// 任务状态，0：未开始，1: 已分配，正在运行, 2: 任务完成
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">StartTime</span> <span style="color:#66d9ef">int64</span> 		<span style="color:#75715e">// 任务分配出去的时间，单位 s，超时使用
+</span><span style="color:#75715e"></span>}
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">TaskType</span> <span style="color:#66d9ef">int</span>
+
+<span style="color:#66d9ef">const</span>(
+	<span style="color:#a6e22e">TaskTypeUnknow</span> <span style="color:#a6e22e">TaskType</span> = <span style="color:#ae81ff">0</span>
+	<span style="color:#a6e22e">TaskTypeMap</span> <span style="color:#a6e22e">TaskType</span> = <span style="color:#ae81ff">1</span>		<span style="color:#75715e">// map 任务
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">TaskTypeReduce</span> <span style="color:#a6e22e">TaskType</span> = <span style="color:#ae81ff">2</span>		<span style="color:#75715e">// reduce task
+</span><span style="color:#75715e"></span>)
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">TaskState</span> <span style="color:#66d9ef">int</span>
+
+<span style="color:#66d9ef">const</span>(
+	<span style="color:#a6e22e">TaskStateInit</span> <span style="color:#a6e22e">TaskState</span> = <span style="color:#ae81ff">0</span>			<span style="color:#75715e">// 未开始
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">TaskStateRuning</span> <span style="color:#a6e22e">TaskState</span> = <span style="color:#ae81ff">1</span>		<span style="color:#75715e">// 已分配，正在运行
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">TaskStateDone</span> <span style="color:#a6e22e">TaskState</span> = <span style="color:#ae81ff">2</span>			<span style="color:#75715e">// 任务完成
+</span><span style="color:#75715e"></span>)
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">TaskDoneArgs</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Task</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>
+}
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">TaskDoneReply</span> <span style="color:#66d9ef">struct</span> {
+
+}
+
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">GetTaskArgs</span> <span style="color:#66d9ef">struct</span> {
+}
+<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">GetTaskReply</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">Task</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>
+}
+
+</code></pre></div><ol start="3">
+<li>
+<p>coordinator 需要维护全局的信息，应该包含什么信息？</p>
+<ol>
+<li>map 任务数组，需要维护每个任务的状态</li>
+<li>reduce 任务数组，需要维护每个任务的状态</li>
+<li>map，reduce 任务总数</li>
+<li>已完成的 map，reduce 数量</li>
+<li>coordinator 自身的状态</li>
+</ol>
+<p><strong>coordinator 设计如下：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Coordinator</span> <span style="color:#66d9ef">struct</span> {
+	<span style="color:#a6e22e">mapTasks</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>			<span style="color:#75715e">// map 任务
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">reduceTasks</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>			<span style="color:#75715e">// reduce 任务
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">nReduce</span> <span style="color:#66d9ef">int</span>					<span style="color:#75715e">// reduce 任务总数
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">nMap</span> <span style="color:#66d9ef">int</span>					<span style="color:#75715e">// map 任务总数
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">finishedMapNum</span> <span style="color:#66d9ef">int</span> 			<span style="color:#75715e">// 已完成 map 任务数量
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">finishedReduceNum</span> <span style="color:#66d9ef">int</span>		<span style="color:#75715e">// 已完成 reduce 任务数量
+</span><span style="color:#75715e"></span>
+	<span style="color:#a6e22e">state</span> <span style="color:#a6e22e">coordinatorState</span>		<span style="color:#75715e">// 协调者状态。0: 初始化, 1: map 任务全部完成, 2: reduce 任务完成 == coodinator 可以结束了
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mu</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>
+}
+
+<span style="color:#75715e">//	coordinator 初始化
+</span><span style="color:#75715e">// create a Coordinator.
+</span><span style="color:#75715e">// main/mrcoordinator.go calls this function.
+</span><span style="color:#75715e">// nReduce is the number of reduce tasks to use.
+</span><span style="color:#75715e">//
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">MakeCoordinator</span>(<span style="color:#a6e22e">files</span> []<span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">nReduce</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Coordinator</span> {
+	<span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Coordinator</span>{<span style="color:#a6e22e">nReduce</span>: <span style="color:#a6e22e">nReduce</span>,<span style="color:#a6e22e">nMap</span>: len(<span style="color:#a6e22e">files</span>), <span style="color:#a6e22e">mu</span>:<span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>{}}
+	<span style="color:#75715e">// 初始化 map 任务
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mapTasks</span> <span style="color:#f92672">:=</span> make([]<span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>, len(<span style="color:#a6e22e">files</span>))
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">files</span> {
+		<span style="color:#a6e22e">mapTasks</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Task</span>{
+			<span style="color:#a6e22e">Index</span>: <span style="color:#a6e22e">i</span>,
+			<span style="color:#a6e22e">TaskType</span>: <span style="color:#a6e22e">TaskTypeMap</span>,
+			<span style="color:#a6e22e">FileName</span>: <span style="color:#a6e22e">file</span>,
+			<span style="color:#a6e22e">NReduce</span>: <span style="color:#a6e22e">nReduce</span>,
+		}
+	}
+	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mapTasks</span> = <span style="color:#a6e22e">mapTasks</span>
+	<span style="color:#75715e">// 初始化 reduce 任务
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">reduceTasks</span> <span style="color:#f92672">:=</span> make([]<span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>, <span style="color:#a6e22e">nReduce</span>)
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">nReduce</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
+		<span style="color:#75715e">// reduce 任务的输入
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">fileNames</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">string</span>, len(<span style="color:#a6e22e">files</span>))
+		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">files</span> {
+			<span style="color:#a6e22e">fileNames</span>[<span style="color:#a6e22e">j</span>] = <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;./intermediate/mr-%s-%d&#34;</span>, <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">TrimSuffix</span>(<span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Base</span>(<span style="color:#a6e22e">file</span>), <span style="color:#e6db74">&#34;.txt&#34;</span>), <span style="color:#a6e22e">i</span>)
+		}
+		<span style="color:#a6e22e">reduceTasks</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Task</span>{
+			<span style="color:#a6e22e">Index</span>: <span style="color:#a6e22e">i</span>,
+			<span style="color:#a6e22e">TaskType</span>: <span style="color:#a6e22e">TaskTypeReduce</span>,
+			<span style="color:#a6e22e">FileNames</span>: <span style="color:#a6e22e">fileNames</span>,
+			<span style="color:#a6e22e">NReduce</span>: <span style="color:#a6e22e">nReduce</span>,
+		}
+	}
+	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">reduceTasks</span> = <span style="color:#a6e22e">reduceTasks</span>
+	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;coordinator 启动完毕，等待 worker ...&#34;</span>)
+	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">server</span>()
+	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">c</span>
+}
+</code></pre></div><ol start="4">
+<li><code>GetTask</code> sever 过程，需要全局加锁</li>
+</ol>
+<pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TD
+	0[开始] --&gt; 1
+	1{coordinate state} --init--&gt; 2(获取一个可用 map 任务返回) --&gt; 4
+	1 --mapFinished--&gt; 3(获取一个可用 reduce 任务返回) --&gt; 4
+	1 --finished--&gt; 5(退出 coordinator 程序)
+	4[返回 RPC]
+</code></pre><p>什么是可用任务？</p>
+<ul>
+<li>任务状态 <strong>尚未分配</strong>或者已经分配出去了但是<strong>运行超时</strong>了（10 s）</li>
+</ul>
+</li>
+</ol>
+<p><strong>GetTask sever设计如下：</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Coordinator</span>) <span style="color:#a6e22e">GetTask</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">GetTaskArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">GetTaskReply</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#75715e">// 全局锁
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">task</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>
+	<span style="color:#75715e">// coordinate state 处于分配 map 任务的阶段 
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">coodinatorStateInit</span> {
+		<span style="color:#a6e22e">task</span> = <span style="color:#a6e22e">findAvaibleTask</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mapTasks</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">task</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;分配了 map 任务: %s&#34;</span>, <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">FileName</span>)
+			<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Task</span> = <span style="color:#a6e22e">task</span>
+			<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+		}
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;state == 0, 但是无可用 map 任务了 &#34;</span>)
+		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+	}
+	<span style="color:#75715e">// coordinate 处于分配 reduce 任务阶段
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">coodinatorStateMapFinished</span> {
+		<span style="color:#a6e22e">task</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">findAvaibleTask</span>(<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">reduceTasks</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">task</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;分配了 reduce 任务: %d&#34;</span>, <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">Index</span>)
+			<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Task</span> = <span style="color:#a6e22e">task</span>
+			<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+		}
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;state == 1, 但是无可用 reduce 任务了 &#34;</span>)
+		<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+	}
+	<span style="color:#75715e">// coordinate 可以结束了
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">coodinatorStateFinished</span> {
+		<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">0</span>)
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+
+<span style="color:#75715e">// 找到一个可用的任务
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">findAvaibleTask</span>(<span style="color:#a6e22e">tasks</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span> {
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">task</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">tasks</span> {
+		<span style="color:#75715e">// 任务没有分配出去，或者分配出去已经超时
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">State</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TaskStateInit</span> <span style="color:#f92672">||</span> (<span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">State</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TaskStateRuning</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>() <span style="color:#f92672">-</span> <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">StartTime</span> &gt; <span style="color:#ae81ff">10</span>) {
+			<span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">StartTime</span> = <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Unix</span>()
+			<span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">State</span> = <span style="color:#a6e22e">TaskStateRuning</span>
+			<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">task</span>
+		}
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+</code></pre></div><ol start="5">
+<li>
+<p><code>TaskDone</code> server 过程，同样需要全局加锁</p>
+<ol>
+<li>
+<p>更新任务列表中的任务状态，和已完成的任务数量</p>
+</li>
+<li>
+<p>比较已完成的任务数量与总任务数量，更新 coordinator state</p>
+</li>
+</ol>
+</li>
+</ol>
+<p><code>TaskDone </code> server 设计如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">c</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Coordinator</span>) <span style="color:#a6e22e">TaskDone</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">TaskDoneArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">TaskDoneReply</span>) <span style="color:#66d9ef">error</span> {
+	<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+	<span style="color:#75715e">// 任务状态是 map， 并且任务列表中的该任务状态不是已完成
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>.<span style="color:#a6e22e">TaskType</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TaskTypeMap</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mapTasks</span>[<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>.<span style="color:#a6e22e">Index</span>].<span style="color:#a6e22e">State</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">TaskStateDone</span> {
+		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">mapTasks</span>[<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>.<span style="color:#a6e22e">Index</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>		<span style="color:#75715e">// 更新任务列表中任务状态，state = done
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">finishedMapNum</span> <span style="color:#f92672">++</span>							<span style="color:#75715e">// 已完成任务 +1
+</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">finishedMapNum</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">nMap</span> {				<span style="color:#75715e">// 已完成任务数 == 总任务数，coordinator 进入下一阶段
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">coodinatorStateMapFinished</span>
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;所有 map task 已执行完&#34;</span>)
+		}
+	}
+	<span style="color:#75715e">// 同样的逻辑，只是任务类型是 reduce
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>.<span style="color:#a6e22e">TaskType</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TaskTypeReduce</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">reduceTasks</span>[<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>.<span style="color:#a6e22e">Index</span>].<span style="color:#a6e22e">State</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">TaskStateDone</span> {
+		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">reduceTasks</span>[<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>.<span style="color:#a6e22e">Index</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Task</span>
+		<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">finishedReduceNum</span> <span style="color:#f92672">++</span>
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">finishedReduceNum</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">nReduce</span> {
+			<span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">coodinatorStateFinished</span>
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;所有 reduce task 已执行完&#34;</span>)
+		}
+	}
+	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">nil</span>
+}
+</code></pre></div><ol start="6">
+<li>worker 收到任务需要区分 map 和 reduce 进行分别处理 .</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Worker</span>(<span style="color:#a6e22e">mapf</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">string</span>) []<span style="color:#a6e22e">KeyValue</span>,
+	<span style="color:#a6e22e">reducef</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>, []<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span>) {
+		<span style="color:#66d9ef">for</span> {
+			<span style="color:#75715e">// 获取 任务
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">task</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">GetTask</span>()
+			<span style="color:#75715e">// 连接不到 coodinator 终止
+</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+				<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+			}
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;收到了任务: &#34;</span>,<span style="color:#a6e22e">task</span>)
+			<span style="color:#75715e">// 没收到任务， 等几秒钟重新请求 
+</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">task</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+				<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+				<span style="color:#66d9ef">continue</span>
+			}
+			<span style="color:#75715e">// map 任务
+</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">TaskType</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TaskTypeMap</span> {
+				<span style="color:#a6e22e">doMapTask</span>(<span style="color:#a6e22e">task</span>, <span style="color:#a6e22e">mapf</span>)
+			}<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">TaskType</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">TaskTypeReduce</span> {
+				<span style="color:#a6e22e">doReduceTask</span>(<span style="color:#a6e22e">task</span>, <span style="color:#a6e22e">reducef</span>)
+			}
+			<span style="color:#75715e">// 通知 coodinator 任务已完成
+</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">TaskDone</span>(<span style="color:#a6e22e">task</span>)
+    }
+}
+</code></pre></div><ol start="7">
+<li>Map 任务的处理过程
+<ol>
+<li>读输入</li>
+<li>mapf 处理</li>
+<li>写入中间文件，主要分桶写入，并且使用 <code>os.Rename</code>做了防 crash 处理</li>
+</ol>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doMapTask</span>(<span style="color:#a6e22e">task</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>, <span style="color:#a6e22e">mapf</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>, <span style="color:#66d9ef">string</span>) []<span style="color:#a6e22e">KeyValue</span>) {
+	<span style="color:#75715e">// 1. 读出 File 内容
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">content</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadFile</span>(<span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">FileName</span>)
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+	}
+	<span style="color:#75715e">// 2. Map 函数处理
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">kvs</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">mapf</span>(<span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">FileName</span>, string(<span style="color:#a6e22e">content</span>))
+	<span style="color:#75715e">// 3. 输出中间文件需要分桶，写入到 nReduce 个文件中 
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">files</span> <span style="color:#f92672">:=</span> make([]<span style="color:#f92672">*</span><span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">File</span>, <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">NReduce</span>)
+	<span style="color:#75715e">// 中间文件存放位置
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Mkdir</span>(<span style="color:#e6db74">&#34;./intermediate&#34;</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">ModeDir</span>)	
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">NReduce</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
+		<span style="color:#a6e22e">intermediateFile</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;./intermediate/mr-%s-%d.tmp&#34;</span>, <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">TrimSuffix</span>(<span style="color:#a6e22e">filepath</span>.<span style="color:#a6e22e">Base</span>(<span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">FileName</span>), <span style="color:#e6db74">&#34;.txt&#34;</span>), <span style="color:#a6e22e">i</span>)
+		<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">OpenFile</span>(<span style="color:#a6e22e">intermediateFile</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">O_CREATE</span>|<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">O_APPEND</span>|<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">O_RDWR</span>, <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">ModePerm</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">err</span>)
+		}
+		<span style="color:#a6e22e">files</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">f</span>
+	}
+	<span style="color:#75715e">// 4. 遍历 KV，根据 Key hash 追加写入到不同文件中
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">kv</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">kvs</span> {
+		<span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ihash</span>(<span style="color:#a6e22e">kv</span>.<span style="color:#a6e22e">Key</span>) <span style="color:#f92672">%</span> <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">NReduce</span>
+		<span style="color:#a6e22e">file</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">files</span>[<span style="color:#a6e22e">n</span>]
+		<span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s %s\n&#34;</span>, <span style="color:#a6e22e">kv</span>.<span style="color:#a6e22e">Key</span>, <span style="color:#a6e22e">kv</span>.<span style="color:#a6e22e">Value</span>))
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#a6e22e">err</span>)
+		}
+	}
+	<span style="color:#75715e">//  5. 关闭文件
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">file</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">files</span> {
+		<span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Rename</span>(<span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Name</span>(), <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">TrimSuffix</span>(<span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Name</span>(),<span style="color:#e6db74">&#34;.tmp&#34;</span>))
+		<span style="color:#a6e22e">file</span>.<span style="color:#a6e22e">Close</span>()
+	}
+}
+</code></pre></div><ol start="8">
+<li>reduce 任务的处理过程
+<ol>
+<li>读一组中间文件，反序列化成一组 key/value</li>
+<li>聚合 key，redf 处理</li>
+<li>写出到输出文件</li>
+</ol>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">doReduceTask</span>(<span style="color:#a6e22e">task</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Task</span>,<span style="color:#a6e22e">reducef</span> <span style="color:#66d9ef">func</span>(<span style="color:#66d9ef">string</span>, []<span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span>) {
+	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">kvs</span> <span style="color:#a6e22e">ByKey</span>
+	<span style="color:#75715e">// 读取 reduce 的所有输入
+</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">fileName</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">FileNames</span> {
+		<span style="color:#75715e">// 单个文件读入
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">file</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Open</span>(<span style="color:#a6e22e">fileName</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalln</span>(<span style="color:#a6e22e">err</span>)
+		}
+		<span style="color:#75715e">// 按行读，一行为一个 key/value
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">sc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bufio</span>.<span style="color:#a6e22e">NewScanner</span>(<span style="color:#a6e22e">file</span>)
+		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">sc</span>.<span style="color:#a6e22e">Scan</span>()  {
+			<span style="color:#a6e22e">strs</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">strings</span>.<span style="color:#a6e22e">Fields</span>(<span style="color:#a6e22e">sc</span>.<span style="color:#a6e22e">Text</span>())
+			<span style="color:#66d9ef">if</span> len(<span style="color:#a6e22e">strs</span>) <span style="color:#f92672">!=</span> <span style="color:#ae81ff">2</span> {
+				<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">fileName</span>,<span style="color:#e6db74">&#34;中间文件错误格式&#34;</span>)
+			}
+			<span style="color:#a6e22e">kv</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">KeyValue</span>{
+				<span style="color:#a6e22e">Key</span>: <span style="color:#a6e22e">strs</span>[<span style="color:#ae81ff">0</span>],
+				<span style="color:#a6e22e">Value</span>: <span style="color:#a6e22e">strs</span>[<span style="color:#ae81ff">1</span>],
+			}
+			<span style="color:#a6e22e">kvs</span> = append(<span style="color:#a6e22e">kvs</span>, <span style="color:#a6e22e">kv</span>)
+		}
+	}
+	<span style="color:#75715e">// 按 key 排序
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">sort</span>.<span style="color:#a6e22e">Sort</span>(<span style="color:#a6e22e">kvs</span>)
+	<span style="color:#75715e">// copy from mrsequence.go
+</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">oname</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;mr-out-%d&#34;</span>, <span style="color:#a6e22e">task</span>.<span style="color:#a6e22e">Index</span>)
+	<span style="color:#a6e22e">ofile</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">os</span>.<span style="color:#a6e22e">Create</span>(<span style="color:#a6e22e">oname</span>)
+	<span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> &lt; len(<span style="color:#a6e22e">kvs</span>) {
+		<span style="color:#a6e22e">j</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">j</span> &lt; len(<span style="color:#a6e22e">kvs</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">kvs</span>[<span style="color:#a6e22e">j</span>].<span style="color:#a6e22e">Key</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">kvs</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">Key</span> {
+			<span style="color:#a6e22e">j</span><span style="color:#f92672">++</span>
+		}
+		<span style="color:#a6e22e">values</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{}
+		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">k</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">i</span>; <span style="color:#a6e22e">k</span> &lt; <span style="color:#a6e22e">j</span>; <span style="color:#a6e22e">k</span><span style="color:#f92672">++</span> {
+			<span style="color:#a6e22e">values</span> = append(<span style="color:#a6e22e">values</span>, <span style="color:#a6e22e">kvs</span>[<span style="color:#a6e22e">k</span>].<span style="color:#a6e22e">Value</span>)
+		}
+		<span style="color:#a6e22e">output</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">reducef</span>(<span style="color:#a6e22e">kvs</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">Key</span>, <span style="color:#a6e22e">values</span>)
+
+		<span style="color:#75715e">// this is the correct format for each line of Reduce output.
+</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Fprintf</span>(<span style="color:#a6e22e">ofile</span>, <span style="color:#e6db74">&#34;%v %v\n&#34;</span>, <span style="color:#a6e22e">kvs</span>[<span style="color:#a6e22e">i</span>].<span style="color:#a6e22e">Key</span>, <span style="color:#a6e22e">output</span>)
+
+		<span style="color:#a6e22e">i</span> = <span style="color:#a6e22e">j</span>
+	}
+
+	<span style="color:#a6e22e">ofile</span>.<span style="color:#a6e22e">Close</span>()
+}
+</code></pre></div><h3 id="4-跑测试脚本">4. 跑测试脚本 <a href="#4-%e8%b7%91%e6%b5%8b%e8%af%95%e8%84%9a%e6%9c%ac" class="anchor">🔗</a></h3><ol>
+<li>先跑通程序：</li>
+</ol>
+<ul>
+<li>运行 coordinator</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bas" data-lang="bas">go run <span style="color:#f92672">-</span>race mrcoordinator<span style="color:#f92672">.</span>go pg<span style="color:#f92672">-*.</span>txt
+</code></pre></div><ul>
+<li>运行 worker</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go build -race -buildmode<span style="color:#f92672">=</span>plugin ../mrapps/wc.go
+go run -race mrworker.go wc.so
+</code></pre></div><ol start="2">
+<li>测试脚本</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">bash test-mr.sh
+bash test-mr-many.sh <span style="color:#ae81ff">5</span>
+</code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>这样第一个 lab MapReduce 就完成了。这个实验实现有多种，以上仅代表个人思路，目前自测脚本通过百分之百，如果有 bug 请留言给我。</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/6.824">6.824</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/lab">lab</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/mapreduce">mapreduce</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+<script src="https://utteranc.es/client.js"
+        repo="he2121/xiaohe-blog"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2022 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>

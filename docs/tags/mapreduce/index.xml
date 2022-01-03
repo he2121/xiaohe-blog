@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>mapreduce on 小贺的博客</title>
+    <link>https://he2121.github.io/xiaohe-blog/tags/mapreduce/</link>
+    <description>Recent content in mapreduce on 小贺的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Thu, 16 Dec 2021 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/mapreduce/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Lab1-MapReduce-实现过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab1%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Thu, 16 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab1%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</guid>
+      <description>最近在学习 MIT 6.824 分布式系统课程，以 lab 维度记录自己的学习心得。
+ 前置准备 🔗6.824 官方课程安排链接
+基础技能 🔗 Go Git  实验前必看 🔗 MapReduce 论文 Lecture-01-笔记-MapReduce-翻译 Lab1-实验文档-MapReduce-翻译这个是重点，跟着这个做实验  选看 🔗 课程视频 Lecture-02-笔记-Go并发-翻译  建议 🔗个人认为看视频比较花费时间，对自己比较自信的话，直接看课程笔记了解一下即可。
+对于实验一 MapReduce 需要我们需要先学习 lecture 1 与 2 的内容。
+ Lecture 1 前半段是课程介绍，大致了解就行。后半段讲的 MapReduce，需仔细学习。 Lecture 2 讲的 Go 多线程 与 RPC，如果已经对 Go 比较熟悉，这里可跳过。  实验过程 🔗1. 实验环境 🔗 跟着 lab1 中的 Getting started（入门），跑通实验环境(go build不出错 ) 熟悉 main/mrsequential.go 代码  在 MapReduce 这个实验中中，使用了 Go 的 plugin（此处应有文档介绍） 把实际的应用程序做成了可插拔式的。但由于 Go 的 plugin 现在比较鸡肋，在 Mac/windows 开发环境中可能会出现各种奇怪问题。建议使用 远程开发 进行开发。</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -255,9 +255,9 @@ JLS num		// 如果上一行的比较结果，左边小于右边则执行跳到 n
 经过这篇文章，相信你已经能大致读懂一些简单的汇编程序了。这里推荐几个源代码的汇编阅读。
 
 - Go 程序的起点：`src/runtime/asm_amd64.s` 中的 `rt0_go(SB)` 函数
-- Go 原子包：`src/runtime/internal/atomic_amd64.s` 中的 Case 函数
+- Go 原子包：`src/runtime/internal/atomic_amd64.s` 中的 `Case` 函数
 
-## 参考
+## 参考 
 
 1. https://segmentfault.com/a/1190000039978109
 2. https://go.dev/doc/asm

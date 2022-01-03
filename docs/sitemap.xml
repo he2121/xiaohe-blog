@@ -2,19 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/6.824/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/lab/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2d%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/raft/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/</loc>
+    <lastmod>2022-01-03T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2c%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</loc>
+    <lastmod>2022-01-01T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2a-2b%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</loc>
+    <lastmod>2021-12-28T14:30:00+08:00</lastmod>
+  </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/golang/</loc>
     <lastmod>2021-12-22T16:10:12+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E6%B1%87%E7%BC%96%E4%BB%8B%E7%BB%8D/</loc>
-    <lastmod>2021-12-22T16:10:12+08:00</lastmod>
-  </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/posts/</loc>
-    <lastmod>2021-12-22T16:10:12+08:00</lastmod>
-  </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/tags/</loc>
-    <lastmod>2021-12-22T16:10:12+08:00</lastmod>
-  </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/</loc>
     <lastmod>2021-12-22T16:10:12+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8/</loc>
@@ -25,6 +43,12 @@
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/</loc>
     <lastmod>2021-12-16T20:39:11+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab1%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</loc>
+    <lastmod>2021-12-16T14:30:00+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/mapreduce/</loc>
+    <lastmod>2021-12-16T14:30:00+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/posts/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</loc>
     <lastmod>2021-12-10T11:10:12+08:00</lastmod>

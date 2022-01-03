@@ -6,7 +6,51 @@
     <description>Recent content in Posts on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 22 Dec 2021 16:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 03 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Lab2D-Raft-快照-实现过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2d%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Mon, 03 Jan 2022 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2d%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</guid>
+      <description>实现前准备 🔗必看 🔗 raft论文 Log compaction 部分 Lab2-实验文档-Raft-翻译Lab2-实验文档-Raft-翻译 2D 交互图  Lab 2D 实验目标 🔗问题 🔗  一个长期运行的服务，不可能永远能存下庞大的 Log
+  服务重启后，上层应用每次都需要从头到尾执行一次全部 Log，这个恢复速度太慢
+  解决 🔗 服务通过不时保存一下它的快照（SnapShot），然后告诉 Raft 快照点之前的日志可以丢了 使：1. Raft 不必维持所有 Log 2. crash 恢复速度也很快速  Lab 2D 实现 🔗我的理解 🔗下图是论文中给出的图，它很形象，让我们一下理解快照的含义。但是这个图给了我一个错觉：快照是经过 log 压缩产生的。然而这是错误的，快照是由上层服务产生，传给 raft 层，然后让 Raft 层丢弃这之前的日志。
+下面的交互图更加准确，让我们了解到数据流通的方向
+ Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态  // For 2D 快照 	lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index 	lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term 	snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int { return len(rf.</description>
+    </item>
+    
+    <item>
+      <title>Lab2C-Raft-持久化状态与日志同步优化-实现过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2c%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Sat, 01 Jan 2022 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2c%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</guid>
+      <description>如果你把 Lab 2B 一步步调过来了，2C 对于你几乎没有难度
+ 实现前准备 🔗必看 🔗 raft论文 Safety、持久化、AppendEntries 优化 Lab2-实验文档-Raft-翻译Lab2-实验文档-Raft-翻译 2C  Lab 2C 目标 🔗 持久化 state，使 server 重启时能够恢复 优化 AppendEntires RPC 被拒绝的次数，之前我们使用 prevLogIndex - 1 来慢慢匹配日志的位置，很明显性能不够  LAB 2C 实现 🔗持久化 state 🔗需要持久化的 state 在图 2 中进行了说明，分别是：
+  currentTerm：当前任期, 这个肯定需要持久化
+  voteFor：这里持久化的目的是，避免一次任期投两次票
+  logs：日志，重启回复需要重新执行一次命令
+  因此代码中修改了上述三个变量的地方都要进行一次持久化。
+持久化一般到磁盘中，但在这个 lab，使用了 persister 来模拟，方便测试。
+ 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) { if data == nil || len(data) &amp;lt; 1 { // bootstrap without any state?</description>
+    </item>
+    
+    <item>
+      <title>Lab2A&amp;2B-Raft-leader选举与日志同步-实现过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2a-2b%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Tue, 28 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab2a-2b%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</guid>
+      <description>Raft 实现真的比较难，首先要从整体上完全理解 Raft 的运行机制就比较困难。再具体到实现上，涉及到很多个后台 goroutine（goroutine 中起 goroutine），如何加锁才能安全读取写入共享变量（一不小心还死锁），并发难以 debug，计时器的实现&amp;hellip; 这篇文章记录下我的个人经验把，希望对其他人能有所帮助
+ 实验前 🔗必看 🔗  raft论文 leader 选举和 Log 复制部分
+  Lab2-实验文档-Raft-翻译Lab2-实验文档-Raft-翻译 2A 2B
+  Lecture-06-笔记-Raft(1)-翻译 Lecture-07-笔记-Raft(2)-翻译
+  选看 🔗 lec 3,4 课程视频 lec 6, 7  建议 🔗  lecture 3 讲 GFS，lecture 4 讲一个复制容错的论文。与我们要实现的 raft 的关系不大，最多算一些前置知识，建议不看。
+  建议 lab2A 与 lab2B 一起做，虽然 lab2 文档把 lab 分开为两个部分。但是我们是去对照论文实现，尤其在 RequestVote 与 AppendEnties 两个 RPC 中，这两者混杂在一起
+  多读几遍论文与 lab2 文档，尤其是论文中的图 2, 再开始 lab&amp;hellip;</description>
+    </item>
+    
     <item>
       <title>Golang 汇编介绍</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E6%B1%87%E7%BC%96%E4%BB%8B%E7%BB%8D/</link>
@@ -20,6 +64,19 @@
   &amp;hellip;
   按汇编格式分类（针对人的阅读习惯） 🔗 Intel 格式 AT&amp;amp;T 格式  平时我们说 golang 中汇编属于 plan9 风格，是按第二种方式分类的，其阅读风格（符号）与 Intel 与 AT&amp;amp;T 都有不同。plan9 汇编作者是 unix 操作系统的同一批人，bell 实验室所开发的。
 Go汇编语言是基于 plan9 汇编，但是现实世界还有这么多不同架构的 CPU 在这。所以 golang 汇编在 plan9 风格下，同一个方法还有不同指令集架构的多种实现。</description>
+    </item>
+    
+    <item>
+      <title>Lab1-MapReduce-实现过程</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab1%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</link>
+      <pubDate>Thu, 16 Dec 2021 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/6.824-lab1%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/</guid>
+      <description>最近在学习 MIT 6.824 分布式系统课程，以 lab 维度记录自己的学习心得。
+ 前置准备 🔗6.824 官方课程安排链接
+基础技能 🔗 Go Git  实验前必看 🔗 MapReduce 论文 Lecture-01-笔记-MapReduce-翻译 Lab1-实验文档-MapReduce-翻译这个是重点，跟着这个做实验  选看 🔗 课程视频 Lecture-02-笔记-Go并发-翻译  建议 🔗个人认为看视频比较花费时间，对自己比较自信的话，直接看课程笔记了解一下即可。
+对于实验一 MapReduce 需要我们需要先学习 lecture 1 与 2 的内容。
+ Lecture 1 前半段是课程介绍，大致了解就行。后半段讲的 MapReduce，需仔细学习。 Lecture 2 讲的 Go 多线程 与 RPC，如果已经对 Go 比较熟悉，这里可跳过。  实验过程 🔗1. 实验环境 🔗 跟着 lab1 中的 Getting started（入门），跑通实验环境(go build不出错 ) 熟悉 main/mrsequential.go 代码  在 MapReduce 这个实验中中，使用了 Go 的 plugin（此处应有文档介绍） 把实际的应用程序做成了可插拔式的。但由于 Go 的 plugin 现在比较鸡肋，在 Mac/windows 开发环境中可能会出现各种奇怪问题。建议使用 远程开发 进行开发。</description>
     </item>
     
     <item>
