@@ -6,7 +6,23 @@
     <description>Recent content in Posts on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 03 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 07 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>日志结构流派存储的引擎的演化</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</link>
+      <pubDate>Fri, 07 Jan 2022 14:30:00 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</guid>
+      <description>本文主要内容来自于《数据密集型应用系统设计》 第三章，内容对我很有启发，所以分享给大家，推荐看原作。
+ 背景 🔗存储引擎存在着两个主要流派：
+ 日志结构流派，只允许追加式更新/删除文件，不会修改已写入的文件，Bitcast，SSTables，LSM-Tree，LevelDB，RocksDB，Cassandra，HBase，Lucene 等属于此类 原地更新流派，将磁盘视为可以覆盖的一组固定大小的页。B-tree 就是这一流派的典型代表，已用于所有主流关系型数据库，以及大量的非关系数据库  大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比
+演化过程 🔗1. 一个最简单的数据库 🔗基本原理 🔗由两个 Bash 函数实现：
+db_set(){ echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database } db_get(){ grep &amp;#34;^$1,&amp;#34; database | sed -e &amp;#34;s/^$1,//&amp;#34; | tail -n 1 } 插入/更新数据: 往 database 文本中追加一行 &amp;lt;key，value&amp;gt;
+查询数据： 查找文本中最后一次出现的 &amp;lt;key，value&amp;gt;
+例如：
+➜ ~ db_set key1 val1 ➜ ~ db_set key2 val2 ➜ ~ db_set key1 val3 ➜ ~ cat database key1,val1 key2,val2 key1,val3 ➜ ~ db_get key1 val3 局限性 🔗db_set: 追加式写，性能高。但db_get: 从头扫描到尾，性能很差</description>
+    </item>
+    
     <item>
       <title>6.824 README</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/6.824/readme/</link>
