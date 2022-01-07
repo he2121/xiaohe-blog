@@ -6,7 +6,9 @@ tags: ["6.824"]
 
 # MIT6.824-2021
 MIT6.824 Distributed Systems Engineering 2021 个人学习记录
+
 [仓库地址](https://github.com/he2121/MIT6.824-2021)
+
 [官方地址](https://pdos.csail.mit.edu/6.824/schedule.html) 
 
 [B 站视频学习](https://www.bilibili.com/video/BV1R7411t71W?from=search&seid=17776370395477379090&spm_id_from=333.337.0.0)

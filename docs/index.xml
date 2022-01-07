@@ -6,14 +6,25 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 03 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 05 Jan 2022 14:08:32 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>2022 读书计划</title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</link>
+      <pubDate>Wed, 05 Jan 2022 14:08:32 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
+      <description>技术类 🔗已读完 🔗正在进行中 🔗 DDIA 数据密集型应用系统设计  待安排 🔗 Redis 设计与实现 重构（第2版）  非技术类 🔗已读完 🔗正在进行中 🔗 红楼梦  待安排 🔗   </description>
+    </item>
+    
     <item>
       <title>6.824 README</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/6.824/readme/</link>
       <pubDate>Mon, 03 Jan 2022 14:30:00 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/6.824/readme/</guid>
-      <description>MIT6.824-2021 🔗MIT6.824 Distributed Systems Engineering 2021 个人学习记录 仓库地址 官方地址
+      <description>MIT6.824-2021 🔗MIT6.824 Distributed Systems Engineering 2021 个人学习记录
+仓库地址
+官方地址
 B 站视频学习
 个人博客在线阅读
 声明：
@@ -381,7 +392,9 @@ brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clon
       <pubDate>Sun, 10 Oct 2021 11:25:11 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/about/</guid>
-      <description></description>
+      <description>2021度博客每周回顾
+2022度博客每周回顾
+2022读书计划</description>
     </item>
     
     <item>
@@ -401,6 +414,16 @@ Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
+    </item>
+    
+    <item>
+      <title>2022度博客每周回顾</title>
+      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</link>
+      <pubDate>Tue, 05 Jan 2021 14:08:32 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
+      <description>每周两篇博客，坚持！
+1.3 - 1.9 🔗1.10 - 1.16 🔗1.17 - 1.23 🔗1.24 - 1.30 🔗1.31 - 2.6 🔗2.7 - 2.13 🔗2.14 - 2.20 🔗2.21 - 2.27 🔗2.28 - 3.6 🔗3.7 - 3.13 🔗</description>
     </item>
     
     <item>
