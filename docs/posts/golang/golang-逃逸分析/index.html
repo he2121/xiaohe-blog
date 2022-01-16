@@ -71,7 +71,7 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          613字
+          617字
         </span>
         <span class="split">
           ·
@@ -136,12 +136,7 @@ if (!doNotTrack) {
 </code></pre></div><ol start="3">
 <li>参数 值传递 VS 指针传递</li>
 </ol>
-<h2 id="问题解答">问题解答 <a href="#%e9%97%ae%e9%a2%98%e8%a7%a3%e7%ad%94" class="anchor">🔗</a></h2><blockquote>
-<ol>
-<li>Go 中 New/Make 出来的对象存在哪，栈还是堆？</li>
-</ol>
-</blockquote>
-<p>Linux 进程布局：</p>
+<h2 id="问题解答">问题解答 <a href="#%e9%97%ae%e9%a2%98%e8%a7%a3%e7%ad%94" class="anchor">🔗</a></h2><h4 id="1-go-中-newmake-出来的对象存在哪栈还是堆">1. Go 中 New/Make 出来的对象存在哪，栈还是堆？ <a href="#1-go-%e4%b8%ad-newmake-%e5%87%ba%e6%9d%a5%e7%9a%84%e5%af%b9%e8%b1%a1%e5%ad%98%e5%9c%a8%e5%93%aa%e6%a0%88%e8%bf%98%e6%98%af%e5%a0%86" class="anchor">🔗</a></h4><p>Linux 进程布局：</p>
 <ol>
 <li>代码段：存放程序可执行的指令的区域</li>
 <li>数据段：存放程序中已初始化的全局变量与静态变量的一块内存区域</li>
@@ -153,18 +148,9 @@ if (!doNotTrack) {
 <p>而在 Go/Java 等有垃圾回收机制的语言上，分配在堆上的对象不需要程序员进行管理。但是如果堆上的对象太多会导致垃圾回收太久，影响主程序的性能。</p>
 <p>Go 的编译器做了一个<strong>优化</strong>: 优先把对象分配在栈上，不能分配在栈上的对象再分配到堆上。由于栈空间随函数调用结束自动回收，不需要垃圾回收，这个优化通过减少垃圾回收简介提高了程序的性能。</p>
 <p>所以，Go 中 New/Make 的对象可能在栈上又可能在堆上。而编译器决定这个对象分在栈上还是堆上的过程，也即对象能否从栈逃逸到堆的分析过程，被称作<strong>逃逸分析</strong>。</p>
-<blockquote>
-<ol start="2">
-<li>FooA 与 FooB 函数哪个性能高一点，为什么(来自 <a href="https://stackoverflow.com/questions/41178729/why-passing-pointers-to-channel-is-slower" target="_blank" rel="noopener">stack overflow</a>)？</li>
-</ol>
-</blockquote>
+<h4 id="2-fooa-与-foob-函数哪个性能高一点为什么">2. FooA 与 FooB 函数哪个性能高一点，为什么？ <a href="#2-fooa-%e4%b8%8e-foob-%e5%87%bd%e6%95%b0%e5%93%aa%e4%b8%aa%e6%80%a7%e8%83%bd%e9%ab%98%e4%b8%80%e7%82%b9%e4%b8%ba%e4%bb%80%e4%b9%88" class="anchor">🔗</a></h4><p>(来自 <a href="https://stackoverflow.com/questions/41178729/why-passing-pointers-to-channel-is-slower" target="_blank" rel="noopener">stack overflow</a>)</p>
 <p>FooB 传递的指针，但其性能会差一些。这是由于其 New 出来的 &amp;User 逃逸到堆上，垃圾回收导致的，具体看 <a href="https://stackoverflow.com/questions/41178729/why-passing-pointers-to-channel-is-slower" target="_blank" rel="noopener">stack overflow</a> 原回答</p>
-<blockquote>
-<ol start="3">
-<li>值传递 VS 指针传递</li>
-</ol>
-</blockquote>
-<p>先根据你的目的：</p>
+<h4 id="3-值传递-vs-指针传递">3. 值传递 VS 指针传递 <a href="#3-%e5%80%bc%e4%bc%a0%e9%80%92-vs-%e6%8c%87%e9%92%88%e4%bc%a0%e9%80%92" class="anchor">🔗</a></h4><p>先根据你的目的：</p>
 <ol>
 <li>你想保证参数不被修改 - 值传递</li>
 <li>参数结构很大 - 指针传递</li>
@@ -172,8 +158,8 @@ if (!doNotTrack) {
 </ol>
 <p>在一般情况下，推荐值传递。因为由于逃逸分析的存在，值传递情况下性能一般比指针传递性能要高。</p>
 <h2 id="golang-逃逸分析">Golang 逃逸分析 <a href="#golang-%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90" class="anchor">🔗</a></h2><p>以下命令查看 Go 编译器的逃逸分析结果，一般搭配 <code>-l</code> 禁止内联使用</p>
-<pre tabindex="0"><code>go build -gcflags=&quot;-m&quot;
-</code></pre><p>上述 FooB 的例子:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-m&#34;</span>
+</code></pre></div><p>上述 FooB 的例子:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
 <span style="color:#75715e"># command-line-arguments</span>
 ./main.go:33:11: &amp;User<span style="color:#f92672">{</span>...<span style="color:#f92672">}</span> escapes to heap
@@ -284,7 +270,7 @@ if (!doNotTrack) {
 <p>过程：</p>
 <ol>
 <li>首先，我们构建一个有向加权图，其中顶点（称为 &ldquo;位置&rdquo;）代表由语句和表达式分配的变量，边代表变量之间的分配（其权重代表寻址/引用计数）</li>
-<li>接下来，我们在图中寻找那些可能违反上述基本原则。如果一个变量 v 的地址被存储在堆或其他地方，可能会超过它的寿命，那么v 就被标记为需要堆分配</li>
+<li>接下来，我们在图中寻找那些可能违反上述基本原则。如果一个变量 v 的地址被存储在堆或其他地方，可能会超过它的寿命，那么 v 就被标记为需要堆分配</li>
 <li>为了支持函数调用间分析，我们还记录了从每个函数的参数到被存到堆以及作为返回值的数据流。这些信息被总结为 &ldquo;参数标签&rdquo;，在静态调用使用，以提高对函数参数的逃逸分析</li>
 </ol>
 <p>这部分了解下大概意思就行，我也没研究</p>

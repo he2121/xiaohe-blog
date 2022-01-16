@@ -6,16 +6,22 @@
     <description>Recent content in 数据编码 on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Mon, 10 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 16 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>数据编码与演化</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
-      <pubDate>Mon, 10 Jan 2022 14:30:00 +0800</pubDate>
+      <pubDate>Sun, 16 Jan 2022 14:30:00 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
-      <description> 本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作
+      <description>本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作
  背景 🔗在程序中，数据有两种不同的表示形式
-   </description>
+  在内存中的数据结构： 对象，结构体，列表，数组，散列表，树等。
+  如果要把内存中的数据结构保存到文件，或通过网络发送，则需要转换成字节序列（如 JSON ）
+  两种不同表示的数据之间经常需要进行转换，从内存中数据结构转成字节序列成为 编码（encode）、序列化（serialization） 或 编组（marshalling）。反过来被称为 解码（Decoding） 、 **反序列化（deserialization）**或者 反编组( unmarshalling）
+数据编码与演化 🔗1. 语言特定的格式 🔗首先比较常见的是各个编程语言内置对序列化的实现。例如 Python 中的 pickle、 Java 中的 java.io.Serializable 、Golang 中的 gob&amp;hellip;
+但除非临时尝试中，我们一般不会使用它们。这是由于：
+ 这类编码通常与特定的编程语言深度绑定，其他语言很难读取这种数据，很难将系统与其他组织的系统（可能用的是不同的语言）进行集成 为了恢复相同对象类型的数据，解码过程需要实例化任意类的能力，这通常是安全问题的一个来源 在这些库中，数据版本控制通常是事后才考虑的。因为它们旨在快速简便地对数据进行编码，所以往往忽略了前向后向兼容性带来的麻烦问题 效率（编码或解码所花费的CPU时间，以及编码结构的大小）往往也是事后才考虑的。 例如，Java的内置序列化由于其糟糕的性能和臃肿的编码而臭名昭着  2. JSON、XML 文本格式编码 🔗现在比较常用的 JSON、XML 两种文本格式编码，其最大优点的是可以被多种编程语言读写， CSV 是另一种流行的与语言无关的格式，但其其功能相对较弱。下面是内存中的一个对象被编码成 JSON 格式后的示例，使用文本格式编码，不仅可以被多种编程语言解码（decoding），甚至连我们人类都能直接阅读理解其意思。
+{ &amp;#34;userName&amp;#34;: &amp;#34;Martin&amp;#34;, &amp;#34;favoriteNumber&amp;#34;: 1337, &amp;#34;interests&amp;#34;: [&amp;#34;daydreaming&amp;#34;, &amp;#34;hacking&amp;#34;] } JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题</description>
     </item>
     
   </channel>
