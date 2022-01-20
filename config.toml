@@ -22,7 +22,10 @@ showPowerBy = false
 
 [[params.links]]
 name = "算法"
-path = "/xiaohe-blog/算法"
+path = "/xiaohe-blog/algorithm"
 [[params.links]]
 name = "杂谈"
-path = "/xiaohe-blog/杂谈"
+path = "/xiaohe-blog/mixed"
+[[params.links]]
+name = "读书"
+path = "/xiaohe-blog/reading"

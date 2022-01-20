@@ -9,10 +9,10 @@
     <lastBuildDate>Sun, 16 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>数据编码与演化</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
       <pubDate>Sun, 16 Jan 2022 14:30:00 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
       <description>本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作
  背景 🔗在程序中，数据有两种不同的表示形式
   在内存中的数据结构： 对象，结构体，列表，数组，散列表，树等。

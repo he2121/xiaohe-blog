@@ -6,13 +6,34 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 16 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 20 Jan 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>流处理系统简介</title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%B5%81%E5%A4%84%E7%90%86%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B/</link>
+      <pubDate>Thu, 20 Jan 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%B5%81%E5%A4%84%E7%90%86%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B/</guid>
+      <description>主要内容来自 DDIA 第十一章 流处理系统，还有自己关于 Golang 流计算的一些调研
+ 背景 🔗计算服务可按以下方式分为三类：
+  在线服务：当收到请求时，服务尽可能快的处理并且发挥一个响应，如常见 Web 服务。
+  批处理(离线)系统：一次性接收并处理大量的数据，往往需要执行比较长的时间（几分钟到几天），所以用户不会同步等待返回结果，这种作业一般定期执行。最常见是 MapReduce
+  流处理（近实时）系统：流处理介于在线与离线之间。批处理输入是有界的，而流处理的输入是无界的。当有新事件到达时，流系统就会处理。比较流行的流处理系统有 Storm， Spark，Flink
+  今天我们来简要介绍下流式处理，尤其是其中流分析相关的部分
+流式处理的适用场景 🔗一般用于实时监控报警
+ 复杂事件处理，允许指定规则，从而在流中搜索特定模式的事件。使用像 SQL 这样的声明式语言来描述应该检验的事件模型 流分析，其与复杂事件处理之间的界限有些模糊。主要差别在其不关心特定序列，更多面向大量数据的累计效果与统计指标，例如，测量某种事件的速率，一段时间内某个值的平均值等 维护物化视图，使用数据库更改流（如 binlog 流）来保持派生数据系统 &amp;hellip;  流处理系统一些难点 🔗1. 时间问题 🔗流处理需要和时间打交道，尤其在用于流分析时，如 “最近 5 分钟的平均值”，这个 “最后 5 分钟” 的定义其实非常模糊，处理起来非常麻烦。在流处理框架，一般使用两种时间：
+ 事件处理时间，流处理框架处理这个事件时的本地系统时钟 事件发生时间，事件自己记录的发生时间  事件处理时间一般要比事件发生时间延迟一些。例如 A 事件发生 00:00, 经过消息队列，到达流处理系统时处理时间为 00:03 了。
+时间窗口该使用哪个定义？这时候就需要使用者根据自己系统的特点和使用目的做一些取舍了。
+  使用事件处理时间，这种方式的优点是简单，并且在发生时间与处理时间之间延迟不大的情况下，效果非常好。
+  使用事件发生时间，可以使处理过程是确定性的：基于同一个输入，再次运行相同的处理过程可以得到相同的处理结果。这样能够支持流批一体，并且能够处理发生时间与处理时间之间延迟很大的情况。
+  使用事件发生时间的缺点是其实现比较复杂，例如无法确定什么时候能够收到特定窗口内的所有事件。一般有两种处理方式：</description>
+    </item>
+    
     <item>
       <title>数据编码与演化</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
       <pubDate>Sun, 16 Jan 2022 14:30:00 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
       <description>本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作
  背景 🔗在程序中，数据有两种不同的表示形式
   在内存中的数据结构： 对象，结构体，列表，数组，散列表，树等。
@@ -35,10 +56,10 @@
     
     <item>
       <title>日志结构流派存储引擎的演化</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</link>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</link>
       <pubDate>Fri, 07 Jan 2022 14:30:00 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</guid>
       <description>本文主要内容来自于《数据密集型应用系统设计》 第三章，内容对我很有启发，所以分享给大家，推荐看原作。
  背景 🔗存储引擎存在着两个主要流派：
  日志结构流派，只允许追加式更新/删除文件，不会修改已写入的文件，Bitcast，SSTables，LSM-Tree，LevelDB，RocksDB，Cassandra，HBase，Lucene 等属于此类 原地更新流派，将磁盘视为可以覆盖的一组固定大小的页。B-tree 就是这一流派的典型代表，已用于所有主流关系型数据库，以及大量的非关系数据库  大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比
@@ -51,20 +72,20 @@ db_set(){ echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database } db_get(){ gre
     
     <item>
       <title>2022 读书计划</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</link>
       <pubDate>Wed, 05 Jan 2022 14:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
       <description> 之前学习新知识总是游离在网上博客，学习到的各个知识点都是零散的。所以今年决定读一些纸质书，增强下自己的底蕴。读完每一本书至少输出一篇博客，分享自己的收获或者对这本书的评价。
- 技术类 🔗已读完 🔗正在进行中 🔗 DDIA 数据密集型应用系统设计 Redis 设计与实现  待安排 🔗 Go专家编程 高性能 MySQL TCP/IP 第一卷 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗正在进行中 🔗 红楼梦  待安排 🔗 毛选 家庭、私有制和国家的起源  </description>
+ 技术类 🔗已读完 🔗正在进行中 🔗 DDIA 数据密集型应用系统设计 Redis 设计与实现  待安排 🔗 Go专家编程 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗正在进行中 🔗 红楼梦  待安排 🔗 毛选 家庭、私有制和国家的起源 亲密关系  </description>
     </item>
     
     <item>
       <title>2022度博客每周回顾</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/2022%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</link>
       <pubDate>Wed, 05 Jan 2022 14:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2022%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/2022%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
       <description>每周两篇博客，坚持！
 1.3 - 1.9 🔗 Raft 2D 日志结构流派存储引擎的演化  1.10 - 1.16 🔗 Golang 逃逸分析 数据编码与演化  1.17 - 1.23 🔗1.24 - 1.30 🔗1.31 - 2.6 🔗2.7 - 2.13 🔗2.14 - 2.20 🔗2.21 - 2.27 🔗2.28 - 3.6 🔗3.7 - 3.13 🔗</description>
     </item>
@@ -152,10 +173,10 @@ Go汇编语言是基于 plan9 汇编，但是现实世界还有这么多不同�
     
     <item>
       <title>云服务器可以干什么系列: vscode 远程开发调试</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95/</link>
       <pubDate>Thu, 16 Dec 2021 20:39:11 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-vscode-%E8%BF%9C%E7%A8%8B%E5%BC%80%E5%8F%91%E8%B0%83%E8%AF%95/</guid>
       <description>为什么需要远程开发调试 🔗 本地开发环境设置复杂 本地操作系统 windows/mac 开发体验、兼容不佳 多设备共享一个开发环境，切换设备开发体验好  如何设置 🔗 本地已安装 vscode，并以安装好开发语言插件（代码提示，补全&amp;hellip;） ssh 能连接上远程开发机，并且远程开发机安装好开发环境（如安装好 Git，Go） vacode 插件市场搜索安装 Remote Development  cmd + shift + p 搜索 Remote-SSH: Add New SSH Host 输入 ssh user@IP 添加 ssh 连接记录。 cmd + shift + p 搜索 Remote-SSH: Connect to Host，选择需要连接的 IP 进行连接。然后弹出的 vscode 界面即是远程开发的环境了  </description>
     </item>
     
@@ -271,19 +292,19 @@ Prometheus 以时序数据的形式收集和存储其指标，同时支持添加
     
     <item>
       <title>前缀和相关算法题</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E7%AE%97%E6%B3%95/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</link>
+      <link>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</link>
       <pubDate>Fri, 26 Nov 2021 17:10:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E7%AE%97%E6%B3%95/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</guid>
       <description></description>
     </item>
     
     <item>
       <title>云服务器可以干什么系列:自建云盘</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</link>
       <pubDate>Sun, 21 Nov 2021 20:39:11 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</guid>
       <description>最近手痒买了一台 4 核 8 G 的阿里云服务器，一直空置也不是事，来发掘下它能干什么吧
  项目介绍 🔗直接放出今天的主角： cloudreve 体验下来，安装简单，功能也比较强大，有需求的同学可以试试。
 安装过程 🔗 登陆服务器，安装 docker 以 docker 镜像 方式，部署服务  &amp;lt;PATH TO uploads&amp;gt;:上传目录，如/sharedfolders &amp;lt;PATH TO config&amp;gt;: 配置文件夹，如/dockercnf/cloudreve/config &amp;lt;PATH TO db&amp;gt;: 数据库文件夹，如/dockercnf/cloudreve/db &amp;lt;PATH TO avatar&amp;gt;: 头像文件夹，如/dockercnf/cloudreve/avatar 新建目录（/cloudreve）
@@ -333,10 +354,10 @@ MESI 的具体设计 🔗MESI：由缓存行（缓存中操作的基本单位，
     
     <item>
       <title>普通人的理财-阶段总结一</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</link>
       <pubDate>Sat, 13 Nov 2021 00:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E6%99%AE%E9%80%9A%E4%BA%BA%E7%9A%84%E7%90%86%E8%B4%A2-%E9%98%B6%E6%AE%B5%E6%80%BB%E7%BB%93%E4%B8%80/</guid>
       <description>起因 🔗两天没写博客了，但想要坚持下去这个习惯。技术文章太费头发了，因此起一个新系列，记录下自己的理财吧（水一下）。
 回顾 🔗启蒙 🔗最初的相遇要追溯到下面那张图
 关键词: &amp;ldquo;2018-02-09&amp;quot;，&amp;ldquo;10.00&amp;rdquo;
@@ -375,10 +396,10 @@ SBL 优点 🔗 产生的日志文件少， io 次数少  SBL 缺点 🔗  在�
     
     <item>
       <title>2021度博客每周回顾</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</link>
       <pubDate>Wed, 10 Nov 2021 14:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/2021%E5%BA%A6%E5%8D%9A%E5%AE%A2%E6%AF%8F%E5%91%A8%E5%9B%9E%E9%A1%BE/</guid>
       <description>每周至少三篇博客，用这个监督下自己
 11.8 - 11.14 🔗 使用 Hugo 与 GitHub Pages 快速建站 Golang 常用日志库介绍 Convert资源集合 普通人的理财-阶段总结一  11.15-11.21 🔗 MySQL binlog 设计 MESI 缓存一致性引发的一些思考 云服务器可以干什么-系列一（自建云盘）  11.22-11.28 🔗 Golang 协程与调度器原理 Golang 程序启动过程  11.29 - 12.05 🔗 Golang channel Golang linkname  12.06 - 12.12 🔗 prometheus-01 prometheus-02 vim 常见操作  12.13 - 12.19 🔗 6.824 lab1 vscode 远程开发  12.20 - 12.26 🔗 Golang 汇编介绍 分布式链路追踪 jaeger  12.27 - 1.</description>
     </item>
@@ -407,10 +428,10 @@ package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日
     
     <item>
       <title>使用 Hugo 与 GitHub Pages 快速建站</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</link>
+      <link>https://he2121.github.io/xiaohe-blog/site/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</link>
       <pubDate>Mon, 08 Nov 2021 20:39:11 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E5%BB%BA%E7%AB%99/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/site/%E4%BD%BF%E7%94%A8hugo%E4%B8%8Egithub-pages%E5%BF%AB%E9%80%9F%E5%BB%BA%E7%AB%99/</guid>
       <description>前言 🔗作为一名程序员，并且是一名有追求的程序员，技术影响力 对我们不可或缺。今天介绍一下我是如何利用 Hugo 与 GitHub Pages 快速搭建个人内容输出平台。
 Hugo 与 GitHub Pages 简介 🔗Hugo: 世界上最快的网站建设框架，将 Markdown 文件生成 HTML 静态页面。
 GitHub Pages GitHub 提供的静态网页托管服务，不需要额外的服务器来部署你的博客系统了。
@@ -423,10 +444,10 @@ brew install hugo  GitHub 创建一个仓库，如 xiaohe-blog，并且 git clon
     
     <item>
       <title>提升技术影响力</title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</link>
       <pubDate>Mon, 08 Nov 2021 20:39:11 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E6%8F%90%E5%8D%87%E6%8A%80%E6%9C%AF%E5%BD%B1%E5%93%8D%E5%8A%9B%E8%AE%A1%E5%88%92/</guid>
       <description>计划 🔗 每周至少三篇博客 持续至少两年 更新到各大平台  平台 🔗 自己的博客 CSDN 知乎 掘金 思否 博客园 微信公共号  发布帖子热度 🔗 知乎 CSDN 掘金   todo 🔗 vscode/GoLand 一键发布帖子插件 vscode/GoLand markdown图床支持(类似 typora + upic)  </description>
     </item>
     
@@ -462,10 +483,10 @@ Interface 🔗定义 🔗接口有两种定义：
     
     <item>
       <title></title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E6%83%B3%E6%B3%95%E8%AE%B0%E5%BD%95/</guid>
       <description>·这里记录一些突然冒出的想法
 常规技术文章 🔗 Golang 的程序启动过程， m0，g0，sysmon？ 从 golang 启动源代码出发: 读懂一些汇编代码需要掌握的一些知识 Golang 协作式调度与抢占式调度 Golang channel 原理介绍 介绍 MySQL 的 redo，undo log 内存分配器 malloc Git 实战操作记录 Golang 中的 linkname Test suite 介绍 打点 prometheus普罗米修斯 介绍 分布式服务追踪 jaeger 介绍  造轮子系列 🔗 手写 go-redis 系列 MIT-6.824 Lab 教程系列 实现一个 go-rpc  项目 🔗  vscode/jetbrain markdown image 插件
   vscode/jetbrain 创造者中心
@@ -475,10 +496,10 @@ Interface 🔗定义 🔗接口有两种定义：
     
     <item>
       <title></title>
-      <link>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</link>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/%E6%9D%82%E8%B0%88/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
       <description>channel 🔗graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
     </item>
     

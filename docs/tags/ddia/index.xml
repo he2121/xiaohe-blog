@@ -6,13 +6,34 @@
     <description>Recent content in DDIA on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sun, 16 Jan 2022 14:30:00 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/ddia/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Thu, 20 Jan 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/ddia/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>流处理系统简介</title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%B5%81%E5%A4%84%E7%90%86%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B/</link>
+      <pubDate>Thu, 20 Jan 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%B5%81%E5%A4%84%E7%90%86%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B/</guid>
+      <description>主要内容来自 DDIA 第十一章 流处理系统，还有自己关于 Golang 流计算的一些调研
+ 背景 🔗计算服务可按以下方式分为三类：
+  在线服务：当收到请求时，服务尽可能快的处理并且发挥一个响应，如常见 Web 服务。
+  批处理(离线)系统：一次性接收并处理大量的数据，往往需要执行比较长的时间（几分钟到几天），所以用户不会同步等待返回结果，这种作业一般定期执行。最常见是 MapReduce
+  流处理（近实时）系统：流处理介于在线与离线之间。批处理输入是有界的，而流处理的输入是无界的。当有新事件到达时，流系统就会处理。比较流行的流处理系统有 Storm， Spark，Flink
+  今天我们来简要介绍下流式处理，尤其是其中流分析相关的部分
+流式处理的适用场景 🔗一般用于实时监控报警
+ 复杂事件处理，允许指定规则，从而在流中搜索特定模式的事件。使用像 SQL 这样的声明式语言来描述应该检验的事件模型 流分析，其与复杂事件处理之间的界限有些模糊。主要差别在其不关心特定序列，更多面向大量数据的累计效果与统计指标，例如，测量某种事件的速率，一段时间内某个值的平均值等 维护物化视图，使用数据库更改流（如 binlog 流）来保持派生数据系统 &amp;hellip;  流处理系统一些难点 🔗1. 时间问题 🔗流处理需要和时间打交道，尤其在用于流分析时，如 “最近 5 分钟的平均值”，这个 “最后 5 分钟” 的定义其实非常模糊，处理起来非常麻烦。在流处理框架，一般使用两种时间：
+ 事件处理时间，流处理框架处理这个事件时的本地系统时钟 事件发生时间，事件自己记录的发生时间  事件处理时间一般要比事件发生时间延迟一些。例如 A 事件发生 00:00, 经过消息队列，到达流处理系统时处理时间为 00:03 了。
+时间窗口该使用哪个定义？这时候就需要使用者根据自己系统的特点和使用目的做一些取舍了。
+  使用事件处理时间，这种方式的优点是简单，并且在发生时间与处理时间之间延迟不大的情况下，效果非常好。
+  使用事件发生时间，可以使处理过程是确定性的：基于同一个输入，再次运行相同的处理过程可以得到相同的处理结果。这样能够支持流批一体，并且能够处理发生时间与处理时间之间延迟很大的情况。
+  使用事件发生时间的缺点是其实现比较复杂，例如无法确定什么时候能够收到特定窗口内的所有事件。一般有两种处理方式：</description>
+    </item>
+    
     <item>
       <title>数据编码与演化</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</link>
       <pubDate>Sun, 16 Jan 2022 14:30:00 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</guid>
       <description>本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作
  背景 🔗在程序中，数据有两种不同的表示形式
   在内存中的数据结构： 对象，结构体，列表，数组，散列表，树等。
@@ -26,10 +47,10 @@
     
     <item>
       <title>日志结构流派存储引擎的演化</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</link>
+      <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</link>
       <pubDate>Fri, 07 Jan 2022 14:30:00 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%B5%81%E6%B4%BE%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E5%8C%96/</guid>
       <description>本文主要内容来自于《数据密集型应用系统设计》 第三章，内容对我很有启发，所以分享给大家，推荐看原作。
  背景 🔗存储引擎存在着两个主要流派：
  日志结构流派，只允许追加式更新/删除文件，不会修改已写入的文件，Bitcast，SSTables，LSM-Tree，LevelDB，RocksDB，Cassandra，HBase，Lucene 等属于此类 原地更新流派，将磁盘视为可以覆盖的一组固定大小的页。B-tree 就是这一流派的典型代表，已用于所有主流关系型数据库，以及大量的非关系数据库  大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比

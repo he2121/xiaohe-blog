@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>日志结构流派存储引擎的演化 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="本文主要内容来自于《数据密集型应用系统设计》 第三章，内容对我很有启发，所以分享给大家，推荐看原作。
+ 背景 🔗存储引擎存在着两个主要流派：
+ 日志结构流派，只允许追加式更新/删除文件，不会修改已写入的文件，Bitcast，SSTables，LSM-Tree，LevelDB，RocksDB，Cassandra，HBase，Lucene 等属于此类 原地更新流派，将磁盘视为可以覆盖的一组固定大小的页。B-tree 就是这一流派的典型代表，已用于所有主流关系型数据库，以及大量的非关系数据库  大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比
+演化过程 🔗1. 一个最简单的数据库 🔗基本原理 🔗由两个 Bash 函数实现：
+db_set(){ echo &#34;$1,$2&#34; &gt;&gt; database } db_get(){ grep &#34;^$1,&#34; database | sed -e &#34;s/^$1,//&#34; | tail -n 1 } 插入/更新数据: 往 database 文本中追加一行 &lt;key，value&gt;
+查询数据： 查找文本中最后一次出现的 &lt;key，value&gt;
+例如：
+➜ ~ db_set key1 val1 ➜ ~ db_set key2 val2 ➜ ~ db_set key1 val3 ➜ ~ cat database key1,val1 key2,val2 key1,val3 ➜ ~ db_get key1 val3 局限性 🔗db_set: 追加式写，性能高。但db_get: 从头扫描到尾，性能很差">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/algorithm">算法</a>
+	
+		<a href="/xiaohe-blog/mixed">杂谈</a>
+	
+		<a href="/xiaohe-blog/reading">读书</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">日志结构流派存储引擎的演化</h1>
+
+    <div class="tip">
+      <div>2022年1月7日</div>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          455字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          3分钟 读完
+        </span>
+        <div class="views">
+          <span class="views">
+              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2freading%2fddia%2f%25E6%2597%25A5%25E5%25BF%2597%25E7%25BB%2593%25E6%259E%2584%25E6%25B5%2581%25E6%25B4%25BE%25E5%25AD%2598%25E5%2582%25A8%25E5%25BC%2595%25E6%2593%258E%25E7%259A%2584%25E6%25BC%2594%25E5%258C%2596%2f" alt="Views"/>
+          </span>
+      </div>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>本文主要内容来自于《数据密集型应用系统设计》 第三章，内容对我很有启发，所以分享给大家，推荐看原作。</p>
+</blockquote>
+<h2 id="背景">背景 <a href="#%e8%83%8c%e6%99%af" class="anchor">🔗</a></h2><p>存储引擎存在着两个主要流派：</p>
+<ol>
+<li><strong>日志结构流派</strong>，只允许追加式更新/删除文件，不会修改已写入的文件，<a href="https://www.cnblogs.com/sinaxyz/p/4199689.html" target="_blank" rel="noopener">Bitcast</a>，<a href="https://stackoverflow.com/questions/2576012/what-is-an-sstable" target="_blank" rel="noopener">SSTables</a>，<a href="https://en.wikipedia.org/wiki/Log-structured_merge-tree" target="_blank" rel="noopener">LSM-Tree</a>，<a href="https://github.com/google/leveldb" target="_blank" rel="noopener">LevelDB</a>，<a href="http://rocksdb.org/docs/getting-started.html" target="_blank" rel="noopener">RocksDB</a>，<a href="https://cassandra.apache.org/_/index.html" target="_blank" rel="noopener">Cassandra</a>，<a href="https://hbase.apache.org/" target="_blank" rel="noopener">HBase</a>，<a href="https://lucene.apache.org/" target="_blank" rel="noopener">Lucene</a> 等属于此类</li>
+<li><strong>原地更新流派</strong>，将磁盘视为可以覆盖的一组固定大小的页。B-tree 就是这一流派的典型代表，已用于所有主流<strong>关系型数据库</strong>，以及大量的非关系数据库</li>
+</ol>
+<p>大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比</p>
+<h2 id="演化过程">演化过程 <a href="#%e6%bc%94%e5%8c%96%e8%bf%87%e7%a8%8b" class="anchor">🔗</a></h2><h3 id="1-一个最简单的数据库">1. 一个最简单的数据库 <a href="#1-%e4%b8%80%e4%b8%aa%e6%9c%80%e7%ae%80%e5%8d%95%e7%9a%84%e6%95%b0%e6%8d%ae%e5%ba%93" class="anchor">🔗</a></h3><h4 id="基本原理">基本原理 <a href="#%e5%9f%ba%e6%9c%ac%e5%8e%9f%e7%90%86" class="anchor">🔗</a></h4><p>由两个 Bash 函数实现：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">db_set<span style="color:#f92672">(){</span>
+        echo <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">,</span>$2<span style="color:#e6db74">&#34;</span> &gt;&gt; database
+<span style="color:#f92672">}</span>
+
+db_get<span style="color:#f92672">(){</span>
+        grep <span style="color:#e6db74">&#34;^</span>$1<span style="color:#e6db74">,&#34;</span> database | sed -e <span style="color:#e6db74">&#34;s/^</span>$1<span style="color:#e6db74">,//&#34;</span> | tail -n <span style="color:#ae81ff">1</span>
+<span style="color:#f92672">}</span>
+</code></pre></div><p><strong>插入/更新数据</strong>: 往 database 文本中追加一行 &lt;key，value&gt;</p>
+<p><strong>查询数据：</strong> 查找文本中最后一次出现的 &lt;key，value&gt;</p>
+<p>例如：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">➜  ~ db_set key1 val1
+➜  ~ db_set key2 val2
+➜  ~ db_set key1 val3
+➜  ~ cat database
+key1,val1
+key2,val2
+key1,val3
+➜  ~ db_get key1
+val3
+</code></pre></div><h4 id="局限性">局限性 <a href="#%e5%b1%80%e9%99%90%e6%80%a7" class="anchor">🔗</a></h4><p><code>db_set</code>: 追加式写，性能高。但<code>db_get</code>: 从头扫描到尾，性能很差</p>
+<p><strong>如何解决：</strong></p>
+<p>增加一个数据结构：<strong>索引</strong></p>
+<p>索引：原始数据派生的额外数据结构，适当的索引可以加速，但是加索引会减慢写的速度</p>
+<h3 id="2-哈希索引">2. 哈希索引 <a href="#2-%e5%93%88%e5%b8%8c%e7%b4%a2%e5%bc%95" class="anchor">🔗</a></h3><h4 id="基本原理-1">基本原理 <a href="#%e5%9f%ba%e6%9c%ac%e5%8e%9f%e7%90%86-1" class="anchor">🔗</a></h4><p>为了解决上述追加式文件读性能太差的问题，可以在内存中维护一个 <code>&lt;key, offset&gt;</code> 的 哈希表，如下图所示。offset 代表此 key 在文件中偏移量，所以 get 不需要遍历整个文件了。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig3-1-2022-01-06.png" alt="ddia-fig3-1"  />
+</p></p>
+<p>这听上去可能过于简单，但它的确是一个可行的方法。事实上，Bitcask 就是这么做的（Riak 中默认的存储引擎）</p>
+<p>这个简单的想法可行，但是要应用到实际中还需要解决其存在的一些问题或者说需要做一些优化</p>
+<h5 id="1-追加式日志存储冗余太多">1. 追加式日志存储冗余太多 <a href="#1-%e8%bf%bd%e5%8a%a0%e5%bc%8f%e6%97%a5%e5%bf%97%e5%ad%98%e5%82%a8%e5%86%97%e4%bd%99%e5%a4%aa%e5%a4%9a" class="anchor">🔗</a></h5><p><strong>压缩思路</strong>：一个 key 存在多次写，可以只保留最新写入的 value</p>
+<p><strong>解决方案</strong>：将日志分解成一定大小的段，当文件达到特定大小时关闭当前段文件，写入一个新的段文件。然后在这些段上执行压缩。</p>
+<p>可以在一个段内压缩，也可以把多个段合并在一起， 下图是一个把两个段合并在一起的例子。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig3-3-2022-01-06.png" alt="ddia-fig3-3"  />
+</p></p>
+<p>压缩合并：</p>
+<ul>
+<li>
+<p>如果 key 存在于多个段中，保留最新的段中的</p>
+</li>
+<li>
+<p>压缩合并可以运行在后台线程</p>
+</li>
+<li>
+<p>在压缩合并的过程中，可以继续用旧的段读取和写入</p>
+</li>
+<li>
+<p>合并过程完成后，读和写请求切换到新的段，旧的段可以删除了</p>
+</li>
+</ul>
+<p>现在，每个段在内存中都有自己的哈希表，读取流程为：首先检查最新段的哈希表，如果 key 不存在，检查第二新的段，以此类推。如果 key 不存在，要遍历完所有段的哈希表</p>
+<h5 id="2-文件格式">2. 文件格式 <a href="#2-%e6%96%87%e4%bb%b6%e6%a0%bc%e5%bc%8f" class="anchor">🔗</a></h5><ul>
+<li>上面例子使用的 CSV 作为日志格式，为了性能考虑，可以使用二进制格式的日志</li>
+</ul>
+<h5 id="3-如何删除">3. 如何删除 <a href="#3-%e5%a6%82%e4%bd%95%e5%88%a0%e9%99%a4" class="anchor">🔗</a></h5><ul>
+<li>在数据文件中追加一个特殊的删除记录</li>
+</ul>
+<h5 id="4-崩溃恢复">4. 崩溃恢复 <a href="#4-%e5%b4%a9%e6%ba%83%e6%81%a2%e5%a4%8d" class="anchor">🔗</a></h5><ol>
+<li>内存中哈希表会丢失
+<ol>
+<li>可以重头到尾重新扫描段文件，恢复哈希表，但是恢复速度太慢</li>
+<li>将哈希表的快照存在磁盘中，Bitcast 就是这么做的，恢复时读取</li>
+</ol>
+</li>
+<li>存在部分写入的记录
+<ul>
+<li>加校验值</li>
+</ul>
+</li>
+</ol>
+<h5 id="5-并发控制">5. 并发控制 <a href="#5-%e5%b9%b6%e5%8f%91%e6%8e%a7%e5%88%b6" class="anchor">🔗</a></h5><ul>
+<li>使用单个线程写</li>
+</ul>
+<h4 id="优势其实以下是日志结构流派的优势">优势（其实以下是日志结构流派的优势） <a href="#%e4%bc%98%e5%8a%bf%e5%85%b6%e5%ae%9e%e4%bb%a5%e4%b8%8b%e6%98%af%e6%97%a5%e5%bf%97%e7%bb%93%e6%9e%84%e6%b5%81%e6%b4%be%e7%9a%84%e4%bc%98%e5%8a%bf" class="anchor">🔗</a></h4><ul>
+<li>追加和合并都是顺序写，顺序写与随机写性能之间有 2 个数量级以上的差异</li>
+<li>段文件是追加和不可修改的，并发与崩溃恢复简单得多。不必担心重写值时发生崩溃，留下一个包含部分旧值与部分新值混杂在一起的文件</li>
+<li>合并旧段可以避免数据文件出现碎片化的问题</li>
+</ul>
+<h4 id="局限性哈希索引结构">局限性（哈希索引结构） <a href="#%e5%b1%80%e9%99%90%e6%80%a7%e5%93%88%e5%b8%8c%e7%b4%a2%e5%bc%95%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h4><ol>
+<li>哈希表必须全局放入内存，如果数据量比较多，内存很容易放不下。虽然理论上可以把哈希表放在磁盘维护，但是哈希表放在磁盘的表现并不好，大量随机 IO</li>
+<li>区间查询效率不高，必须遍历所有段的哈希表中每个 key</li>
+</ol>
+<h3 id="3-sstables">3. SSTables <a href="#3-sstables" class="anchor">🔗</a></h3><h4 id="基本原理-2">基本原理 <a href="#%e5%9f%ba%e6%9c%ac%e5%8e%9f%e7%90%86-2" class="anchor">🔗</a></h4><p>为了解决上述哈希索引的问题，提出以下要求</p>
+<ul>
+<li><strong>段文件中 &lt;key, value&gt; 按 key 排序</strong></li>
+</ul>
+<p>这种格式的段文件被称为<strong>排序字符表（SSTable）</strong>，其相对哈希索引的日志段有以下优势</p>
+<ol>
+<li>即使文件大于可用内存，合并段的操作仍然是简单而高效的。使用归并排序算法，如下图所示</li>
+</ol>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig3-4-2022-01-06.png" alt="ddia-fig3-4"  />
+</p></p>
+<ol start="2">
+<li>不需要在内存中保存所有 key 的索引了。因为其中段文件中 key 是排序的，索引可以非常稀疏，每几千个字节存一个索引。然后可以在几千个字节中使用遍历/二分查找出特定的 key</li>
+<li>可以将两个索引之间的多个 &lt;key,value&gt; 分组，压缩存储，节省磁盘 IO</li>
+</ol>
+<h4 id="局限性-1">局限性 <a href="#%e5%b1%80%e9%99%90%e6%80%a7-1" class="anchor">🔗</a></h4><p>虽然 SSTable 相对哈希索引有这么多好处， 但其要求段文件中 &lt;key,value&gt; 按 key 排序，这个要求本身就违背了日志结构流派的初心-追加顺序写，因为用户的写请求不可能是按 key 从小到大顺序来的</p>
+<h3 id="4-lsm-tree">4. LSM-Tree <a href="#4-lsm-tree" class="anchor">🔗</a></h3><p>LSM-Tree 作为目前日志结构流派的最终 boss 出场了，它的作用是构建和维护 SSTables</p>
+<h4 id="原理">原理 <a href="#%e5%8e%9f%e7%90%86" class="anchor">🔗</a></h4><p>写入以任意顺序出现，但可以在内存中维护一个有序的数据结构，如红黑树、AVL 树、跳跃表等。</p>
+<p>因此现在的<strong>写入流程</strong>为：</p>
+<ol>
+<li>有新写入时，将其添加到内存中的平衡树数据结构（例如红黑树）。这个内存树有时被称为<strong>内存表（memtable）</strong>。</li>
+<li>当<strong>内存表</strong>大于某个阈值（通常为几 MB）时，将其作为 SSTable 文件写入硬盘。由于已经是有序 &lt;key, value&gt; 对了，写磁盘比较高效。新的 SSTable 文件将成为数据库中最新的段。当该 SSTable 被写入硬盘时，新的写入可以在一个新的内存表实例上继续进行。</li>
+</ol>
+<p><strong>读取流程</strong>为：</p>
+<ol>
+<li>收到读取请求时，首先尝试在内存表中找到对应的 key</li>
+<li>如果内存表没有就在最近的 SSTable 段中寻找</li>
+<li>如果还没有就在下一个较旧的段中继续寻找，以此类推</li>
+</ol>
+<p>后台线程周期性执行段的合并压缩过程，以合并段文件并将已覆盖或已删除的值丢弃掉</p>
+<p>以上还存在一个问题，内存表的数据会在崩溃中丢掉，这也很好解决，使用 <strong>WAL</strong> 记录内存表中的写入。下图很形象的描述了 LSM-tree 的工作原理</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220107004526423-2022-01-07.png" alt="image-20220107004526423"  />
+</p></p>
+<p>以上就是 LSM-tree 的基本思想了，其获得了巨大成功，LevelDB，RocksDB，Cassandra，HBase，Lucene 等都使用到了类似的方法。</p>
+<h4 id="性能优化">性能优化 <a href="#%e6%80%a7%e8%83%bd%e4%bc%98%e5%8c%96" class="anchor">🔗</a></h4><p>要满足实际应用的需求，总是由很多细节值得深入</p>
+<p>**问题 1：**查找数据库中不存在的 key 时，要回溯到最旧的段（多次磁盘访问）</p>
+<p><strong>解决方法：</strong> 布隆过滤器</p>
+<p>**问题 2：**合并与压缩 SSTable 的策略: 什么时候去合并压缩 SSTable？ 应该合并压缩 那几个 SSTable？</p>
+<p>**解决方案 **：分层压缩（LevelDB 与 RocksDB）与大小分级（HBase）</p>
+<p>我们这里主要介绍下 LevelDB 的实现，其主要思想是把 SSTable 分层，如下图所示：</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/leveldb-2022-01-07.png" alt="leveldb"  />
+</p></p>
+<p>内存表：</p>
+<ul>
+<li>默认 4MB 左右内存块</li>
+<li>存放有序 Key-Value</li>
+<li>内存结构为跳跃表</li>
+<li>数据先写入 Memtable，达到指定大小后，把它变成 ImmuableTable，之后异步 Compaction 落盘到 Level-0</li>
+</ul>
+<p>SSTable 文件：</p>
+<ul>
+<li>SSTable 文件是层次结构，每层按 key range 分区存放在多个 SSTable 中</li>
+<li>Level-0 层 比较特殊，其上不同 SSTable 的 key range 会存在重叠，其它层 key range 不重叠。level-0 限定总大小 4 MB，单个 SSTable 段 1 MB</li>
+<li>Level-i（i &gt; 0）的大小呈指数增长，其单个 SSTable 大小限定 2MB，Level-i 层总大小限定大小 <code>10^i </code>MB，第 6 层能容纳 1 T 的数据量</li>
+<li>Level-i 层中的每个 SSTable 最多与 Level-(i+1) 的 10 个 SSTable 存在交集</li>
+<li>数据新鲜度：Memtable &gt; ImmutableTable &gt; Level-0 &gt; Level-1 &gt; Level-2 &gt; ..</li>
+</ul>
+<p>合并时机：</p>
+<p>level-i 的大小超过其限定大小 <code>10^i</code> MB 时，选择一个 level-i 的 SSTable 与其 level-(i+1) 的 key 存在交集的 SSTable 进行合并。</p>
+<p>触发生成新的 SSTable 时机</p>
+<ul>
+<li>SSTable 文件大小达到 2 MB</li>
+<li>SSTable 与下一层 key 重叠的 SSTable 数量超过十个</li>
+</ul>
+<h4 id="存在的一些问题">存在的一些问题 <a href="#%e5%ad%98%e5%9c%a8%e7%9a%84%e4%b8%80%e4%ba%9b%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h4><ol>
+<li>写放大：指一次写入请求造成多次磁盘写，合并压缩引起</li>
+<li>读放大：指实际读取的数据量大于用户需要的数据量，LSM-tree 从内存表开始，若找不到，会一层层查找后面 SSTable</li>
+<li>空间放大: 不是原地更新，过期数据不会马上删除</li>
+</ol>
+<p>合并压缩能够减少读放大与空间放大，但会带来写放大，三者的关系有点类似 CAP，需要取舍。</p>
+<h2 id="lsm-tree-与-b-tree-的对比">LSM-tree 与 B-tree 的对比 <a href="#lsm-tree-%e4%b8%8e-b-tree-%e7%9a%84%e5%af%b9%e6%af%94" class="anchor">🔗</a></h2><p>尽管 B-tree 实现通常比 LSM-tree 实现更成熟，但 LSM-tree 由于其性能特点目前很有吸引力。根据经验，通常 LSM-tree 的写入速度更快，而 B-tree 的读取速度更快。 LSM-tree 上的读取通常比较慢，因为它们必须检查几种不同的数据结构和不同压缩（Compaction）层级的SSTables。</p>
+<h3 id="lsm-tree-优势">LSM-Tree 优势 <a href="#lsm-tree-%e4%bc%98%e5%8a%bf" class="anchor">🔗</a></h3><h4 id="1-设计简单高效">1. 设计简单高效 <a href="#1-%e8%ae%be%e8%ae%a1%e7%ae%80%e5%8d%95%e9%ab%98%e6%95%88" class="anchor">🔗</a></h4><p>基本思路是合并压缩排序文件，写入性能高，在并发与崩溃恢复等问题上也简单得多</p>
+<h4 id="2-较低的写放大">2. 较低的写放大 <a href="#2-%e8%be%83%e4%bd%8e%e7%9a%84%e5%86%99%e6%94%be%e5%a4%a7" class="anchor">🔗</a></h4><p>B-tree 写数据时，即使只有几个字节更改，也必须承受整个页的开销（有时还可能发生页分裂）</p>
+<p>LSM-tree 在压缩和合并 SSTable 的过程中，也会重写数据多次</p>
+<p>结论：LSM-tree 具有较低的写放大</p>
+<p>写放大在写入吞吐量和 SSD 磁盘寿命中影响比较大</p>
+<h4 id="3-顺序写">3. 顺序写 <a href="#3-%e9%a1%ba%e5%ba%8f%e5%86%99" class="anchor">🔗</a></h4><p>B-tree：随机写</p>
+<p>LSM-tree:  顺序写</p>
+<p>顺序写性能更高，在使用普通磁盘的机器中非常关键</p>
+<h4 id="4-支持更好地压缩">4. 支持更好地压缩 <a href="#4-%e6%94%af%e6%8c%81%e6%9b%b4%e5%a5%bd%e5%9c%b0%e5%8e%8b%e7%bc%a9" class="anchor">🔗</a></h4><p>B-tree 不支持压缩， 面向页的，存在一些碎片无法使用</p>
+<p>LSM-tree 支持压缩，磁盘中文件比 B-tree 小，定期合并 SSTable 消除碎片化</p>
+<h3 id="lsm-tree-劣势">LSM-tree 劣势 <a href="#lsm-tree-%e5%8a%a3%e5%8a%bf" class="anchor">🔗</a></h3><h4 id="1-后台压缩合并过程会影响实时读写操作">1. 后台压缩合并过程会影响实时读写操作 <a href="#1-%e5%90%8e%e5%8f%b0%e5%8e%8b%e7%bc%a9%e5%90%88%e5%b9%b6%e8%bf%87%e7%a8%8b%e4%bc%9a%e5%bd%b1%e5%93%8d%e5%ae%9e%e6%97%b6%e8%af%bb%e5%86%99%e6%93%8d%e4%bd%9c" class="anchor">🔗</a></h4><p>磁盘的并发资源有限，而压缩合并过程非常占用磁盘资源，会干扰实时读写请求</p>
+<p>LSM-tree 会在更高的百分位查询响应（pct999？）相当高的情况，而 B-tree 的响应延迟更具确定性</p>
+<h4 id="2可能后台压缩速度赶不上写入速度">2.可能后台压缩速度赶不上写入速度 <a href="#2%e5%8f%af%e8%83%bd%e5%90%8e%e5%8f%b0%e5%8e%8b%e7%bc%a9%e9%80%9f%e5%ba%a6%e8%b5%b6%e4%b8%8d%e4%b8%8a%e5%86%99%e5%85%a5%e9%80%9f%e5%ba%a6" class="anchor">🔗</a></h4><p>硬盘的有限写入带宽需要在初始写入（记录日志和刷新内存表到硬盘）和在后台运行的压缩线程之间共享。写入空数据库时，可以使用全硬盘带宽进行初始写入，但数据库越大，压缩所需的硬盘带宽就越多。</p>
+<p>如果写入吞吐量很高，并且压缩没有仔细配置好，有可能导致压缩跟不上写入速率。在这种情况下，硬盘上未合并段的数量不断增加，直到硬盘空间用完，读取速度也会减慢，因为它们需要检查更多的段文件。</p>
+<p>通常情况下，即使压缩无法跟上，基于SSTable的存储引擎也不会限制传入写入的速率，所以你需要进行明确的监控来检测这种情况</p>
+<h4 id="3-对事务的支持不如-b-tree">3. 对事务的支持不如 B-tree <a href="#3-%e5%af%b9%e4%ba%8b%e5%8a%a1%e7%9a%84%e6%94%af%e6%8c%81%e4%b8%8d%e5%a6%82-b-tree" class="anchor">🔗</a></h4><p>B-tree 中一个 key 存在一个确切的位置，而 LSM-tree 可能存在于不同段中</p>
+<p>在许多关系数据库中，事务隔离是通过在键范围上使用锁来实现的，在 B-tree 索引中，这些锁可以直接附加到树上。在 LSM-tree 对范围上锁，只能把所有 SSTable 对应位置锁上。</p>
+<h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>B-tree 在数据库架构中是根深蒂固的，为许多工作负载都提供了始终如一的良好性能，所以它们不可能很快就会消失。而在新的数据存储中，日志结构化索引变得越来越流行，日志结构流派的设计足够简单高效，值得我们学习。</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/ddia">DDIA</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80">计算机基础</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E">存储引擎</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+<script src="https://utteranc.es/client.js"
+        repo="he2121/xiaohe-blog"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2022 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>

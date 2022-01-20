@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>数据编码与演化 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作
+ 背景 🔗在程序中，数据有两种不同的表示形式
+  在内存中的数据结构： 对象，结构体，列表，数组，散列表，树等。
+  如果要把内存中的数据结构保存到文件，或通过网络发送，则需要转换成字节序列（如 JSON ）
+  两种不同表示的数据之间经常需要进行转换，从内存中数据结构转成字节序列成为 编码（encode）、序列化（serialization） 或 编组（marshalling）。反过来被称为 解码（Decoding） 、 **反序列化（deserialization）**或者 反编组( unmarshalling）
+数据编码与演化 🔗1. 语言特定的格式 🔗首先比较常见的是各个编程语言内置对序列化的实现。例如 Python 中的 pickle、 Java 中的 java.io.Serializable 、Golang 中的 gob&hellip;
+但除非临时尝试中，我们一般不会使用它们。这是由于：
+ 这类编码通常与特定的编程语言深度绑定，其他语言很难读取这种数据，很难将系统与其他组织的系统（可能用的是不同的语言）进行集成 为了恢复相同对象类型的数据，解码过程需要实例化任意类的能力，这通常是安全问题的一个来源 在这些库中，数据版本控制通常是事后才考虑的。因为它们旨在快速简便地对数据进行编码，所以往往忽略了前向后向兼容性带来的麻烦问题 效率（编码或解码所花费的CPU时间，以及编码结构的大小）往往也是事后才考虑的。 例如，Java的内置序列化由于其糟糕的性能和臃肿的编码而臭名昭着  2. JSON、XML 文本格式编码 🔗现在比较常用的 JSON、XML 两种文本格式编码，其最大优点的是可以被多种编程语言读写， CSV 是另一种流行的与语言无关的格式，但其其功能相对较弱。下面是内存中的一个对象被编码成 JSON 格式后的示例，使用文本格式编码，不仅可以被多种编程语言解码（decoding），甚至连我们人类都能直接阅读理解其意思。
+{ &#34;userName&#34;: &#34;Martin&#34;, &#34;favoriteNumber&#34;: 1337, &#34;interests&#34;: [&#34;daydreaming&#34;, &#34;hacking&#34;] } JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题">
+<meta name="generator" content="Hugo 0.89.2" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/algorithm">算法</a>
+	
+		<a href="/xiaohe-blog/mixed">杂谈</a>
+	
+		<a href="/xiaohe-blog/reading">读书</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">数据编码与演化</h1>
+
+    <div class="tip">
+      <div>2022年1月16日</div>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          287字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          2分钟 读完
+        </span>
+        <div class="views">
+          <span class="views">
+              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2freading%2fddia%2f%25E6%2595%25B0%25E6%258D%25AE%25E7%25BC%2596%25E7%25A0%2581%25E4%25B8%258E%25E6%25BC%2594%25E5%258C%2596%2f" alt="Views"/>
+          </span>
+      </div>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <blockquote>
+<p>本文主要内容来自于《数据密集型应用系统设计》 第四章，推荐大家看原作</p>
+</blockquote>
+<h2 id="背景">背景 <a href="#%e8%83%8c%e6%99%af" class="anchor">🔗</a></h2><p>在程序中，数据有两种不同的表示形式</p>
+<ol>
+<li>
+<p>在内存中的数据结构： 对象，结构体，列表，数组，散列表，树等。</p>
+</li>
+<li>
+<p>如果要把内存中的数据结构保存到文件，或通过网络发送，则需要转换成字节序列（如 JSON ）</p>
+</li>
+</ol>
+<p>两种不同表示的数据之间经常需要进行转换，从内存中数据结构转成字节序列成为 <strong>编码（encode</strong>）、<strong>序列化（serialization）</strong> 或 <strong>编组（marshalling）</strong>。反过来被称为 <strong>解码（Decoding）</strong> 、 **反序列化（deserialization）**或者 <strong>反编组( unmarshalling）</strong></p>
+<h2 id="数据编码与演化">数据编码与演化 <a href="#%e6%95%b0%e6%8d%ae%e7%bc%96%e7%a0%81%e4%b8%8e%e6%bc%94%e5%8c%96" class="anchor">🔗</a></h2><h3 id="1-语言特定的格式">1. 语言特定的格式 <a href="#1-%e8%af%ad%e8%a8%80%e7%89%b9%e5%ae%9a%e7%9a%84%e6%a0%bc%e5%bc%8f" class="anchor">🔗</a></h3><p>首先比较常见的是各个编程语言内置对序列化的实现。例如 Python 中的 <code>pickle</code>、 Java 中的 <code>java.io.Serializable</code> 、Golang 中的 <code>gob</code>&hellip;</p>
+<p>但除非临时尝试中，我们一般不会使用它们。这是由于：</p>
+<ol>
+<li>这类编码通常与特定的编程语言深度绑定，其他语言很难读取这种数据，很难将系统与其他组织的系统（可能用的是不同的语言）进行集成</li>
+<li>为了恢复相同对象类型的数据，解码过程需要实例化任意类的能力，这通常是安全问题的一个来源</li>
+<li>在这些库中，数据版本控制通常是事后才考虑的。因为它们旨在快速简便地对数据进行编码，所以往往忽略了前向后向兼容性带来的麻烦问题</li>
+<li>效率（编码或解码所花费的CPU时间，以及编码结构的大小）往往也是事后才考虑的。 例如，Java的内置序列化由于其糟糕的性能和臃肿的编码而臭名昭着</li>
+</ol>
+<h3 id="2-jsonxml-文本格式编码">2. JSON、XML 文本格式编码 <a href="#2-jsonxml-%e6%96%87%e6%9c%ac%e6%a0%bc%e5%bc%8f%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h3><p>现在比较常用的 JSON、XML 两种文本格式编码，其最大优点的是可以被多种编程语言读写， CSV 是另一种流行的与语言无关的格式，但其其功能相对较弱。下面是内存中的一个对象被编码成 JSON 格式后的示例，使用文本格式编码，不仅可以被多种编程语言解码（decoding），甚至连我们人类都能直接阅读理解其意思。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+    <span style="color:#f92672">&#34;userName&#34;</span>: <span style="color:#e6db74">&#34;Martin&#34;</span>,
+    <span style="color:#f92672">&#34;favoriteNumber&#34;</span>: <span style="color:#ae81ff">1337</span>,
+    <span style="color:#f92672">&#34;interests&#34;</span>: [<span style="color:#e6db74">&#34;daydreaming&#34;</span>, <span style="color:#e6db74">&#34;hacking&#34;</span>]
+}
+</code></pre></div><p>JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题</p>
+<ol>
+<li>数值（numbers） 的编码多有歧义之处。XML 和 CSV 不能区分数字和字符串（除非引用一个外部模式）。 JSON虽然区分字符串与数值，但不区分整数和浮点数，而且不能指定精度，导致 JSON 不能表示 int64 中特别大的数值</li>
+<li>JSON 和 XML 对 Unicode 字符串（即人类可读的文本）有很好的支持，但是它们不支持二进制数据。人们通过使用 Base64 将二进制数据编码为文本来绕过此限制。其特有的模式标识着这个值应当被解释为 Base64 编码的二进制数据。这种方案虽然管用，但比较Hacky，并且会增加三分之一的数据大小。</li>
+<li>XML 和 JSON 都有可选的模式支持。这些模式语言相当强大，所以学习和实现起来都相当复杂。 XML模式的使用相当普遍，但许多基于 JSON 的工具才不会去折腾模式。对数据的正确解读（例如区分数值与二进制串）取决于模式中的信息，因此不使用XML/JSON模式的应用程序可能需要对相应的编码/解码逻辑进行硬编码</li>
+<li>文本格式性能还可以待提升，例如数字  12345678901234567890 在文本格式编码中需要 20 个字节</li>
+</ol>
+<h3 id="3-二进制编码">3. 二进制编码 <a href="#3-%e4%ba%8c%e8%bf%9b%e5%88%b6%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h3><p>二进制编码对文本格式的做了一些性能方面的提升，大量二进制编码版本 JSON（MessagePack，BSON，BJSON，UBJSON，BISON和Smile 等） 和 XML（例如WBXML和Fast Infoset）的出现。这些格式已经在各种各样的领域中采用，像 BSON 在 MangoDB 中被使用，但是没有一个能像文本版 JSON 和 XML 那样被广泛采用。</p>
+<p>我们来看一个 MessagePack 的例子，它是一个 JSON 的二进制编码。它对上述例子的 JSON 文档 进行编码，则得到的字节序列如下图所示。二进制编码长度为 <strong>66 个字节</strong>，仅略小于文本 JSON 编码所取的 <strong>81 个字节</strong>（删除了空白）。主要的不同点：</p>
+<ol>
+<li>
+<p>数据类型与其边界，JSON 使用符号标识 <code>{}</code>,<code>,</code>,<code>&quot;&quot;</code>等标识，MessagePack 直接使用 2 字节规定</p>
+</li>
+<li>
+<p>数值编码格式，JSON 使用文本编码数字，二进制的数值编码格式明显压缩率更高，8 个字节能表示 int 64 范围内的数字</p>
+</li>
+</ol>
+<p>所有的 JSON 的二进制编码在这方面是相似的。在空间节省了一丁点（以及解析加速）是否能弥补可读性的损失，谁也说不准</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig4-1-2022-01-17.png" alt="ddia-fig4-1"  />
+</p></p>
+<h3 id="4-thrift-与protocol-buffers">4. Thrift 与Protocol Buffers <a href="#4-thrift-%e4%b8%8eprotocol-buffers" class="anchor">🔗</a></h3><p>上述二进制编码是基于 JSON 的做出的一点优化，但我们看到其效果（<strong>81 B -&gt; 66 B</strong>）还不太够</p>
+<p>由此出现了两种更加强大二进制编码的格式，它们基于相同的原理：</p>
+<ul>
+<li>消息中字段名过长可能会占用过多空间，可以把字段名优化掉</li>
+</ul>
+<p>Protocol Buffers 最初是在 Google 开发的，Thrift 最初是在Facebook 开发的，并且在 2007~2008 年开源。 Thrift 和 Protocol Buffers 都需要一个模式（接口定义语言 IDL）来编码任何数据。如下面例子分别用 IDL 表示了上述例子中的数据格式</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-protobuf" data-lang="protobuf"><span style="color:#75715e">// thrift 
+</span><span style="color:#75715e"></span>struct Person {<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">required</span> <span style="color:#66d9ef">string</span>       userName,<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">optional</span> i64          favoriteNumber,<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">3</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">optional</span> list&lt;<span style="color:#66d9ef">string</span>&gt; interests<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#75715e">// protobuf
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">message</span> <span style="color:#a6e22e">Person</span> {<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">required</span> <span style="color:#66d9ef">string</span> user_name       <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">optional</span> <span style="color:#66d9ef">int64</span>  favorite_number <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">repeated</span> <span style="color:#66d9ef">string</span> interests       <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;<span style="color:#960050;background-color:#1e0010">
+</span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
+</span></code></pre></div><p>相信各位对这两者并不陌生，其都被广泛用于各种 RPC 中。</p>
+<p>我们来看看这两者是如何把数据压缩到极致的。Thrift有两种不同的二进制编码格式，分别称为BinaryProtocol 和 CompactProtocol。</p>
+<h4 id="1-thrift-binaryprotocol-编码">1. Thrift BinaryProtocol 编码 <a href="#1-thrift-binaryprotocol-%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h4><p>使用这种格式的编码来编码上述例子中的消息只需要 <strong>59 个字节</strong>，如下图所示。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig4-2-2022-01-17.png" alt="ddia-fig4-2"  />
+</p></p>
+<p>Thrift 与基于 JSON 变种二进制编码的主要优化点：</p>
+<ul>
+<li>Thrift 使用 field tag  1,2,3  代替了字段名 (userName, favoriteNumber, interests)</li>
+</ul>
+<h4 id="2-thrift-compactprotocol-编码">2. Thrift CompactProtocol 编码 <a href="#2-thrift-compactprotocol-%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h4><p>其在语义上等同于 BinaryProtocol，但是如下图所示，它只将相同的信息打包成只有 <strong>34 个字节</strong>。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig4-3-2022-01-17.png" alt="ddia-fig4-3"  />
+</p></p>
+<p>其上做了更细致的一点优化。</p>
+<ol>
+<li>它通过将字段类型和标签号打包到单个字节中，</li>
+<li>使用可变长度整数编码, 实现原理每个字节的最高位用来指示是否还有更多的字节。这意味着 -64 到 63 之间的数字 只要一个字节，-8192 和 8191之间的数字只需要用两个字节编码&hellip;</li>
+</ol>
+<h4 id="3-protocol-buffers-编码">3. Protocol Buffers 编码 <a href="#3-protocol-buffers-%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h4><p>​	其与Thrift的 CompactProtocol 非常相似。 Protobuf 将同样的记录塞进了 <strong>33 个字节</strong>中，如下图所示。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig4-4-2022-01-17.png" alt="ddia-fig4-4"  />
+</p></p>
+<h4 id="thrift-与-protobuf-需要注意的一些问题">Thrift 与 Protobuf 需要注意的一些问题 <a href="#thrift-%e4%b8%8e-protobuf-%e9%9c%80%e8%a6%81%e6%b3%a8%e6%84%8f%e7%9a%84%e4%b8%80%e4%ba%9b%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h4><ol>
+<li>IDL 中有 <code>Require</code> 与 <code>optional </code>, 怎么没有在字节编码序列中表示出来</li>
+</ol>
+<p>不需要。处理方式为：</p>
+<ul>
+<li>字段设置为 <code>required</code>，但未设置该字段，则所需的运行时检查将失败</li>
+<li>字段设置为 <code>optional</code>，如果没有被设置，则不会序列化到消息结构体</li>
+</ul>
+<ol start="2">
+<li>字段标签和模式演变</li>
+</ol>
+<ul>
+<li>向前兼容性：
+<ul>
+<li>字段名修改无所谓，不要去修改字段标签。</li>
+<li>可以添加新的字段到架构，只要你给每个字段一个新的标签号码，旧的代码读取到新的数据会忽视新增加的字段</li>
+<li>你只能删除一个可选的字段（必需字段永远不能删除），而且你不能再次使用相同的标签号码（因为你可能仍然有数据写在包含旧标签号码的地方，而该字段必须被新代码忽略）</li>
+</ul>
+</li>
+<li>向后兼容性：只要每个字段都有一个唯一的标签号码，新的代码总是可以读取旧的数据</li>
+</ul>
+<h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>主要介绍了数据编码的演化历史，以及它们之间所做的优化。此文作为我自己阅读记录，推荐大家去看 DDIA 原作。</p>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/ddia">DDIA</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80">计算机基础</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81">数据编码</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+<script src="https://utteranc.es/client.js"
+        repo="he2121/xiaohe-blog"
+        issue-term="pathname"
+        theme="github-light"
+        crossorigin="anonymous"
+        async>
+</script>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2022 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>
