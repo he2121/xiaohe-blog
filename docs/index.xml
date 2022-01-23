@@ -6,7 +6,23 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 20 Jan 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 23 Jan 2022 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>kmp 算法</title>
+      <link>https://he2121.github.io/xiaohe-blog/algorithm/kmp-%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Sun, 23 Jan 2022 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/algorithm/kmp-%E7%AE%97%E6%B3%95/</guid>
+      <description>KMP 相关题目 🔗  28. 实现 strStr()
+  459. 重复的子字符串
+  686. 重复叠加字符串匹配
+  基本思想 🔗KMP 算法是字符串匹配中经典算法，由 Knuth，Morris 和 Pratt 发现，所以取了三位学者名字的首字母，叫做KMP 算法
+以 28. 实现 strStr() 为例
+ 给你两个字符串 haystack 和 needle ，请你在 haystack 字符串中找出 needle 字符串出现的第一个位置（下标从 0 开始）。如果不存在，则返回 -1 。
+ 我们普通人的暴力破解思路：
+func strStr(haystack string, needle string) int { if len(needle) == 0 { return 0 } for i := 0; i &amp;lt;= len(haystack) -len(needle); i ++ { j := 0 for ; j &amp;lt; len(needle); j ++ { if haystack[i + j] !</description>
+    </item>
+    
     <item>
       <title>流处理系统简介</title>
       <link>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%B5%81%E5%A4%84%E7%90%86%E7%B3%BB%E7%BB%9F%E7%AE%80%E4%BB%8B/</link>
@@ -77,7 +93,7 @@ db_set(){ echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database } db_get(){ gre
       
       <guid>https://he2121.github.io/xiaohe-blog/mixed/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
       <description> 之前学习新知识总是游离在网上博客，学习到的各个知识点都是零散的。所以今年决定读一些纸质书，增强下自己的底蕴。读完每一本书至少输出一篇博客，分享自己的收获或者对这本书的评价。
- 技术类 🔗已读完 🔗正在进行中 🔗 DDIA 数据密集型应用系统设计 Redis 设计与实现  待安排 🔗 Go专家编程 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗正在进行中 🔗 红楼梦  待安排 🔗 毛选 家庭、私有制和国家的起源 亲密关系  </description>
+ 技术类 🔗已读完 🔗正在进行中 🔗 DDIA 数据密集型应用系统设计 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗正在进行中 🔗 红楼梦 家庭、私有制和国家的起源  待安排 🔗 毛选 亲密关系  </description>
     </item>
     
     <item>
@@ -291,15 +307,6 @@ Prometheus 以时序数据的形式收集和存储其指标，同时支持添加
     </item>
     
     <item>
-      <title>前缀和相关算法题</title>
-      <link>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</link>
-      <pubDate>Fri, 26 Nov 2021 17:10:12 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</guid>
-      <description></description>
-    </item>
-    
-    <item>
       <title>云服务器可以干什么系列:自建云盘</title>
       <link>https://he2121.github.io/xiaohe-blog/mixed/%E4%BA%91%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%AF%E4%BB%A5%E5%B9%B2%E4%BB%80%E4%B9%88%E7%B3%BB%E5%88%97-%E8%87%AA%E5%BB%BA%E4%BA%91%E7%9B%98/</link>
       <pubDate>Sun, 21 Nov 2021 20:39:11 +0800</pubDate>
@@ -479,6 +486,24 @@ Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
+    </item>
+    
+    <item>
+      <title>前缀和相关算法题</title>
+      <link>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</link>
+      <pubDate>Fri, 26 Feb 2021 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Golang Select 关键词详解</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</link>
+      <pubDate>Thu, 28 Jan 2021 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</guid>
+      <description>背景 🔗在分析 Golang channel 源码时</description>
     </item>
     
     <item>

@@ -6,11 +6,27 @@
     <description>Recent content in Algorithms on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 26 Nov 2021 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/algorithm/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 23 Jan 2022 17:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/algorithm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>kmp 算法</title>
+      <link>https://he2121.github.io/xiaohe-blog/algorithm/kmp-%E7%AE%97%E6%B3%95/</link>
+      <pubDate>Sun, 23 Jan 2022 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/algorithm/kmp-%E7%AE%97%E6%B3%95/</guid>
+      <description>KMP 相关题目 🔗  28. 实现 strStr()
+  459. 重复的子字符串
+  686. 重复叠加字符串匹配
+  基本思想 🔗KMP 算法是字符串匹配中经典算法，由 Knuth，Morris 和 Pratt 发现，所以取了三位学者名字的首字母，叫做KMP 算法
+以 28. 实现 strStr() 为例
+ 给你两个字符串 haystack 和 needle ，请你在 haystack 字符串中找出 needle 字符串出现的第一个位置（下标从 0 开始）。如果不存在，则返回 -1 。
+ 我们普通人的暴力破解思路：
+func strStr(haystack string, needle string) int { if len(needle) == 0 { return 0 } for i := 0; i &amp;lt;= len(haystack) -len(needle); i ++ { j := 0 for ; j &amp;lt; len(needle); j ++ { if haystack[i + j] !</description>
+    </item>
+    
     <item>
       <title>前缀和相关算法题</title>
       <link>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</link>
-      <pubDate>Fri, 26 Nov 2021 17:10:12 +0800</pubDate>
+      <pubDate>Fri, 26 Feb 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/algorithm/%E5%89%8D%E7%BC%80%E5%92%8C%E7%AE%97%E6%B3%95%E7%9B%B8%E5%85%B3%E7%AE%97%E6%B3%95%E9%A2%98/</guid>
       <description></description>
