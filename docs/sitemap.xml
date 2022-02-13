@@ -2,6 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
+    <loc>https://he2121.github.io/xiaohe-blog/reading/</loc>
+    <lastmod>2022-02-13T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/</loc>
+    <lastmod>2022-02-13T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/</loc>
+    <lastmod>2022-02-13T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/%E7%BA%A2%E6%A5%BC%E6%A2%A6/</loc>
+    <lastmod>2022-02-13T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/reading/%E7%BA%A2%E6%A5%BC%E6%A2%A6/%E7%BA%A2%E6%A5%BC%E6%A2%A6%E5%85%B3%E4%BA%8E%E9%AB%98%E9%B9%97%E7%BB%AD%E5%86%99%E5%90%8E-40-%E5%9B%9E%E4%B8%AA%E4%BA%BA%E6%83%B3%E6%B3%95/</loc>
+    <lastmod>2022-02-13T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/</loc>
+    <lastmod>2022-02-10T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/posts/golang/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</loc>
+    <lastmod>2022-02-10T11:10:12+08:00</lastmod>
+  </url><url>
+    <loc>https://he2121.github.io/xiaohe-blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/</loc>
+    <lastmod>2022-02-10T11:10:12+08:00</lastmod>
+  </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/algorithm/</loc>
     <lastmod>2022-01-23T17:10:12+08:00</lastmod>
   </url><url>
@@ -11,12 +35,6 @@
     <loc>https://he2121.github.io/xiaohe-blog/tags/leetcode/</loc>
     <lastmod>2022-01-23T17:10:12+08:00</lastmod>
   </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/tags/</loc>
-    <lastmod>2022-01-23T17:10:12+08:00</lastmod>
-  </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/</loc>
-    <lastmod>2022-01-23T17:10:12+08:00</lastmod>
-  </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/%E7%AE%97%E6%B3%95/</loc>
     <lastmod>2022-01-23T17:10:12+08:00</lastmod>
   </url><url>
@@ -24,9 +42,6 @@
     <lastmod>2022-01-20T11:10:12+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/flink/</loc>
-    <lastmod>2022-01-20T11:10:12+08:00</lastmod>
-  </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/reading/</loc>
     <lastmod>2022-01-20T11:10:12+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/stream/</loc>
@@ -41,16 +56,10 @@
     <loc>https://he2121.github.io/xiaohe-blog/reading/ddia/%E6%95%B0%E6%8D%AE%E7%BC%96%E7%A0%81%E4%B8%8E%E6%BC%94%E5%8C%96/</loc>
     <lastmod>2022-01-16T14:30:00+08:00</lastmod>
   </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80/</loc>
-    <lastmod>2022-01-16T14:30:00+08:00</lastmod>
-  </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/golang/</loc>
     <lastmod>2022-01-12T16:10:12+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</loc>
-    <lastmod>2022-01-12T16:10:12+08:00</lastmod>
-  </url><url>
-    <loc>https://he2121.github.io/xiaohe-blog/posts/</loc>
     <lastmod>2022-01-12T16:10:12+08:00</lastmod>
   </url><url>
     <loc>https://he2121.github.io/xiaohe-blog/tags/%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E/</loc>
