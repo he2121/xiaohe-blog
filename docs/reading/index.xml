@@ -82,5 +82,25 @@ db_set(){ echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database } db_get(){ gre
 ➜ ~ db_set key1 val1 ➜ ~ db_set key2 val2 ➜ ~ db_set key1 val3 ➜ ~ cat database key1,val1 key2,val2 key1,val3 ➜ ~ db_get key1 val3 局限性 🔗db_set: 追加式写，性能高。但db_get: 从头扫描到尾，性能很差</description>
     </item>
     
+    <item>
+      <title>2022 读书计划</title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</link>
+      <pubDate>Wed, 05 Jan 2022 14:08:32 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
+      <description> 之前学习新知识总是游离在网上博客，学习到的各个知识点都是零散的。所以今年决定读一些纸质书，增强下自己的底蕴。读完每一本书至少输出一篇博客，分享自己的收获或者对这本书的评价。
+ 技术类 🔗已读完 🔗 DDIA 数据密集型应用系统设计  正在进行中 🔗 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗 红楼梦 小狗钱钱  正在进行中 🔗 家庭、私有制和国家的起源 巴菲特致股东的信  待安排 🔗 毛选 亲密关系 原则  </description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/%E5%B0%8F%E7%8B%97%E9%92%B1%E9%92%B1%E8%AF%BB%E5%90%8E%E6%84%9F/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/%E5%B0%8F%E7%8B%97%E9%92%B1%E9%92%B1%E8%AF%BB%E5%90%8E%E6%84%9F/</guid>
+      <description>it ``` title: &amp;ldquo;小狗钱钱读后感&amp;rdquo; author: &amp;ldquo;小贺&amp;rdquo; date: 2022-02-15T11:10:12+08:00 tags: [&amp;ldquo;理财书籍&amp;rdquo;]
+ 这本书我不到 2 小时读完了，适用于投资小白阅读，对于我这种已经进入股票交易一年多人来说，内容偏简单 ![image-20220215124726474](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220215124726474-2022-02-15.png) ### 核心思想 - 行动力 - 强制储蓄 - 基金理财 ### 记忆深刻的两点 - **鹅生蛋:** 每个人都要有自己的鹅来生蛋。目前我的钱 90% 以上都在股市，实际上不是一种好的鹅，而是一种很可能会死的鹅。但目前我的资本少，能接受亏损，主要是想快速扩张资本。但后期应无论何时都要保障一定的现金流 - **72 法则**：想重点分析下这个法则 ### 72 法则 **意义**：快速计算你资本在理财复利情况下，多少年能翻倍。 如： - 一只基金稳定年收益率 10%，需要 72/10 = 7.2 年，翻倍 - 假设我国通货膨胀在 3% 每年，需要 72/3 = 24 年，你的钱损失一半 72 法则如何计算得来？ 假设利率为 m，需要 n 年后本金才能翻倍，可得下面等式 $$ (1+m)^n = 2 $$ 现在需要计算 n，取 ln $$ n*ln(1+m) = ln2 $$ 移项 $$ n = \frac{ln2} {ln(1+m)} $$ ln(1+m) 泰勒展开式 (高等数学，任何表达式都能用一个二项式来近似) $$ ln(1+𝑥)=𝑥−\frac{𝑥^2}{2}+\frac{𝑥^3}{3}−\frac{𝑥^4}{4}+⋯, $$ 理财一般利率会在 0.</description>
+    </item>
+    
   </channel>
 </rss>

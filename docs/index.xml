@@ -118,12 +118,12 @@ db_set(){ echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database } db_get(){ gre
     
     <item>
       <title>2022 读书计划</title>
-      <link>https://he2121.github.io/xiaohe-blog/mixed/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</link>
+      <link>https://he2121.github.io/xiaohe-blog/reading/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</link>
       <pubDate>Wed, 05 Jan 2022 14:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/mixed/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
+      <guid>https://he2121.github.io/xiaohe-blog/reading/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
       <description> 之前学习新知识总是游离在网上博客，学习到的各个知识点都是零散的。所以今年决定读一些纸质书，增强下自己的底蕴。读完每一本书至少输出一篇博客，分享自己的收获或者对这本书的评价。
- 技术类 🔗已读完 🔗正在进行中 🔗 DDIA 数据密集型应用系统设计 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗 红楼梦  正在进行中 🔗 家庭、私有制和国家的起源  待安排 🔗 毛选 亲密关系  </description>
+ 技术类 🔗已读完 🔗 DDIA 数据密集型应用系统设计  正在进行中 🔗 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗 红楼梦 小狗钱钱  正在进行中 🔗 家庭、私有制和国家的起源 巴菲特致股东的信  待安排 🔗 毛选 亲密关系 原则  </description>
     </item>
     
     <item>
@@ -556,6 +556,28 @@ Interface 🔗定义 🔗接口有两种定义：
       
       <guid>https://he2121.github.io/xiaohe-blog/mixed/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
       <description>channel 🔗graph LR 1(channel) --&amp;gt; 2(向 channel 发送消息) 1 --&amp;gt; 3(接受消息) 1 --&amp;gt; 4(关闭channel) 2 -- full channel--&amp;gt; 5(阻塞) 2 --closed channel--&amp;gt; 6(panic) 3 --empty channel--&amp;gt;5 3 --closed channel--&amp;gt; 7(读到零值) 4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</guid>
+      <description>title: &amp;quot;字符编码发展梳理&amp;quot; date: 2021-02-20T00:38:28+08:00 tags: [&amp;quot;string&amp;quot;] 从 Golang 中的字符串出发，我们知道 Go 语言中 string 的实现是基于 utf-8 编码的。遍历 string 一般有以下两种写法：
+  通过索引下标，去遍历字符串中每一个字节
+  通过 for range rune 类型遍历字符串中每一个 utf-8 字符
+  // 索引下标的方式 for i := 0; i &amp;lt; len(str); i ++ { fmt.Printf(&amp;#34;索引: %d , 十进制: %d, ASCII字符 %q \n&amp;#34;, i, str[i], str[i]) } // for range, rune 的方式  for i, ch := range str { fmt.Printf(&amp;#34;索引:%d 十进制: %d, 十六进制: %X,二进制:%b, utf 码点: %U \n&amp;#34;,i, ch, ch, ch, ch) }   这两者区别在那？</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/%E5%B0%8F%E7%8B%97%E9%92%B1%E9%92%B1%E8%AF%BB%E5%90%8E%E6%84%9F/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/%E5%B0%8F%E7%8B%97%E9%92%B1%E9%92%B1%E8%AF%BB%E5%90%8E%E6%84%9F/</guid>
+      <description>it ``` title: &amp;ldquo;小狗钱钱读后感&amp;rdquo; author: &amp;ldquo;小贺&amp;rdquo; date: 2022-02-15T11:10:12+08:00 tags: [&amp;ldquo;理财书籍&amp;rdquo;]
+ 这本书我不到 2 小时读完了，适用于投资小白阅读，对于我这种已经进入股票交易一年多人来说，内容偏简单 ![image-20220215124726474](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220215124726474-2022-02-15.png) ### 核心思想 - 行动力 - 强制储蓄 - 基金理财 ### 记忆深刻的两点 - **鹅生蛋:** 每个人都要有自己的鹅来生蛋。目前我的钱 90% 以上都在股市，实际上不是一种好的鹅，而是一种很可能会死的鹅。但目前我的资本少，能接受亏损，主要是想快速扩张资本。但后期应无论何时都要保障一定的现金流 - **72 法则**：想重点分析下这个法则 ### 72 法则 **意义**：快速计算你资本在理财复利情况下，多少年能翻倍。 如： - 一只基金稳定年收益率 10%，需要 72/10 = 7.2 年，翻倍 - 假设我国通货膨胀在 3% 每年，需要 72/3 = 24 年，你的钱损失一半 72 法则如何计算得来？ 假设利率为 m，需要 n 年后本金才能翻倍，可得下面等式 $$ (1+m)^n = 2 $$ 现在需要计算 n，取 ln $$ n*ln(1+m) = ln2 $$ 移项 $$ n = \frac{ln2} {ln(1+m)} $$ ln(1+m) 泰勒展开式 (高等数学，任何表达式都能用一个二项式来近似) $$ ln(1+𝑥)=𝑥−\frac{𝑥^2}{2}+\frac{𝑥^3}{3}−\frac{𝑥^4}{4}+⋯, $$ 理财一般利率会在 0.</description>
     </item>
     
   </channel>
