@@ -6,14 +6,26 @@
     <description>Recent content in Posts on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 10 Feb 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 02 Mar 2022 00:38:28 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>内存分配器介绍</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</link>
-      <pubDate>Thu, 10 Feb 2022 11:10:12 +0800</pubDate>
+      <title>字符编码发展梳理</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</link>
+      <pubDate>Wed, 02 Mar 2022 00:38:28 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</guid>
-      <description>参考 🔗 https://studygolang.com/articles/7212  </description>
+      <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</guid>
+      <description>从 Golang 中的字符串出发，我们知道 Go 语言中 string 的实现是基于 utf-8 编码的。遍历 string 一般有以下两种写法：
+  通过索引下标，去遍历字符串中每一个字节
+  通过 for range rune 类型遍历字符串中每一个 utf-8 字符
+  // 索引下标的方式 for i := 0; i &amp;lt; len(str); i ++ { fmt.Printf(&amp;#34;索引: %d , 十进制: %d, ASCII字符 %q \n&amp;#34;, i, str[i], str[i]) } // for range, rune 的方式  for i, ch := range str { fmt.Printf(&amp;#34;索引:%d 十进制: %d, 十六进制: %X,二进制:%b, utf 码点: %U \n&amp;#34;,i, ch, ch, ch, ch) }   这两者区别在那？</description>
+    </item>
+    
+    <item>
+      <title>Golang Select 关键词详解</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</link>
+      <pubDate>Fri, 28 Jan 2022 17:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</guid>
+      <description>背景 🔗在分析 Golang channel 源码时 todo</description>
     </item>
     
     <item>
@@ -306,27 +318,6 @@ Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
-    </item>
-    
-    <item>
-      <title>Golang Select 关键词详解</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</link>
-      <pubDate>Thu, 28 Jan 2021 17:10:12 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</guid>
-      <description>背景 🔗在分析 Golang channel 源码时</description>
-    </item>
-    
-    <item>
-      <title></title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</link>
-      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</guid>
-      <description>title: &amp;quot;字符编码发展梳理&amp;quot; date: 2021-02-20T00:38:28+08:00 tags: [&amp;quot;string&amp;quot;] 从 Golang 中的字符串出发，我们知道 Go 语言中 string 的实现是基于 utf-8 编码的。遍历 string 一般有以下两种写法：
-  通过索引下标，去遍历字符串中每一个字节
-  通过 for range rune 类型遍历字符串中每一个 utf-8 字符
-  // 索引下标的方式 for i := 0; i &amp;lt; len(str); i ++ { fmt.Printf(&amp;#34;索引: %d , 十进制: %d, ASCII字符 %q \n&amp;#34;, i, str[i], str[i]) } // for range, rune 的方式  for i, ch := range str { fmt.Printf(&amp;#34;索引:%d 十进制: %d, 十六进制: %X,二进制:%b, utf 码点: %U \n&amp;#34;,i, ch, ch, ch, ch) }   这两者区别在那？</description>
     </item>
     
   </channel>

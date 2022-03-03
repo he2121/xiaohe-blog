@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>理财书籍 on 小贺的博客</title>
+    <link>https://he2121.github.io/xiaohe-blog/tags/%E7%90%86%E8%B4%A2%E4%B9%A6%E7%B1%8D/</link>
+    <description>Recent content in 理财书籍 on 小贺的博客</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Tue, 15 Feb 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/%E7%90%86%E8%B4%A2%E4%B9%A6%E7%B1%8D/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>小狗钱钱读后感</title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/%E5%B0%8F%E7%8B%97%E9%92%B1%E9%92%B1%E8%AF%BB%E5%90%8E%E6%84%9F/</link>
+      <pubDate>Tue, 15 Feb 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/%E5%B0%8F%E7%8B%97%E9%92%B1%E9%92%B1%E8%AF%BB%E5%90%8E%E6%84%9F/</guid>
+      <description>这本书我不到 2 小时读完了，适用于投资小白阅读，对于我这种已经进入股票交易一年多人来说，内容偏简单
+核心思想 🔗  行动力
+  强制储蓄
+  基金理财
+  记忆深刻的两点 🔗 鹅生蛋: 每个人都要有自己的鹅来生蛋。目前我的钱 90% 以上都在股市，实际上不是一种好的鹅，而是一种很可能会死的鹅。但目前我的资本少，能接受亏损，主要是想快速扩张资本。但后期应无论何时都要保障一定的现金流 72 法则：想重点分析下这个法则  72 法则 🔗意义：快速计算你资本在理财复利情况下，多少年能翻倍。
+如：
+ 一只基金稳定年收益率 10%，需要 72/10 = 7.2 年，翻倍 假设我国通货膨胀在 3% 每年，需要 72/3 = 24 年，你的钱损失一半  72 法则如何计算得来？
+假设利率为 m，需要 n 年后本金才能翻倍，可得下面等式 $$ (1+m)^n = 2 $$ 现在需要计算 n，取 ln $$ n*ln(1+m) = ln2 $$ 移项 $$ n = \frac{ln2} {ln(1+m)} $$ ln(1+m) 泰勒展开式 (高等数学，任何表达式都能用一个二项式来近似) $$ ln(1+𝑥)=𝑥−\frac{𝑥^2}{2}+\frac{𝑥^3}{3}−\frac{𝑥^4}{4}+⋯, $$ 理财一般利率会在 0.</description>
+    </item>
+    
+  </channel>
+</rss>
