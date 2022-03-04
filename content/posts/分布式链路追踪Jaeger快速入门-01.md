@@ -9,17 +9,15 @@ tags: ["Open Tracing", "Jaeger", "cloud native"]
 
 **区别**：
 
-| ----     | Logging                           | Metrics           | Tracing                                       |
-| -------- | --------------------------------- | ----------------- | --------------------------------------------- |
-| 特点     | 记录离散的事件                    | 记录可聚合的数据  | 记录请求范围内的信息                          |
-| 典型指标 | 用户自行打印的调试信息...         | QPS, 接口时延分布 | 一个具体 RPC 调用中的过程：各个服务的耗时占比 |
-| 典型应用 | ELK(收集，分析), log4j（记录）... | Prometheus...     | Dapper, OpenZipkin,Jaeger...                  |
+| ---- | Logging                  | Metrics       | Tracing                      |
+| ---- | ------------------------ | ------------- | ---------------------------- |
+| 特点   | 记录离散的事件                  | 记录可聚合的数据      | 记录请求范围内的信息                   |
+| 典型指标 | 用户自行打印的调试信息...           | QPS, 接口时延分布   | 一个具体 RPC 调用中的过程：各个服务的耗时占比    |
+| 典型应用 | ELK(收集，分析), log4j（记录）... | Prometheus... | Dapper, OpenZipkin,Jaeger... |
 
 它们之间有重叠，但各自关注的重点不同
 
 ![img](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/p5876-2021-12-20.png)
-
-
 
 ### OpenTracing 是什么
 
@@ -109,17 +107,17 @@ docker run -d --name jaeger \
 package main
 
 import (
-	"net/http"
+    "net/http"
 )
 
 func main() {
-	// web 示例
-	http.HandleFunc("/api1", http.HandlerFunc(api1))
-	http.HandleFunc("/api2", http.HandlerFunc(api2))
-	err := http.ListenAndServe(":1234", nil)
-	if err != nil {
-		panic(err)
-	}
+    // web 示例
+    http.HandleFunc("/api1", http.HandlerFunc(api1))
+    http.HandleFunc("/api2", http.HandlerFunc(api2))
+    err := http.ListenAndServe(":1234", nil)
+    if err != nil {
+        panic(err)
+    }
 }
 ```
 
@@ -127,16 +125,16 @@ func main() {
 package main
 
 import (
-	"fmt"
-	"net/http"
+    "fmt"
+    "net/http"
 )
 
 func api1(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hello api1")
+    fmt.Println("hello api1")
 }
 
 func api2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hello api2")
+    fmt.Println("hello api2")
 }
 ```
 
@@ -153,45 +151,44 @@ jaeger client 的初始化，和 简单使用
 package main
 
 import (
-	"net/http"
+    "net/http"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go/config"
+    "github.com/opentracing/opentracing-go"
+    "github.com/uber/jaeger-client-go/config"
 )
 
 func main() {
   // 初始化 jaeger client，参数需要服务名，采样机制，上报数据地址
-	tracing, closer, err := config.Configuration{
-		ServiceName: "hello.service",
-		Sampler:     &config.SamplerConfig{Type: "const", Param: 1},
-		Reporter:    &config.ReporterConfig{CollectorEndpoint: "http://localhost:14268/api/traces"},
-	}.NewTracer()
-	if err != nil {
-		panic(err)
-	}
-	defer closer.Close()
+    tracing, closer, err := config.Configuration{
+        ServiceName: "hello.service",
+        Sampler:     &config.SamplerConfig{Type: "const", Param: 1},
+        Reporter:    &config.ReporterConfig{CollectorEndpoint: "http://localhost:14268/api/traces"},
+    }.NewTracer()
+    if err != nil {
+        panic(err)
+    }
+    defer closer.Close()
   // 设置成全局默认
-	opentracing.SetGlobalTracer(tracing)
-	// web 示例
-	http.HandleFunc("/api1", jaegerTracing(http.HandlerFunc(api1)))
-	http.HandleFunc("/api2", jaegerTracing(http.HandlerFunc(api2)))
-	err = http.ListenAndServe(":1234", nil)
-	if err != nil {
-		panic(err)
-	}
+    opentracing.SetGlobalTracer(tracing)
+    // web 示例
+    http.HandleFunc("/api1", jaegerTracing(http.HandlerFunc(api1)))
+    http.HandleFunc("/api2", jaegerTracing(http.HandlerFunc(api2)))
+    err = http.ListenAndServe(":1234", nil)
+    if err != nil {
+        panic(err)
+    }
 }
 
 // 添加jaeger 分布式追踪中间件
 func jaegerTracing(handler http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
+    return func(w http.ResponseWriter, r *http.Request) {
     // 记录 tracing 中的一个 span 上报
-		span := opentracing.StartSpan(r.URL.String())
+        span := opentracing.StartSpan(r.URL.String())
     // span 结束
-		defer span.Finish()
-		handler.ServeHTTP(w, r)
-	}
+        defer span.Finish()
+        handler.ServeHTTP(w, r)
+    }
 }
-
 ```
 
 jaeger 的作用是追踪服务间的调用关系，上述使用意义不大，以下是模拟多服务调用使用 jaeger 的作用
@@ -200,38 +197,37 @@ jaeger 的作用是追踪服务间的调用关系，上述使用意义不大，�
 package main
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	"time"
+    "context"
+    "fmt"
+    "net/http"
+    "time"
 
-	"github.com/opentracing/opentracing-go"
+    "github.com/opentracing/opentracing-go"
 )
 
 func api1(w http.ResponseWriter, r *http.Request) {
-	// 根 ctx
-	ctx := context.Background()
-	// 记录 sever1.api 的调动耗时等信息
-	span, c := opentracing.StartSpanFromContext(ctx, "server1.api1")
-	defer span.Finish()
-	fmt.Println("hello api1")
-	time.Sleep(time.Second)
-	// 模拟一个跨服务的调用，ctx 上下文信息传递
-	service2XXX(c)
+    // 根 ctx
+    ctx := context.Background()
+    // 记录 sever1.api 的调动耗时等信息
+    span, c := opentracing.StartSpanFromContext(ctx, "server1.api1")
+    defer span.Finish()
+    fmt.Println("hello api1")
+    time.Sleep(time.Second)
+    // 模拟一个跨服务的调用，ctx 上下文信息传递
+    service2XXX(c)
 }
 
 func service2XXX(ctx context.Context) {
-	// 从 ctx 获取 span， 这样就能把在一条调用链的 span 聚合在一起
-	span, c := opentracing.StartSpanFromContext(ctx, "server2.XXX")
-	defer span.Finish()
-	time.Sleep(time.Second * 2)
-	fmt.Println("hello server2 xxx", c)
+    // 从 ctx 获取 span， 这样就能把在一条调用链的 span 聚合在一起
+    span, c := opentracing.StartSpanFromContext(ctx, "server2.XXX")
+    defer span.Finish()
+    time.Sleep(time.Second * 2)
+    fmt.Println("hello server2 xxx", c)
 }
 
 func api2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hello api2")
+    fmt.Println("hello api2")
 }
-
 ```
 
 **效果如下**

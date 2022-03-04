@@ -208,31 +208,31 @@ if (!doNotTrack) {
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
 
 <span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;net/http&#34;</span>
+    <span style="color:#e6db74">&#34;net/http&#34;</span>
 )
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#75715e">// web 示例
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api1&#34;</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api1</span>))
-	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api2&#34;</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api2</span>))
-	<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:1234&#34;</span>, <span style="color:#66d9ef">nil</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		panic(<span style="color:#a6e22e">err</span>)
-	}
+    <span style="color:#75715e">// web 示例
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api1&#34;</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api1</span>))
+    <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api2&#34;</span>, <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api2</span>))
+    <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:1234&#34;</span>, <span style="color:#66d9ef">nil</span>)
+    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+        panic(<span style="color:#a6e22e">err</span>)
+    }
 }
 </code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
 
 <span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;fmt&#34;</span>
-	<span style="color:#e6db74">&#34;net/http&#34;</span>
+    <span style="color:#e6db74">&#34;fmt&#34;</span>
+    <span style="color:#e6db74">&#34;net/http&#34;</span>
 )
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">api1</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api1&#34;</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api1&#34;</span>)
 }
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">api2</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api2&#34;</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api2&#34;</span>)
 }
 </code></pre></div><p>使用 jaeger client 监控每一个接口，引用以下两个包</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> go get github.com/uber/jaeger-client-go
@@ -241,81 +241,79 @@ go get github.com/opentracing/opentracing-go
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Go" data-lang="Go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
 
 <span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;net/http&#34;</span>
+    <span style="color:#e6db74">&#34;net/http&#34;</span>
 
-	<span style="color:#e6db74">&#34;github.com/opentracing/opentracing-go&#34;</span>
-	<span style="color:#e6db74">&#34;github.com/uber/jaeger-client-go/config&#34;</span>
+    <span style="color:#e6db74">&#34;github.com/opentracing/opentracing-go&#34;</span>
+    <span style="color:#e6db74">&#34;github.com/uber/jaeger-client-go/config&#34;</span>
 )
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
   <span style="color:#75715e">// 初始化 jaeger client，参数需要服务名，采样机制，上报数据地址
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">tracing</span>, <span style="color:#a6e22e">closer</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Configuration</span>{
-		<span style="color:#a6e22e">ServiceName</span>: <span style="color:#e6db74">&#34;hello.service&#34;</span>,
-		<span style="color:#a6e22e">Sampler</span>:     <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">SamplerConfig</span>{<span style="color:#a6e22e">Type</span>: <span style="color:#e6db74">&#34;const&#34;</span>, <span style="color:#a6e22e">Param</span>: <span style="color:#ae81ff">1</span>},
-		<span style="color:#a6e22e">Reporter</span>:    <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">ReporterConfig</span>{<span style="color:#a6e22e">CollectorEndpoint</span>: <span style="color:#e6db74">&#34;http://localhost:14268/api/traces&#34;</span>},
-	}.<span style="color:#a6e22e">NewTracer</span>()
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		panic(<span style="color:#a6e22e">err</span>)
-	}
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">closer</span>.<span style="color:#a6e22e">Close</span>()
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">tracing</span>, <span style="color:#a6e22e">closer</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">Configuration</span>{
+        <span style="color:#a6e22e">ServiceName</span>: <span style="color:#e6db74">&#34;hello.service&#34;</span>,
+        <span style="color:#a6e22e">Sampler</span>:     <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">SamplerConfig</span>{<span style="color:#a6e22e">Type</span>: <span style="color:#e6db74">&#34;const&#34;</span>, <span style="color:#a6e22e">Param</span>: <span style="color:#ae81ff">1</span>},
+        <span style="color:#a6e22e">Reporter</span>:    <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">config</span>.<span style="color:#a6e22e">ReporterConfig</span>{<span style="color:#a6e22e">CollectorEndpoint</span>: <span style="color:#e6db74">&#34;http://localhost:14268/api/traces&#34;</span>},
+    }.<span style="color:#a6e22e">NewTracer</span>()
+    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+        panic(<span style="color:#a6e22e">err</span>)
+    }
+    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">closer</span>.<span style="color:#a6e22e">Close</span>()
   <span style="color:#75715e">// 设置成全局默认
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">SetGlobalTracer</span>(<span style="color:#a6e22e">tracing</span>)
-	<span style="color:#75715e">// web 示例
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api1&#34;</span>, <span style="color:#a6e22e">jaegerTracing</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api1</span>)))
-	<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api2&#34;</span>, <span style="color:#a6e22e">jaegerTracing</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api2</span>)))
-	<span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:1234&#34;</span>, <span style="color:#66d9ef">nil</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		panic(<span style="color:#a6e22e">err</span>)
-	}
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">SetGlobalTracer</span>(<span style="color:#a6e22e">tracing</span>)
+    <span style="color:#75715e">// web 示例
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api1&#34;</span>, <span style="color:#a6e22e">jaegerTracing</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api1</span>)))
+    <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandleFunc</span>(<span style="color:#e6db74">&#34;/api2&#34;</span>, <span style="color:#a6e22e">jaegerTracing</span>(<span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span>(<span style="color:#a6e22e">api2</span>)))
+    <span style="color:#a6e22e">err</span> = <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ListenAndServe</span>(<span style="color:#e6db74">&#34;:1234&#34;</span>, <span style="color:#66d9ef">nil</span>)
+    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+        panic(<span style="color:#a6e22e">err</span>)
+    }
 }
 
 <span style="color:#75715e">// 添加jaeger 分布式追踪中间件
 </span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">jaegerTracing</span>(<span style="color:#a6e22e">handler</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Handler</span>) <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">HandlerFunc</span> {
-	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
     <span style="color:#75715e">// 记录 tracing 中的一个 span 上报
-</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">span</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">StartSpan</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">String</span>())
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">span</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">StartSpan</span>(<span style="color:#a6e22e">r</span>.<span style="color:#a6e22e">URL</span>.<span style="color:#a6e22e">String</span>())
     <span style="color:#75715e">// span 结束
-</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">Finish</span>()
-		<span style="color:#a6e22e">handler</span>.<span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>)
-	}
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">Finish</span>()
+        <span style="color:#a6e22e">handler</span>.<span style="color:#a6e22e">ServeHTTP</span>(<span style="color:#a6e22e">w</span>, <span style="color:#a6e22e">r</span>)
+    }
 }
-
 </code></pre></div><p>jaeger 的作用是追踪服务间的调用关系，上述使用意义不大，以下是模拟多服务调用使用 jaeger 的作用</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
 
 <span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;context&#34;</span>
-	<span style="color:#e6db74">&#34;fmt&#34;</span>
-	<span style="color:#e6db74">&#34;net/http&#34;</span>
-	<span style="color:#e6db74">&#34;time&#34;</span>
+    <span style="color:#e6db74">&#34;context&#34;</span>
+    <span style="color:#e6db74">&#34;fmt&#34;</span>
+    <span style="color:#e6db74">&#34;net/http&#34;</span>
+    <span style="color:#e6db74">&#34;time&#34;</span>
 
-	<span style="color:#e6db74">&#34;github.com/opentracing/opentracing-go&#34;</span>
+    <span style="color:#e6db74">&#34;github.com/opentracing/opentracing-go&#34;</span>
 )
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">api1</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-	<span style="color:#75715e">// 根 ctx
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>()
-	<span style="color:#75715e">// 记录 sever1.api 的调动耗时等信息
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">span</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">StartSpanFromContext</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;server1.api1&#34;</span>)
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">Finish</span>()
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api1&#34;</span>)
-	<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
-	<span style="color:#75715e">// 模拟一个跨服务的调用，ctx 上下文信息传递
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">service2XXX</span>(<span style="color:#a6e22e">c</span>)
+    <span style="color:#75715e">// 根 ctx
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ctx</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Background</span>()
+    <span style="color:#75715e">// 记录 sever1.api 的调动耗时等信息
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">span</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">StartSpanFromContext</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;server1.api1&#34;</span>)
+    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">Finish</span>()
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api1&#34;</span>)
+    <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+    <span style="color:#75715e">// 模拟一个跨服务的调用，ctx 上下文信息传递
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">service2XXX</span>(<span style="color:#a6e22e">c</span>)
 }
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">service2XXX</span>(<span style="color:#a6e22e">ctx</span> <span style="color:#a6e22e">context</span>.<span style="color:#a6e22e">Context</span>) {
-	<span style="color:#75715e">// 从 ctx 获取 span， 这样就能把在一条调用链的 span 聚合在一起
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">span</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">StartSpanFromContext</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;server2.XXX&#34;</span>)
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">Finish</span>()
-	<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>)
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello server2 xxx&#34;</span>, <span style="color:#a6e22e">c</span>)
+    <span style="color:#75715e">// 从 ctx 获取 span， 这样就能把在一条调用链的 span 聚合在一起
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">span</span>, <span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">opentracing</span>.<span style="color:#a6e22e">StartSpanFromContext</span>(<span style="color:#a6e22e">ctx</span>, <span style="color:#e6db74">&#34;server2.XXX&#34;</span>)
+    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">Finish</span>()
+    <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">2</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello server2 xxx&#34;</span>, <span style="color:#a6e22e">c</span>)
 }
 
 <span style="color:#66d9ef">func</span> <span style="color:#a6e22e">api2</span>(<span style="color:#a6e22e">w</span> <span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">ResponseWriter</span>, <span style="color:#a6e22e">r</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">http</span>.<span style="color:#a6e22e">Request</span>) {
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api2&#34;</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;hello api2&#34;</span>)
 }
-
 </code></pre></div><p><strong>效果如下</strong></p>
 <p><p class="markdown-image">
   <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211221004524655-2021-12-21.png" alt="image-20211221004524655"  />

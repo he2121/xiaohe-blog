@@ -13,10 +13,19 @@
       <pubDate>Wed, 02 Mar 2022 00:38:28 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</guid>
-      <description>从 Golang 中的字符串出发，我们知道 Go 语言中 string 的实现是基于 utf-8 编码的。遍历 string 一般有以下两种写法：
-  通过索引下标，去遍历字符串中每一个字节
-  通过 for range rune 类型遍历字符串中每一个 utf-8 字符
-  // 索引下标的方式 for i := 0; i &amp;lt; len(str); i ++ { fmt.Printf(&amp;#34;索引: %d , 十进制: %d, ASCII字符 %q \n&amp;#34;, i, str[i], str[i]) } // for range, rune 的方式  for i, ch := range str { fmt.Printf(&amp;#34;索引:%d 十进制: %d, 十六进制: %X,二进制:%b, utf 码点: %U \n&amp;#34;,i, ch, ch, ch, ch) }   这两者区别在那？</description>
+      <description>从 Golang 中的字符串出发
+  len(&amp;quot;ab你好&amp;quot;) 返回多少
+  已经存在用下标遍历字符串的方式，为什么还要有for _,ch range str ，有什么区别
+  从 ASCII 字符编码到 UTF-8 🔗起点: ASCII 码 🔗首先我们知道在计算机的世界中，一切数据都是以字节流的形式存在。例如下图，一个字节（8 个 bit）可以表示从 0 - 255 之间的整数。
+但是我如果想表示一个字符呢？
+字符定义：
+ 在电脑和电信领域中，字符（Character）是一个信息单位。对使用字母系统或音节文字等自然语言，它大约对应为一个音位、类音位的单位或符号。简单来讲就是一个汉字、假名、韩文字……，或是一个英文、其他西方语言的字母。字符的例子有：字母、数字系统或标点符号。
+ 此时需要一个字符与整数之间的映射关系。例如，用整数 97 -&amp;gt; a。你传入一个整数，并且指明这个整数是字符类型，那么计算机就给你显示成字符
+这时候最通用的 ASCII (American Standard Code for Information Interchange，美国信息交换标准代码) 在 1963 年由美国国家标准协会提出。
+最初版 ASCII 编码使用一个字节中的 7 个 bit 位 （整数 0-127）定义了整数到 128 个字符的映射关系。 ASCII 定义的 128 个字符与其编码方式如下图所示。
+编码范围 🔗十进制: 0-127
+字节形式：
+ASCII 意义 🔗包含了使用最广泛的控制字符、数字符号、英文字母、英文符号，作为鼻祖，成为计算机编码系统的基础，以后出现的各种字符编码基本都要兼容它</description>
     </item>
     
     <item>

@@ -159,13 +159,13 @@ binlog.000006
 binlog.index 
 </code></pre></div><p>每个日志文件以一个 4 字节魔数 ( 0xfe b i n) 开头，后面是一组<strong>描述数据修改的事件</strong>，文件格式如下：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+<span style="color:#f92672">===================</span>+
-| Magic Number	    |
+| Magic Number        |
 +<span style="color:#f92672">===================</span>+
-| Start Event		|
+| Start Event        |
 +<span style="color:#f92672">===================</span>+
-| Event 1			|
+| Event <span style="color:#ae81ff">1</span>            |
 +<span style="color:#f92672">===================</span>+
-| ...				|
+| ...                |
 +<span style="color:#f92672">===================</span>+
 </code></pre></div><p>一个具体的例子：</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> show BINLOG EVENTS in <span style="color:#e6db74">&#39;binlog.000001&#39;</span>

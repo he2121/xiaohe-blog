@@ -6,10 +6,19 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
 <meta name="viewport" content="width=device-width,minimum-scale=1">
-<meta name="description" content="从 Golang 中的字符串出发，我们知道 Go 语言中 string 的实现是基于 utf-8 编码的。遍历 string 一般有以下两种写法：
-  通过索引下标，去遍历字符串中每一个字节
-  通过 for range rune 类型遍历字符串中每一个 utf-8 字符
-  // 索引下标的方式 for i := 0; i &lt; len(str); i &#43;&#43; { fmt.Printf(&#34;索引: %d , 十进制: %d, ASCII字符 %q \n&#34;, i, str[i], str[i]) } // for range, rune 的方式  for i, ch := range str { fmt.Printf(&#34;索引:%d 十进制: %d, 十六进制: %X,二进制:%b, utf 码点: %U \n&#34;,i, ch, ch, ch, ch) }   这两者区别在那？">
+<meta name="description" content="从 Golang 中的字符串出发
+  len(&quot;ab你好&quot;) 返回多少
+  已经存在用下标遍历字符串的方式，为什么还要有for _,ch range str ，有什么区别
+  从 ASCII 字符编码到 UTF-8 🔗起点: ASCII 码 🔗首先我们知道在计算机的世界中，一切数据都是以字节流的形式存在。例如下图，一个字节（8 个 bit）可以表示从 0 - 255 之间的整数。
+但是我如果想表示一个字符呢？
+字符定义：
+ 在电脑和电信领域中，字符（Character）是一个信息单位。对使用字母系统或音节文字等自然语言，它大约对应为一个音位、类音位的单位或符号。简单来讲就是一个汉字、假名、韩文字……，或是一个英文、其他西方语言的字母。字符的例子有：字母、数字系统或标点符号。
+ 此时需要一个字符与整数之间的映射关系。例如，用整数 97 -&gt; a。你传入一个整数，并且指明这个整数是字符类型，那么计算机就给你显示成字符
+这时候最通用的 ASCII (American Standard Code for Information Interchange，美国信息交换标准代码) 在 1963 年由美国国家标准协会提出。
+最初版 ASCII 编码使用一个字节中的 7 个 bit 位 （整数 0-127）定义了整数到 128 个字符的映射关系。 ASCII 定义的 128 个字符与其编码方式如下图所示。
+编码范围 🔗十进制: 0-127
+字节形式：
+ASCII 意义 🔗包含了使用最广泛的控制字符、数字符号、英文字母、英文符号，作为鼻祖，成为计算机编码系统的基础，以后出现的各种字符编码基本都要兼容它">
 <meta name="generator" content="Hugo 0.89.2" />
 
 
@@ -76,7 +85,7 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          267字
+          404字
         </span>
         <span class="split">
           ·
@@ -96,67 +105,59 @@ if (!doNotTrack) {
 
 
     <div class="content">
-      <p>从 Golang 中的字符串出发，我们知道 Go 语言中 <code>string</code> 的实现是基于 <code>utf-8</code> 编码的。遍历 <code>string</code> 一般有以下两种写法：</p>
-<ol>
+      <p>从 Golang 中的字符串出发</p>
+<ul>
 <li>
-<p>通过索引下标，去遍历字符串中每一个字节</p>
+<p><code>len(&quot;ab你好&quot;)</code> 返回多少</p>
 </li>
 <li>
-<p>通过 for range <code>rune</code> 类型遍历字符串中每一个 <code>utf-8 </code>字符</p>
-</li>
-</ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Golang" data-lang="Golang"><span style="color:#75715e">// 索引下标的方式    
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; len(<span style="color:#a6e22e">str</span>); <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
-        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;索引: %d , 十进制: %d, ASCII字符 %q \n&#34;</span>, <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">str</span>[<span style="color:#a6e22e">i</span>], <span style="color:#a6e22e">str</span>[<span style="color:#a6e22e">i</span>])
-    }
-<span style="color:#75715e">// for range, rune 的方式
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">ch</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">str</span> {
-        <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;索引:%d 十进制: %d, 十六进制: %X,二进制:%b, utf 码点: %U \n&#34;</span>,<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">ch</span>, <span style="color:#a6e22e">ch</span>, <span style="color:#a6e22e">ch</span>, <span style="color:#a6e22e">ch</span>)
-    }
-</code></pre></div><ul>
-<li>
-<p>这两者区别在那？</p>
-</li>
-<li>
-<p>为什么 Golang 要支持这两种方式，或者说为什么 Golang 字符串的实现要基于 <code>utf-8</code> 编码</p>
+<p>已经存在用下标遍历字符串的方式，为什么还要有<code>for _,ch range str</code> ，有什么区别</p>
 </li>
 </ul>
-<h2 id="从-ascii-字符编码到-utf-8">从 ASCII 字符编码到 UTF-8 <a href="#%e4%bb%8e-ascii-%e5%ad%97%e7%ac%a6%e7%bc%96%e7%a0%81%e5%88%b0-utf-8" class="anchor">🔗</a></h2><h3 id="起点-ascii-码">起点: ASCII 码 <a href="#%e8%b5%b7%e7%82%b9-ascii-%e7%a0%81" class="anchor">🔗</a></h3><p>首先我们要知道在计算机的世界中，一切数据都是以字节流的形式存在。例如下图，一个字节（8 个 bit）可以表示从 0 - 255 之间的整数。</p>
-<!-- raw HTML omitted -->
+<h2 id="从-ascii-字符编码到-utf-8">从 ASCII 字符编码到 UTF-8 <a href="#%e4%bb%8e-ascii-%e5%ad%97%e7%ac%a6%e7%bc%96%e7%a0%81%e5%88%b0-utf-8" class="anchor">🔗</a></h2><h3 id="起点-ascii-码">起点: ASCII 码 <a href="#%e8%b5%b7%e7%82%b9-ascii-%e7%a0%81" class="anchor">🔗</a></h3><p>首先我们知道在计算机的世界中，一切数据都是以字节流的形式存在。例如下图，一个字节（8 个 bit）可以表示从 0 - 255 之间的整数。</p>
+<p><p class="markdown-image">
+  <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220221174739815-2022-02-21.png" alt=""  />
+</p></p>
 <p>但是我如果想表示一个字符呢？</p>
 <p><strong>字符定义</strong>：</p>
 <blockquote>
 <p>在<a href="https://zh.wikipedia.org/wiki/%e9%9b%bb%e8%85%a6" target="_blank" rel="noopener">电脑</a>和<a href="https://zh.wikipedia.org/wiki/%e9%9b%bb%e4%bf%a1" target="_blank" rel="noopener">电信</a>领域中，<strong>字符</strong>（Character）是一个<a href="https://zh.wikipedia.org/wiki/%e8%b3%87%e8%a8%8a" target="_blank" rel="noopener">信息</a>单位。对使用<a href="https://zh.wikipedia.org/wiki/%e5%ad%97%e6%af%8d%e7%b3%bb%e7%b5%b1" target="_blank" rel="noopener">字母系统</a>或<a href="https://zh.wikipedia.org/wiki/%e9%9f%b3%e7%af%80%e6%96%87%e5%ad%97" target="_blank" rel="noopener">音节文字</a>等<a href="https://zh.wikipedia.org/wiki/%e8%87%aa%e7%84%b6%e8%aa%9e%e8%a8%80" target="_blank" rel="noopener">自然语言</a>，它大约对应为一个<a href="https://zh.wikipedia.org/wiki/%e9%9f%b3%e4%bd%8d" target="_blank" rel="noopener">音位</a>、类音位的单位或符号。简单来讲就是一个汉字、假名、韩文字……，或是一个英文、其他西方语言的字母。字符的例子有：<a href="https://zh.wikipedia.org/wiki/%e5%ad%97%e6%af%8d" target="_blank" rel="noopener">字母</a>、<a href="https://zh.wikipedia.org/wiki/%e6%95%b8%e5%ad%97%e7%b3%bb%e7%b5%b1" target="_blank" rel="noopener">数字系统</a>或<a href="https://zh.wikipedia.org/wiki/%e6%a8%99%e9%bb%9e%e7%ac%a6%e8%99%9f" target="_blank" rel="noopener">标点符号</a>。</p>
 </blockquote>
 <p>此时需要一个字符与整数之间的<strong>映射关系</strong>。例如，用整数 97 -&gt; a。你传入一个整数，并且指明这个整数是字符类型，那么计算机就给你显示成字符</p>
-<p>这时候最通用的 <code>ASCII</code> (<strong>A</strong>merican <strong>S</strong>tandard <strong>C</strong>ode for <strong>I</strong>nformation <strong>I</strong>nterchange，<strong>美国信息交换标准代码</strong>) 在·1963 年由美国国家标准协会提出。</p>
-<!-- raw HTML omitted -->
-<p>最初版 ASCII 编码使用一个字节中的 7 个 bit 位 （整数 0-127）定义了整数到  128 个字符的映射关系。最初的 ASCII 定义的 128 个字符与其编码方式如下图所示。</p>
 <p><p class="markdown-image">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/USASCII_code_chart.png/1024px-USASCII_code_chart.png" alt=""  />
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/yMWYYm-2022-03-04.png" alt="yMWYYm-2022-03-04"  />
+</p></p>
+<p>这时候最通用的 <code>ASCII</code> (<strong>A</strong>merican <strong>S</strong>tandard <strong>C</strong>ode for <strong>I</strong>nformation <strong>I</strong>nterchange，<strong>美国信息交换标准代码</strong>) 在 1963 年由美国国家标准协会提出。</p>
+<p>最初版 ASCII 编码使用一个字节中的 7 个 bit 位 （整数 0-127）定义了整数到  128 个字符的映射关系。 ASCII 定义的 128 个字符与其编码方式如下图所示。</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/PAmTmM-2022-03-04.png" alt="PAmTmM-2022-03-04"  />
 </p></p>
 <h4 id="编码范围">编码范围 <a href="#%e7%bc%96%e7%a0%81%e8%8c%83%e5%9b%b4" class="anchor">🔗</a></h4><p>十进制: 0-127</p>
 <p>字节形式：</p>
-<!-- raw HTML omitted -->
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/sxcDAk-2022-03-04.png" alt="sxcDAk-2022-03-04"  />
+</p></p>
 <h4 id="ascii-意义">ASCII 意义 <a href="#ascii-%e6%84%8f%e4%b9%89" class="anchor">🔗</a></h4><p>包含了使用最广泛的控制字符、数字符号、英文字母、英文符号，作为鼻祖，成为计算机编码系统的基础，以后出现的各种字符编码基本都要兼容它</p>
 <h4 id="缺点">缺点 <a href="#%e7%bc%ba%e7%82%b9" class="anchor">🔗</a></h4><p>只能表示一些基本英文字母、阿拉伯数字和英式标点符号。所以基本只适用于英语语系的国家</p>
 <h3 id="字符集与字符编码的区别">字符集与字符编码的区别 <a href="#%e5%ad%97%e7%ac%a6%e9%9b%86%e4%b8%8e%e5%ad%97%e7%ac%a6%e7%bc%96%e7%a0%81%e7%9a%84%e5%8c%ba%e5%88%ab" class="anchor">🔗</a></h3><p>在这里先补充下字符集与字符编码定义的区别，再继续介绍</p>
-<p><strong>字符集</strong>：字符的集合，并为字符分配了唯一的编号（码点），例如可以把所有英文字符定义为一种集合，也可以把所有中文字符定义为一种字符集。</p>
+<p><strong>字符集</strong>：字符的集合，并为其中的每个字符分配了唯一的编号（码点），例如可以把所有英文字符定义为一种集合，也可以把所有中文字符定义为一种字符集。</p>
 <p><strong>字符编码</strong>：字符集映射成字节流的方式，可以直接把码点直接存储在计算机中，也可以做一次转换。</p>
 <p>在最早期，一种字符集只有一种编码方式，直接使用它们码点数字存储在计算机。如 ASCII 码，它是一种字符集也是一种字符编码，所以叫法比较乱。</p>
 <p>直到 Unicode 出现，这两者之间的区别才比较清晰。如 Unicode 是一种字符集，每一个字符都会预先分配一个编号。而 utf-8、utf-16、utf-32 都是其中的一种编码方式</p>
 <p><p class="markdown-image">
-  <img src="https://www.icode9.com/i/l/?n=20&amp;i=blog/11824/202102/11824-20210222210932851-351737889.png" alt=""  />
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/qbkigy-2022-03-04.png" alt="qbkigy-2022-03-04"  />
 </p></p>
 <h3 id="野蛮发展时期">野蛮发展时期 <a href="#%e9%87%8e%e8%9b%ae%e5%8f%91%e5%b1%95%e6%97%b6%e6%9c%9f" class="anchor">🔗</a></h3><p>显然 ASCII 字符集包括的128 个字符不能满足广大人民群众的需求，于是字符集的扩充陷入到一阵野蛮发展的时期</p>
-<h4 id="eascii">EASCII <a href="#eascii" class="anchor">🔗</a></h4><p>ASCII 出来后，最先感到不适应的是欧洲地区，欧洲一些地区也比较发达，但所使用的语言不是英语，其语言的一些字符在电脑中无法表示。</p>
+<h4 id="eascii">EASCII <a href="#eascii" class="anchor">🔗</a></h4><p>ASCII 出来后，最先感到不适应的是欧洲地区，欧洲一些地区也比较发达，但所使用的语言不是英语，如法语之类的，其语言的一些字符在电脑中无法表示。</p>
 <p>于是扩展 ASCII (EASCII) 出现了，由于 ASCII 码只使用了一个字节中的 7 个 bit，扩展 ASCII 就是利用了剩下的最高 bit (128 - 255) 扩展出了 128 个字符使用。EASCII 拓展的字符在字节里最高位都是 1.</p>
-<!-- raw HTML omitted -->
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/yhuqZX-2022-03-04.png" alt="yhuqZX-2022-03-04"  />
+</p></p>
 <p>这扩展的 128 字符如下图，如要包括表格符号、计算符号、希腊字母和特殊的拉丁符号</p>
 <p><p class="markdown-image">
-  <img src="https://www.gjszlin.cz/ivt/esf/ostatni-sin/images/04_cp852.png" alt="Informatika na Gymnáziu a Jazykové škole s právem státní jazykové zkoušky Zlín"  />
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/7cTRUJ-2022-03-04.png" alt="7cTRUJ-2022-03-04"  />
 </p></p>
-<h4 id="gb2313big5gbk-与-gb18030">GB2313、BIG5、GBK 与 GB18030 <a href="#gb2313big5gbk-%e4%b8%8e-gb18030" class="anchor">🔗</a></h4><p>时代在发展，当计算机渐渐在东亚流行后，计算机无法表示当地字符，东亚人民感受到极大的不便</p>
+<h4 id="gb2313big5gbk-与-gb18030-中文字符集的发展">GB2313、BIG5、GBK 与 GB18030 中文字符集的发展 <a href="#gb2313big5gbk-%e4%b8%8e-gb18030-%e4%b8%ad%e6%96%87%e5%ad%97%e7%ac%a6%e9%9b%86%e7%9a%84%e5%8f%91%e5%b1%95" class="anchor">🔗</a></h4><p>时代在发展，当计算机渐渐在东亚流行后，计算机无法表示当地字符，东亚人民感受到极大的不便</p>
 <h5 id="gb-2313">GB 2313 <a href="#gb-2313" class="anchor">🔗</a></h5><p>GB2313 是中国国家标准简体中文字符集，由中国国家标准总局于1980年发布，支持的字符</p>
 <ul>
 <li>
@@ -178,15 +179,15 @@ if (!doNotTrack) {
 <p><strong>如何在字节流中区分 ASCII 字符与 GB2312 支持的字符</strong></p>
 <ul>
 <li>
-<p>最高位 0 的字节编码成 ASCII 字符</p>
+<p>最高位 0 的字节是 ASCII 字符</p>
 </li>
 <li>
-<p>最高位 1 的字节 + 后续的一个字节编码成 GB 2312 支持的字符</p>
+<p>最高位 1 的字节 + 后续的一个字节组成 GB 2312 支持的字符</p>
 </li>
 </ul>
 <p>理论中的编码范围如下，实际上总共需要表示 7445 多个字符，只使用了一部分空间。</p>
 <p><p class="markdown-image">
-  <img src="/Users/bytedance/Library/Application%20Support/marktext/images/2022-03-03-15-28-42-image.png" alt=""  />
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/MlhchR-2022-03-04.png" alt="MlhchR-2022-03-04"  />
 </p></p>
 <h5 id="big5">BIG5 <a href="#big5" class="anchor">🔗</a></h5><p>由于 GB2312 不包括繁体字符，台湾同胞们不乐意了</p>
 <p><strong>BIG5：</strong> BIG-5 码是通行于台湾、香港地区的一个繁体字编码方案。使用2个字节表示，表示13053 个汉字</p>
@@ -212,9 +213,175 @@ if (!doNotTrack) {
 <p>四个字节支持新增的字符</p>
 </li>
 </ul>
-<h3 id="终点-unicode-字符集">终点: Unicode 字符集 <a href="#%e7%bb%88%e7%82%b9-unicode-%e5%ad%97%e7%ac%a6%e9%9b%86" class="anchor">🔗</a></h3><p>上述的发展只是描述中国这一块区域的字符集的发展，而世界上有这么多国家，这么多文化。字符集与字符编码的爆炸使得开发人员痛苦，并且日常使用中使用者经常选择错误的编码方式打开文本导致乱码</p>
-<p><strong>Unicode</strong> 全称 Unicode Character Set，是国际组织制定的可以容纳<strong>世界上所有文字和符号</strong>字的集合</p>
-<h4 id="utf-32">UTF-32 <a href="#utf-32" class="anchor">🔗</a></h4><h4 id="utf-16">UTF-16 <a href="#utf-16" class="anchor">🔗</a></h4><h4 id="utf-8">UTF-8 <a href="#utf-8" class="anchor">🔗</a></h4>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/Ek6sXM-2022-03-04.jpg" alt="Ek6sXM-2022-03-04"  />
+</p></p>
+<h3 id="终点-unicode-字符集">终点: Unicode 字符集 <a href="#%e7%bb%88%e7%82%b9-unicode-%e5%ad%97%e7%ac%a6%e9%9b%86" class="anchor">🔗</a></h3><p>上述的的一系列字符集只是在中国这一块区域出现的，而世界上还有这么多国家，这么多文化、文字。</p>
+<ul>
+<li>
+<p>字符集与字符编码数量爆炸和不兼容，使得开发人员痛苦，、</p>
+</li>
+<li>
+<p>并且日常使用中人们经常选择错误的编码方式打开文本导致乱码</p>
+</li>
+</ul>
+<p><strong>Unicode</strong> 全称 Unicode Character Set，是国际组织制定的可以容纳<strong>世界上所有文字和符号</strong>的集合</p>
+<p>Unicode 字符集目前包括两个主要版本</p>
+<ul>
+<li>
+<p>2 个字节的版本，能表示 65536 个字符，目前普遍使用</p>
+</li>
+<li>
+<p>4 个字节的版本，理论能表示十亿级别数量的字符，实际包括了一百多万个字符，目前使用还较少</p>
+</li>
+</ul>
+<p>上面说的字节只是各个字符的 unicode 码点（编号），并不是其在计算机中存储实际所占用多少个字节，在计算机中实际存储决定于字符编码，UTF（Unicode Transformation Format）</p>
+<h4 id="utf-32">UTF-32 <a href="#utf-32" class="anchor">🔗</a></h4><p>UTF-32 是最简单的编码方式，<strong>每个码点使用四个字节表示，字节内容一一对应码点</strong>，即计算机中存储就是定义的码点</p>
+<pre tabindex="0"><code class="language-textile" data-lang="textile">U+0000 = 0x0000 0000
+u+597D = 0x0000 597D
+</code></pre><p><strong>优点</strong></p>
+<ul>
+<li>定长编码，转换规则简单直观</li>
+</ul>
+<p><strong>缺点</strong></p>
+<ul>
+<li>
+<p>内存占用大，如果一篇纯粹由 ASCII 字符组成的文本，UTF-32 占用空间大四倍</p>
+</li>
+<li>
+<p>不兼容 ASCII</p>
+</li>
+</ul>
+<h4 id="utf-16">UTF-16 <a href="#utf-16" class="anchor">🔗</a></h4><p><strong>UTF-16:</strong> 介于 UTF-8 和 UTF-32 之间，使用 2 个或者 4 个字节来存储</p>
+<ul>
+<li>
+<p>对于 Unicode 编号在 0 ~ FFFF，直接存储 Unicode 编号</p>
+</li>
+<li>
+<p>对于 Unicode 编号在 10000 ~10FFFF，使用四个字节存储</p>
+</li>
+</ul>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/L7hUlU-2022-03-04.png" alt="L7hUlU-2022-03-04"  />
+</p></p>
+<p><strong>UTF-16 如何区分是 2 个字节还是 4 个字节组成一个字符</strong></p>
+<ul>
+<li>U+D800 到 U+DFFF 在 unicode 中不对应任何字符，UTF-16 用这个区域的码点说明这两个字节和后面的两个字节共同组成一个字符</li>
+</ul>
+<p><strong>优点</strong></p>
+<ul>
+<li>
+<p>相对 UTF-32 节省空间</p>
+</li>
+<li>
+<p>转换相对简单</p>
+</li>
+<li>
+<p>文化上相对公平</p>
+</li>
+</ul>
+<p><strong>缺点</strong></p>
+<ul>
+<li>
+<p>不兼容 ASCII</p>
+</li>
+<li>
+<p>UTF-16 存在大小端字节序问题</p>
+</li>
+</ul>
+<h4 id="utf-8">UTF-8 <a href="#utf-8" class="anchor">🔗</a></h4><p><strong>UTF-8：</strong> 变长字符编码方式，用一至六个字节对 Unicode 字符集中的所有有效码点进行编码，目前实际上最多使用到了 4 个字节</p>
+<ul>
+<li>
+<p>1 个字节：ASCII 字符</p>
+</li>
+<li>
+<p>2 个字节:   拉丁字母、希腊文 、亚美尼亚语、希伯来文、阿拉伯文、叙利亚文等</p>
+</li>
+<li>
+<p>3 个字节：汉字和其它语言字符</p>
+</li>
+<li>
+<p>4 个字节：几乎没有用到</p>
+</li>
+</ul>
+<p><strong>UTF-8 如何区分变长字节</strong></p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/v0iT7G-2022-03-04.jpg" alt="v0iT7G-2022-03-04"  />
+</p></p>
+<p><strong>优点</strong></p>
+<ul>
+<li>
+<p>兼容 ASCII</p>
+</li>
+<li>
+<p>对西文编码优势比较大</p>
+</li>
+<li>
+<p>无字节序大小端的问题</p>
+</li>
+</ul>
+<p><strong>缺点</strong></p>
+<ul>
+<li>
+<p>文化上不平衡，汉字需要 3 个字节，英文只需要 1 个字节存储</p>
+</li>
+<li>
+<p>变长字节带来的效率问题，如何计算字符数？</p>
+</li>
+</ul>
+<p>目前，UTF-8 编码由于其优势，已经在互联网上占据压倒式优势了，因此 Golang 字符串的实现基于 UTF-8 也是符合潮流</p>
+<h3 id="字符编码常见问题">字符编码常见问题 <a href="#%e5%ad%97%e7%ac%a6%e7%bc%96%e7%a0%81%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h3><ol>
+<li>MySQL 中 utf-8mb4 是什么</li>
+</ol>
+<p>答：MySQL 中原先的 utf-8 只支持 3 个字节的编码。完整的 utf-8 理论上支持最多 6 个字节（目前最多四个字节）。utf-mb4 指的是支持最多 4 个字节的编码，主要是一些 emoji 符号。</p>
+<ol start="2">
+<li>
+<p>为什么 notepad 上字符编码很多都看不懂</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/klEzk3-2022-03-04.jpg" alt="klEzk3-2022-03-04"  />
+</p></p>
+</li>
+</ol>
+<p><strong>ANSI</strong>，由微软提出</p>
+<ul>
+<li>
+<p>在简体中文Windows操作系统中，ANSI 编码代表 GBK 编码；</p>
+</li>
+<li>
+<p>在繁体中文Windows操作系统中，ANSI编码代表Big5；</p>
+</li>
+<li>
+<p>在日文Windows操作系统中，ANSI 编码代表 Shift_JIS 编码</p>
+</li>
+</ul>
+<p><strong>UCS2</strong>，国际标准化组织(ISO)提出的统一码，后面和 UTF-16 合并了，现在基本等于 UTF-16，UCS4 与 UTF-32 同理</p>
+<p><strong>BigEndian、Little Endian</strong>，字节序大小端</p>
+<p>BOM:  微软提出在所有的 Unicode 文件开头加入标识，来识别所使用的编码和字节顺序</p>
+<p>插入到以UTF-8、UTF16 或 UTF-32 编码 Unicode 文件开头的特殊标记，用来识别Unicode文件的编码类型。对于UTF-8来说，BOM并不是必须的</p>
+<h3 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h3><ol>
+<li>
+<p><a href="https://zh.wikipedia.org/wiki/UTF-8" target="_blank" rel="noopener">UTF-8 - 维基百科，自由的百科全书</a></p>
+</li>
+<li>
+<p><a href="https://liyucang-git.github.io/2019/06/17/%E5%BD%BB%E5%BA%95%E5%BC%84%E6%87%82Unicode%E7%BC%96%E7%A0%81/" target="_blank" rel="noopener">彻底弄懂Unicode编码 - 李宇仓 | Li Yucang</a></p>
+</li>
+<li>
+<p><a href="https://juejin.cn/post/6854573213326770184" target="_blank" rel="noopener">字符编码（四：UTF 系列编码详解） - 掘金</a></p>
+</li>
+<li>
+<p><a href="https://zhuanlan.zhihu.com/p/51202412" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/51202412</a></p>
+</li>
+<li>
+<p><a href="https://www.cnblogs.com/chenwenbiao/archive/2011/09/16/2178372.html" target="_blank" rel="noopener">GBK,BIG5等字符集编码范围的具体说明 （转） - 奋斗者 - 博客园</a></p>
+</li>
+<li>
+<p><a href="https://www.cnblogs.com/cnhyk/p/12284020.html" target="_blank" rel="noopener">ASCII，GBK，和Unicode的UTF-8，UTF-16，UTF-32阐述 - 开花的马铃薯 - 博客园</a></p>
+</li>
+<li>
+<p><a href="https://cloud.tencent.com/developer/article/1343240" target="_blank" rel="noopener">一图弄懂ASCII、GB2312、GBK、GB18030编码 - 云+社区 - 腾讯云</a></p>
+</li>
+</ol>
+
     </div>
 
     
