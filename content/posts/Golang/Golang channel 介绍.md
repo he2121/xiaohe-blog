@@ -1,22 +1,25 @@
 ---
+
 title: "Golang channel 原理介绍"
 author: "小贺"
 date: 2021-11-29T17:10:12+08:00
 tags: ["golang"]
+
 ---
+
 ### 问题
 
 1. 从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭
 
 ```go
 func main() {
-	ch := make(chan int,2)
-	ch <- 1
-	close(ch)
-	num1, ok1 := <- ch
-	num2,ok2 := <- ch
-	println(num1,ok1)
-	println(num2,ok2)
+    ch := make(chan int,2)
+    ch <- 1
+    close(ch)
+    num1, ok1 := <- ch
+    num2,ok2 := <- ch
+    println(num1,ok1)
+    println(num2,ok2)
 }
 ```
 
@@ -42,7 +45,6 @@ func main() {
 
 ![mermaid-diagram-20211130225330](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/mermaid-diagram-20211130225330-2021-11-30.png)
 
-
 ## channel 实现
 
 ### 数据结构
@@ -52,18 +54,18 @@ channel 的底层数据结构如下代码所示，个人认为主要由**一个 
 ```go
 // src/runtime/chan.go
 type hchan struct {
-	qcount   uint           // chan 中元素个数
-	dataqsiz uint           // chan 底层循环队列的长度
-	buf      unsafe.Pointer // 指向 循环队列的指针
-	elemsize uint16					// chan 中元素大小
-	closed   uint32					// 是否关闭的状态位
-	elemtype *_type 				// 元素类型
-	sendx    uint   				// 已发送元素在循环队列中的索引
-	recvx    uint   				// 已接受元素在循环队列中的索引
-	recvq    waitq  				// 等待接受数据的 goroutine 队列
-	sendq    waitq  				// 等待发送数据的 goroutine 列队
+    qcount   uint           // chan 中元素个数
+    dataqsiz uint           // chan 底层循环队列的长度
+    buf      unsafe.Pointer // 指向 循环队列的指针
+    elemsize uint16                    // chan 中元素大小
+    closed   uint32                    // 是否关闭的状态位
+    elemtype *_type                 // 元素类型
+    sendx    uint                   // 已发送元素在循环队列中的索引
+    recvx    uint                   // 已接受元素在循环队列中的索引
+    recvq    waitq                  // 等待接受数据的 goroutine 队列
+    sendq    waitq                  // 等待发送数据的 goroutine 列队
 
-	lock mutex	// 保护上述字段
+    lock mutex    // 保护上述字段
 }
 
 ```
@@ -95,63 +97,62 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
   // channel 为 nil
   if c == nil {
     // select 非阻塞，直接返回 false
-		if !block {
-			return false
-		}
+        if !block {
+            return false
+        }
     // 阻塞协程
-		gopark(nil, nil, waitReasonChanSendNilChan, traceEvGoStop, 2)
-		throw("unreachable")
-	}
+        gopark(nil, nil, waitReasonChanSendNilChan, traceEvGoStop, 2)
+        throw("unreachable")
+    }
   // 省略一些...
-  
+
   // select 非阻塞,如果 channel 没有关闭, channel 为 full：有缓冲（buf 满了），无缓冲（recvq 为空）
   if !block && c.closed == 0 && full(c) {
-		return false
-	}
+        return false
+    }
   // ... 省略了一些...
   // 如果 channel 关闭了，panic
   if c.closed != 0 {
-		unlock(&c.lock)
-		panic(plainError("send on closed channel"))
-	}
+        unlock(&c.lock)
+        panic(plainError("send on closed channel"))
+    }
   // 若 receq 不为空，把 receq 队列取一个 goroutine，直接把其要发送的消息ep发到取到的 goroutine 中。存在两种情况
   // 1. 这是无缓冲 channel发送数据的过程，
   // 2. 有缓冲 channel receq 不为空，则说明其 buf 数组为空，
-	if sg := c.recvq.dequeue(); sg != nil {
-		send(c, sg, ep, func() { unlock(&c.lock) }, 3)
-		return true
-	}
+    if sg := c.recvq.dequeue(); sg != nil {
+        send(c, sg, ep, func() { unlock(&c.lock) }, 3)
+        return true
+    }
   // 有缓冲 channel，且其 buff 数组还没满，把 ep 数据放到 buf 中
   if c.qcount < c.dataqsiz {
-		// 返回sendx 指向的地址
-		qp := chanbuf(c, c.sendx)
+        // 返回sendx 指向的地址
+        qp := chanbuf(c, c.sendx)
     // 把 ep 中的消息 copy 到 buf 中
-		typedmemmove(c.elemtype, qp, ep)
+        typedmemmove(c.elemtype, qp, ep)
     // sendx count... 的修改
-		c.sendx++
-		if c.sendx == c.dataqsiz {
-			c.sendx = 0
-		}
-		c.qcount++
-		unlock(&c.lock)
-		return true
-	}
+        c.sendx++
+        if c.sendx == c.dataqsiz {
+            c.sendx = 0
+        }
+        c.qcount++
+        unlock(&c.lock)
+        return true
+    }
   // 以上都不成功，阻塞当前协程
   // ...
-  c.sendq.enqueue(mysg)	// 当前协程入队 sendq
+  c.sendq.enqueue(mysg)    // 当前协程入队 sendq
   // ...
-  gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanSend, traceEvGoBlockSend, 2)	// 阻塞
+  gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanSend, traceEvGoBlockSend, 2)    // 阻塞
   // ...
 }
 ```
 
 这里解释下 full/empty channel。
 
-
-| Channel 类型 |                  Full                  |                 Empty                 |
-| :------------: | :--------------------------------------: | :--------------------------------------: |
-|    无缓冲    | reveq 队列为空：没有等待接受消息的协程 | sendq 队列为空：没有等待发送消息的协程 |
-|    有缓冲    |              buf 数组已满              |              buf 数组为空              |
+| Channel 类型 | Full                   | Empty                  |
+|:----------:|:----------------------:|:----------------------:|
+| 无缓冲        | reveq 队列为空：没有等待接受消息的协程 | sendq 队列为空：没有等待发送消息的协程 |
+| 有缓冲        | buf 数组已满               | buf 数组为空               |
 
 **总结**
 
@@ -176,82 +177,82 @@ func chansend(c *hchan, ep unsafe.Pointer, block bool, callerpc uintptr) bool {
 // ep: 接受数据，block：是否阻塞式接受, selected: 是否有返回值(select 语句 并且 channel empty 无返回值) received: 此返回值是否是正常由发送者发送过来的数据
 func chanrecv(c *hchan, ep unsafe.Pointer, block bool) (selected, received bool) {
   // channel 为空
-	if c == nil {
+    if c == nil {
     // 非阻塞直接返回 false false
-		if !block {
-			return
-		}
+        if !block {
+            return
+        }
     // 阻塞协程
-		gopark(nil, nil, waitReasonChanReceiveNilChan, traceEvGoStop, 2)
-		throw("unreachable")
-	}
+        gopark(nil, nil, waitReasonChanReceiveNilChan, traceEvGoStop, 2)
+        throw("unreachable")
+    }
 
-	// 非阻塞快速失败
-	if !block && empty(c) {
-		// channel 没有关闭，返回 false,false
-		if atomic.Load(&c.closed) == 0 {
-			return
-		}
+    // 非阻塞快速失败
+    if !block && empty(c) {
+        // channel 没有关闭，返回 false,false
+        if atomic.Load(&c.closed) == 0 {
+            return
+        }
     // channel 已经关闭, 需要返回零值，因此返回:true，false
-		if empty(c) {
-			if ep != nil {
-				typedmemclr(c.elemtype, ep)
-			}
-			return true, false
-		}
-	}
-	// ...
+        if empty(c) {
+            if ep != nil {
+                typedmemclr(c.elemtype, ep)
+            }
+            return true, false
+        }
+    }
+    // ...
   // 得操作 buf 或者 sendq 队列了，并发需要加锁
-	lock(&c.lock)
+    lock(&c.lock)
 
   // 如果 channel 已经关闭, 并且 buf 为空，返回零值
-	if c.closed != 0 && c.qcount == 0 {
-		unlock(&c.lock)
-		if ep != nil {
-			typedmemclr(c.elemtype, ep)
-		}
-		return true, false
-	}
+    if c.closed != 0 && c.qcount == 0 {
+        unlock(&c.lock)
+        if ep != nil {
+            typedmemclr(c.elemtype, ep)
+        }
+        return true, false
+    }
 
   // 发送队列不为空, 有两种情况sendq 不为空 
   // 1. 无缓冲 channel，直接将队首的消息 copy 到 ep 指向的数据中
-	// 2. 有缓冲 channel，但是其 buf 已满。其中操作需要把 buf 队首数据 copy 到 ep 指向的数据， sendq 队首出队，将其发送的消息copy 到 buf 中
-	if sg := c.sendq.dequeue(); sg != nil {
-		recv(c, sg, ep, func() { unlock(&c.lock) }, 3)
-		return true, true
-	}
- 
-	// buf 不为空，将 buf 队首数据 copy 到 ep 
-	if c.qcount > 0 {
-		// Receive directly from queue
-		qp := chanbuf(c, c.recvx)
-		// ....
-		if ep != nil {
-			typedmemmove(c.elemtype, ep, qp)
-		}
-		typedmemclr(c.elemtype, qp)
-		c.recvx++
-		if c.recvx == c.dataqsiz {
-			c.recvx = 0
-		}
-		c.qcount--
-		unlock(&c.lock)
-		return true, true
-	}
-	// 非阻塞直接返回
-	if !block {
-		unlock(&c.lock)
-		return false, false
-	}
+    // 2. 有缓冲 channel，但是其 buf 已满。其中操作需要把 buf 队首数据 copy 到 ep 指向的数据， sendq 队首出队，将其发送的消息copy 到 buf 中
+    if sg := c.sendq.dequeue(); sg != nil {
+        recv(c, sg, ep, func() { unlock(&c.lock) }, 3)
+        return true, true
+    }
 
-	// 阻塞
-	gp := getg()
-	mysg := acquireSudog()
-	c.recvq.enqueue(mysg)			// 入 recvq 队
+    // buf 不为空，将 buf 队首数据 copy 到 ep 
+    if c.qcount > 0 {
+        // Receive directly from queue
+        qp := chanbuf(c, c.recvx)
+        // ....
+        if ep != nil {
+            typedmemmove(c.elemtype, ep, qp)
+        }
+        typedmemclr(c.elemtype, qp)
+        c.recvx++
+        if c.recvx == c.dataqsiz {
+            c.recvx = 0
+        }
+        c.qcount--
+        unlock(&c.lock)
+        return true, true
+    }
+    // 非阻塞直接返回
+    if !block {
+        unlock(&c.lock)
+        return false, false
+    }
+
+    // 阻塞
+    gp := getg()
+    mysg := acquireSudog()
+    c.recvq.enqueue(mysg)            // 入 recvq 队
   // ...
-	gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanReceive, traceEvGoBlockRecv, 2)	// 阻塞
+    gopark(chanparkcommit, unsafe.Pointer(&c.lock), waitReasonChanReceive, traceEvGoBlockRecv, 2)    // 阻塞
   // ...
-	return true, success
+    return true, success
 }
 ```
 

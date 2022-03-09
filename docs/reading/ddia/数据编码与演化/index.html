@@ -14,8 +14,8 @@
 数据编码与演化 🔗1. 语言特定的格式 🔗首先比较常见的是各个编程语言内置对序列化的实现。例如 Python 中的 pickle、 Java 中的 java.io.Serializable 、Golang 中的 gob&hellip;
 但除非临时尝试中，我们一般不会使用它们。这是由于：
  这类编码通常与特定的编程语言深度绑定，其他语言很难读取这种数据，很难将系统与其他组织的系统（可能用的是不同的语言）进行集成 为了恢复相同对象类型的数据，解码过程需要实例化任意类的能力，这通常是安全问题的一个来源 在这些库中，数据版本控制通常是事后才考虑的。因为它们旨在快速简便地对数据进行编码，所以往往忽略了前向后向兼容性带来的麻烦问题 效率（编码或解码所花费的CPU时间，以及编码结构的大小）往往也是事后才考虑的。 例如，Java的内置序列化由于其糟糕的性能和臃肿的编码而臭名昭着  2. JSON、XML 文本格式编码 🔗现在比较常用的 JSON、XML 两种文本格式编码，其最大优点的是可以被多种编程语言读写， CSV 是另一种流行的与语言无关的格式，但其其功能相对较弱。下面是内存中的一个对象被编码成 JSON 格式后的示例，使用文本格式编码，不仅可以被多种编程语言解码（decoding），甚至连我们人类都能直接阅读理解其意思。
-{ &#34;userName&#34;: &#34;Martin&#34;, &#34;favoriteNumber&#34;: 1337, &#34;interests&#34;: [&#34;daydreaming&#34;, &#34;hacking&#34;] } JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题">
-<meta name="generator" content="Hugo 0.89.2" />
+{  &#34;userName&#34;: &#34;Martin&#34;,  &#34;favoriteNumber&#34;: 1337,  &#34;interests&#34;: [&#34;daydreaming&#34;, &#34;hacking&#34;] } JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -76,7 +76,7 @@ if (!doNotTrack) {
     <h1 class="title">数据编码与演化</h1>
 
     <div class="tip">
-      <div>2022年1月16日</div>
+        <time datetime="2022-01-16 14:30:00 &#43;0800 CST">2022年01月16日</time>
         <span class="split">
           ·
         </span>
@@ -87,13 +87,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          2分钟 读完
+          2分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2freading%2fddia%2f%25E6%2595%25B0%25E6%258D%25AE%25E7%25BC%2596%25E7%25A0%2581%25E4%25B8%258E%25E6%25BC%2594%25E5%258C%2596%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -123,12 +118,12 @@ if (!doNotTrack) {
 <li>效率（编码或解码所花费的CPU时间，以及编码结构的大小）往往也是事后才考虑的。 例如，Java的内置序列化由于其糟糕的性能和臃肿的编码而臭名昭着</li>
 </ol>
 <h3 id="2-jsonxml-文本格式编码">2. JSON、XML 文本格式编码 <a href="#2-jsonxml-%e6%96%87%e6%9c%ac%e6%a0%bc%e5%bc%8f%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h3><p>现在比较常用的 JSON、XML 两种文本格式编码，其最大优点的是可以被多种编程语言读写， CSV 是另一种流行的与语言无关的格式，但其其功能相对较弱。下面是内存中的一个对象被编码成 JSON 格式后的示例，使用文本格式编码，不仅可以被多种编程语言解码（decoding），甚至连我们人类都能直接阅读理解其意思。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
-    <span style="color:#f92672">&#34;userName&#34;</span>: <span style="color:#e6db74">&#34;Martin&#34;</span>,
-    <span style="color:#f92672">&#34;favoriteNumber&#34;</span>: <span style="color:#ae81ff">1337</span>,
-    <span style="color:#f92672">&#34;interests&#34;</span>: [<span style="color:#e6db74">&#34;daydreaming&#34;</span>, <span style="color:#e6db74">&#34;hacking&#34;</span>]
-}
-</code></pre></div><p>JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;userName&#34;</span>: <span style="color:#e6db74">&#34;Martin&#34;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;favoriteNumber&#34;</span>: <span style="color:#ae81ff">1337</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;interests&#34;</span>: [<span style="color:#e6db74">&#34;daydreaming&#34;</span>, <span style="color:#e6db74">&#34;hacking&#34;</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>JSON、XML 得到了广泛的应用，但也有不少问题。例如 XML 格式的复杂与冗长。JSON 的流行则主要源于（通过成为JavaScript的一个子集）Web浏览器的内置支持，以及相对于XML的简单性。下面列数了它们的一些问题</p>
 <ol>
 <li>数值（numbers） 的编码多有歧义之处。XML 和 CSV 不能区分数字和字符串（除非引用一个外部模式）。 JSON虽然区分字符串与数值，但不区分整数和浮点数，而且不能指定精度，导致 JSON 不能表示 int64 中特别大的数值</li>
 <li>JSON 和 XML 对 Unicode 字符串（即人类可读的文本）有很好的支持，但是它们不支持二进制数据。人们通过使用 Base64 将二进制数据编码为文本来绕过此限制。其特有的模式标识着这个值应当被解释为 Base64 编码的二进制数据。这种方案虽然管用，但比较Hacky，并且会增加三分之一的数据大小。</li>
@@ -155,19 +150,19 @@ if (!doNotTrack) {
 <li>消息中字段名过长可能会占用过多空间，可以把字段名优化掉</li>
 </ul>
 <p>Protocol Buffers 最初是在 Google 开发的，Thrift 最初是在Facebook 开发的，并且在 2007~2008 年开源。 Thrift 和 Protocol Buffers 都需要一个模式（接口定义语言 IDL）来编码任何数据。如下面例子分别用 IDL 表示了上述例子中的数据格式</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-protobuf" data-lang="protobuf"><span style="color:#75715e">// thrift 
-</span><span style="color:#75715e"></span>struct Person {<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">required</span> <span style="color:#66d9ef">string</span>       userName,<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">optional</span> i64          favoriteNumber,<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">3</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">optional</span> list&lt;<span style="color:#66d9ef">string</span>&gt; interests<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#75715e">// protobuf
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">message</span> <span style="color:#a6e22e">Person</span> {<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">required</span> <span style="color:#66d9ef">string</span> user_name       <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">optional</span> <span style="color:#66d9ef">int64</span>  favorite_number <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">repeated</span> <span style="color:#66d9ef">string</span> interests       <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;<span style="color:#960050;background-color:#1e0010">
-</span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
-</span></code></pre></div><p>相信各位对这两者并不陌生，其都被广泛用于各种 RPC 中。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-protobuf" data-lang="protobuf"><span style="display:flex;"><span><span style="color:#75715e">// thrift 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>struct Person {<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">1</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">required</span> <span style="color:#66d9ef">string</span>       userName,<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">2</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">optional</span> i64          favoriteNumber,<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#ae81ff">3</span><span style="color:#f92672">:</span> <span style="color:#66d9ef">optional</span> list&lt;<span style="color:#66d9ef">string</span>&gt; interests<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span><span style="color:#75715e">// protobuf
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">message</span> <span style="color:#a6e22e">Person</span> {<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">required</span> <span style="color:#66d9ef">string</span> user_name       <span style="color:#f92672">=</span> <span style="color:#ae81ff">1</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">optional</span> <span style="color:#66d9ef">int64</span>  favorite_number <span style="color:#f92672">=</span> <span style="color:#ae81ff">2</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>    <span style="color:#66d9ef">repeated</span> <span style="color:#66d9ef">string</span> interests       <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>;<span style="color:#960050;background-color:#1e0010">
+</span></span></span><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010"></span>}<span style="color:#960050;background-color:#1e0010">
+</span></span></span></code></pre></div><p>相信各位对这两者并不陌生，其都被广泛用于各种 RPC 中。</p>
 <p>我们来看看这两者是如何把数据压缩到极致的。Thrift有两种不同的二进制编码格式，分别称为BinaryProtocol 和 CompactProtocol。</p>
 <h4 id="1-thrift-binaryprotocol-编码">1. Thrift BinaryProtocol 编码 <a href="#1-thrift-binaryprotocol-%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h4><p>使用这种格式的编码来编码上述例子中的消息只需要 <strong>59 个字节</strong>，如下图所示。</p>
 <p><p class="markdown-image">
@@ -186,7 +181,7 @@ if (!doNotTrack) {
 <li>它通过将字段类型和标签号打包到单个字节中，</li>
 <li>使用可变长度整数编码, 实现原理每个字节的最高位用来指示是否还有更多的字节。这意味着 -64 到 63 之间的数字 只要一个字节，-8192 和 8191之间的数字只需要用两个字节编码&hellip;</li>
 </ol>
-<h4 id="3-protocol-buffers-编码">3. Protocol Buffers 编码 <a href="#3-protocol-buffers-%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h4><p>​	其与Thrift的 CompactProtocol 非常相似。 Protobuf 将同样的记录塞进了 <strong>33 个字节</strong>中，如下图所示。</p>
+<h4 id="3-protocol-buffers-编码">3. Protocol Buffers 编码 <a href="#3-protocol-buffers-%e7%bc%96%e7%a0%81" class="anchor">🔗</a></h4><p>​    其与Thrift的 CompactProtocol 非常相似。 Protobuf 将同样的记录塞进了 <strong>33 个字节</strong>中，如下图所示。</p>
 <p><p class="markdown-image">
   <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/ddia-fig4-4-2022-01-17.png" alt="ddia-fig4-4"  />
 </p></p>
@@ -230,14 +225,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

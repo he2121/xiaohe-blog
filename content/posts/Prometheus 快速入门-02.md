@@ -44,6 +44,7 @@ Prometheus Metric 有四种类型：Counter，Gauge，Histogram，Summary
 - **特性**：只增不减
 
 - **适用**：服务请求数、已完成任务数、错误出现次数等
+
 - **示例**：http 请求数
 
 ```bash
@@ -67,6 +68,7 @@ Add(float64)
 - **特性**：数据可以任意变化，可增可减
 
 - **适用**：温度、内存/磁盘使用率等
+
 - **示例**：go 当前协程数
 
 ```bash
@@ -100,7 +102,7 @@ SetToCurrentTime()
 ```bash
 # HELP prometheus_http_request_duration_seconds Histogram of latencies for HTTP requests.
 # TYPE prometheus_http_request_duration_seconds histogram
-prometheus_http_request_duration_seconds_bucket{handler="/",le="0.1"} 6	// 延时小于 0.1 s 的请求数 6 个
+prometheus_http_request_duration_seconds_bucket{handler="/",le="0.1"} 6    // 延时小于 0.1 s 的请求数 6 个
 prometheus_http_request_duration_seconds_bucket{handler="/",le="0.2"} 6 // 延时小于 0.2 s 的请求数 6 个
 prometheus_http_request_duration_seconds_bucket{handler="/",le="0.4"} 6
 prometheus_http_request_duration_seconds_bucket{handler="/",le="1"} 6
@@ -109,9 +111,9 @@ prometheus_http_request_duration_seconds_bucket{handler="/",le="8"} 6
 prometheus_http_request_duration_seconds_bucket{handler="/",le="20"} 6
 prometheus_http_request_duration_seconds_bucket{handler="/",le="60"} 6
 prometheus_http_request_duration_seconds_bucket{handler="/",le="120"} 6
-prometheus_http_request_duration_seconds_bucket{handler="/",le="+Inf"} 6	// 这个实际上等于总请求数
-prometheus_http_request_duration_seconds_sum{handler="/"} 0.00016767900000000003	// 上述样本求和 sum
-prometheus_http_request_duration_seconds_count{handler="/"} 6							// 这次采样总请求数
+prometheus_http_request_duration_seconds_bucket{handler="/",le="+Inf"} 6    // 这个实际上等于总请求数
+prometheus_http_request_duration_seconds_sum{handler="/"} 0.00016767900000000003    // 上述样本求和 sum
+prometheus_http_request_duration_seconds_count{handler="/"} 6                            // 这次采样总请求数
 ```
 
 - **Go SDK** ：
@@ -167,8 +169,7 @@ Observe(float64)
 
 ### PormQL 查询返回数据类型
 
-1.  **瞬时向量（Instant vector）**: 包含一组时序数据，默认返回**最新时间点的值**
-
+1. **瞬时向量（Instant vector）**: 包含一组时序数据，默认返回**最新时间点的值**
 - 查询语句
 
 ```bash
@@ -183,7 +184,6 @@ http_requests_total{handler="/api/comments"}
 ![image-20211208170850461](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211208170850461-2021-12-08.png)
 
 2. **范围向量（Range vector）**: 一组时序数据，每个时序有多个值（限定在一段时间内，不同时间点的值）
-
 - 查询语句
 
 ```bash
@@ -194,9 +194,8 @@ http_requests_total{handler="/api/comments"}[5m]
 ```
 
 - 返回结果
-
+  
   ![image-20211208171741338](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211208171741338-2021-12-08.png)
-
 3. **标量**
 
 单纯的数字：2，2.0
@@ -232,9 +231,9 @@ topk(5, http_requests_total{code="200"}) // 只要值在前 5 的时序数据
 - [内置函数 ](https://prometheus.io/docs/prometheus/latest/querying/functions/) 如 `abs,floor, rate`, 不同函数有着不同的操作对象，例如 `rate` 针对与范围向量，瞬时向量增长率
 
 ```bash
-floor(avg(http_requests_total{code="200"}))	// 向下取整
-ceil(avg(http_requests_total{code="200"}))	// 向上取整
-rate(http_requests_total[5m])								// 求 5m 增长率
+floor(avg(http_requests_total{code="200"}))    // 向下取整
+ceil(avg(http_requests_total{code="200"}))    // 向上取整
+rate(http_requests_total[5m])                                // 求 5m 增长率
 ```
 
 ## Go Client 实现自定义 exporter
@@ -252,31 +251,30 @@ package main
 
 import (
   "fmt"
-	"net/http"
+    "net/http"
 )
 
 func main() {
-	http.HandleFunc("/api1", api1)
-	http.HandleFunc("/api2", api2)
+    http.HandleFunc("/api1", api1)
+    http.HandleFunc("/api2", api2)
 
-	err := http.ListenAndServe(":1234", nil)
-	if err != nil {
-		panic(err)
-	}
+    err := http.ListenAndServe(":1234", nil)
+    if err != nil {
+        panic(err)
+    }
 }
 
 func api1(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hello api1")
+    fmt.Println("hello api1")
 }
 
 func api2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("hello api2")
+    fmt.Println("hello api2")
 }
 
 ```
 
 - 如何利用 prometheus 监控这两个接口请求量与接口时延呢
-
 1. 向外暴露 exporter 地址，下述例子使用默认的 exporter 提供了一些 go 程序的基本监控，如 go 协程数，垃圾回收时间..
 
 ```bash
@@ -286,10 +284,12 @@ go get github.com/prometheus/client_golang/prometheus
 ```go
 http.Handle("/metrics", promhttp.Handler())
 go func() {
-	_ = http.ListenAndServe(":1235", nil)
+    _ = http.ListenAndServe(":1235", nil)
 }()
 ```
+
 exporter 上报数据示例如下：
+
 ```bash
 # HELP go_goroutines Number of goroutines that currently exist.
 # TYPE go_goroutines gauge
@@ -301,24 +301,24 @@ go_info{version="go1.17.2"} 1
 ```
 
 2. 注册自定义接口 Counter
-
+   
    - `NewCounter`:一个 Counter
-
+   
    - `NewCounterVec`: 一组 Counter，按里面的 label 值分组
-
- 使用示例如下（完整例子在这节最后）
+   
+   使用示例如下（完整例子在这节最后）
 
 ```go
 // 声明一个 Counter
 var apiCounterVec = prometheus.NewCounterVec(prometheus.CounterOpts{
-	Name: "http_api_counter",
-	Help: "web http requests number",
+    Name: "http_api_counter",
+    Help: "web http requests number",
 }, []string{"handler"})
 
 // 声明 一组 Counter
 var apiTotalCounter = prometheus.NewCounter(prometheus.CounterOpts{
-	Name: "http_api_total_counter",
-	Help: "web http requests number",
+    Name: "http_api_total_counter",
+    Help: "web http requests number",
 })
 // 注册到 prometheus exporter 中
 prometheus.MustRegister(apiTotalCounter)
@@ -334,9 +334,9 @@ apiCounterVec.WithLabelValues("/api").Inc()
 ```go
 // 声明一组 Histogram
 var apiHandleMS = prometheus.NewHistogramVec(prometheus.HistogramOpts{
-	Name: "http_api_handler_ms",
-	Help: "Microseconds of HTTP interface processing",
-	Buckets: prometheus.LinearBuckets(1,19,10),
+    Name: "http_api_handler_ms",
+    Help: "Microseconds of HTTP interface processing",
+    Buckets: prometheus.LinearBuckets(1,19,10),
 }, []string{"handler"})
 // 注册到 prometheus exporter 种 
 prometheus.MustRegister(apiHandleMS)
@@ -349,43 +349,43 @@ apiHandleMS.WithLabelValues("/api").Observe(xx)
 ```go
 
 func main() {
-	// 初始化 prometheus exporter
-	initPrometheus()
+    // 初始化 prometheus exporter
+    initPrometheus()
 
-	// web 示例
-	http.HandleFunc("/api1", prometheusMetric(http.HandlerFunc(api1)))
-	http.HandleFunc("/api2", prometheusMetric(http.HandlerFunc(api2)))
-	err := http.ListenAndServe(":1234", nil)
-	if err != nil {
-		panic(err)
-	}
+    // web 示例
+    http.HandleFunc("/api1", prometheusMetric(http.HandlerFunc(api1)))
+    http.HandleFunc("/api2", prometheusMetric(http.HandlerFunc(api2)))
+    err := http.ListenAndServe(":1234", nil)
+    if err != nil {
+        panic(err)
+    }
 }
 
 func initPrometheus() {
-	// 注册自定义的监控指标
-	prometheus.MustRegister(apiTotalCounter)
-	prometheus.MustRegister(apiCounterVec)
-	prometheus.MustRegister(apiHandleMS)
-	// 暴露 exporter 地址，prometheus server 通过 pull 这个地址，拉取指标数据
-	http.Handle("/metrics", promhttp.Handler())
-	go func() {
-		_ = http.ListenAndServe(":1235", nil)
-	}()
+    // 注册自定义的监控指标
+    prometheus.MustRegister(apiTotalCounter)
+    prometheus.MustRegister(apiCounterVec)
+    prometheus.MustRegister(apiHandleMS)
+    // 暴露 exporter 地址，prometheus server 通过 pull 这个地址，拉取指标数据
+    http.Handle("/metrics", promhttp.Handler())
+    go func() {
+        _ = http.ListenAndServe(":1235", nil)
+    }()
 }
 
 // metric 中间件
 func prometheusMetric(handler http.Handler) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// 总接口访问量计数
-		apiTotalCounter.Inc()
-		// 单个接口访问量计数
-		apiCounterVec.WithLabelValues(r.URL.String()).Inc()
-		start := time.Now()
-		handler.ServeHTTP(w, r)
-		ms := time.Now().UnixMicro() - start.UnixMicro()
-		// 接口时延计数
-		apiHandleMS.WithLabelValues(r.URL.String()).Observe(float64(ms))
-	}
+    return func(w http.ResponseWriter, r *http.Request) {
+        // 总接口访问量计数
+        apiTotalCounter.Inc()
+        // 单个接口访问量计数
+        apiCounterVec.WithLabelValues(r.URL.String()).Inc()
+        start := time.Now()
+        handler.ServeHTTP(w, r)
+        ms := time.Now().UnixMicro() - start.UnixMicro()
+        // 接口时延计数
+        apiHandleMS.WithLabelValues(r.URL.String()).Observe(float64(ms))
+    }
 }
 ```
 

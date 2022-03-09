@@ -29,8 +29,8 @@ func makechan(typ *rtype, size int) (ch unsafe.Pointer)
 ```go
 //go:linkname time_now time.now
 func time_now() (sec int64, nsec int32, mono int64) {
-	sec, nsec = walltime()
-	return sec, nsec, nanotime()
+    sec, nsec = walltime()
+    return sec, nsec, nanotime()
 }
 ```
 
@@ -65,7 +65,7 @@ func timeSleep(ns int64) {
 ```go
 //go:linkname reflect_makechan reflect.makechan
 func reflect_makechan(t *chantype, size int) *hchan {
-	return makechan(t, size)
+    return makechan(t, size)
 }
 ```
 
@@ -107,7 +107,7 @@ outer.go
 package outer
 
 import (
-	_ "github.com/he2121/demos/linkname_example/inner"	// 真实方法在 inner 包，必须引用这个编译器才能找到链接
+    _ "github.com/he2121/demos/linkname_example/inner"    // 真实方法在 inner 包，必须引用这个编译器才能找到链接
 )
 
 func Hello()
@@ -121,12 +121,12 @@ inner.go
 package inner
 
 import (
-	_ "unsafe"
+    _ "unsafe"
 )
 
 //go:linkname hello github.com/he2121/demos/linkname_example/outer.Hello
 func hello()  {
-	println("hello")
+    println("hello")
 }
 
 ```
@@ -139,7 +139,7 @@ package main
 import "github.com/he2121/demos/linkname_example/outer"
 
 func main()  {
-	outer.Hello()
+    outer.Hello()
 }
 // output:
 // hello
@@ -147,7 +147,7 @@ func main()  {
 
 这就是 go 源码中这么多没有 body 的方法的原因了，一般到 `src/runtime`包中搜索就能发现 `//go:linkname`的实现。
 
-####  实际使用
+#### 实际使用
 
 实现中，如果我们有一些骚操作需要使用源代码/第三方包中的未导出变量/方法，就可使用 `//go:linkname`实现, 如下例子
 
@@ -157,9 +157,9 @@ outer.go: 使用 inner 包中的未导出变量/方法
 package outer
 
 import (
-	_ "unsafe"
+    _ "unsafe"
 
-	_ "github.com/he2121/demos/linkname_example/inner"
+    _ "github.com/he2121/demos/linkname_example/inner"
 )
 
 //go:linkname A github.com/he2121/demos/linkname_example/inner.a
@@ -177,7 +177,7 @@ package inner
 var a = 100
 
 func hello()  {
-	println("hello")
+    println("hello")
 }
 
 ```
@@ -190,8 +190,8 @@ package main
 import "github.com/he2121/demos/linkname_example/outer"
 
 func main()  {
-	outer.Hello()
-	println(outer.A)
+    outer.Hello()
+    println(outer.A)
 }
 // output
 // hello

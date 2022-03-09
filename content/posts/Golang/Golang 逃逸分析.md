@@ -14,40 +14,40 @@ tags: ["golang"]
 package main
 
 import (
-	"fmt"
-	"time"
+    "fmt"
+    "time"
 )
 
 type User struct {
-	Name string
-	Age int
+    Name string
+    Age int
 }
 
 func main() {
-	fooA()
-	fooB()
+    fooA()
+    fooB()
 }
 
 func fooA()  {
-	start := time.Now()
-	var c = make(chan User, 1024)
-	for i := 0; i < 1024; i ++ {
-		user := User{Name: "he", Age: 25}
-		c <- user
-	}
-	since := time.Since(start)
-	fmt.Println("FooA User", since.Microseconds())
+    start := time.Now()
+    var c = make(chan User, 1024)
+    for i := 0; i < 1024; i ++ {
+        user := User{Name: "he", Age: 25}
+        c <- user
+    }
+    since := time.Since(start)
+    fmt.Println("FooA User", since.Microseconds())
 }
 
 func fooB()  {
-	start := time.Now()
-	var c = make(chan *User, 1024)
-	for i := 0; i < 1024; i ++ {
-		user := &User{Name: "he", Age: 25}
-		c <- user
-	}
-	since := time.Since(start)
-	fmt.Println("FooB *User ", since.Microseconds())
+    start := time.Now()
+    var c = make(chan *User, 1024)
+    for i := 0; i < 1024; i ++ {
+        user := &User{Name: "he", Age: 25}
+        c <- user
+    }
+    since := time.Since(start)
+    fmt.Println("FooB *User ", since.Microseconds())
 }
 ```
 
@@ -124,15 +124,15 @@ $ go build -gcflags='-m -l' main.go
 ```Go
 type User struct {
   Name string
-	Age int
+    Age int
 }
 func main() {
-	GetUser()
+    GetUser()
 }
 
 func GetUser() *User {
   user := User{}
-	return &user
+    return &user
 }
 ```
 
@@ -151,20 +151,20 @@ $ go build -gcflags='-m -l' main.go
 ```go
 type User struct {
   Name string
-	Age int
-	Car *Car
+    Age int
+    Car *Car
 }
 type Car struct {
 }
 
 func main() {
-	user := GetUser()
-	car := Car{}
-	user.Car = &car
+    user := GetUser()
+    car := Car{}
+    user.Car = &car
 }
 
 func GetUser() *User {
-	return &User{}
+    return &User{}
 }
 ```
 
@@ -183,11 +183,11 @@ $ go build -gcflags='-m -l' main.go
 
 ```go
 func main() {
-	_ = make([]byte, 1 << 16)	// 1 << 16 B 的 slice 没有逃逸，分配在栈上
+    _ = make([]byte, 1 << 16)    // 1 << 16 B 的 slice 没有逃逸，分配在栈上
 }
 
 func main() {
-	_ = make([]byte, 1 << 16 + 1)	// 1 << 16 + 1 B 的 slice 逃逸到堆上
+    _ = make([]byte, 1 << 16 + 1)    // 1 << 16 + 1 B 的 slice 逃逸到堆上
 }
 // output 1
 // $ go build -gcflags='-m -l' main.go 
@@ -209,8 +209,8 @@ func main() {
 
 ```go
 func main() {
-	l := 10
-	_ = make([]byte,l)
+    l := 10
+    _ = make([]byte,l)
 }
 ```
 
@@ -228,9 +228,9 @@ $ go build -gcflags='-m -l' main.go
 
 ```go
 func main() {
-	users := make([]*User, 1)
-	user := User{}
-	users[0] = &user
+    users := make([]*User, 1)
+    user := User{}
+    users[0] = &user
 }
 ```
 
@@ -249,11 +249,11 @@ $ go build -gcflags='-m -l' main.go
 
 ```go
 func add() func() int {
-	a := 1
-	return func() int {
-		a ++
-		return a
-	}
+    a := 1
+    return func() int {
+        a ++
+        return a
+    }
 }
 ```
 
@@ -293,4 +293,3 @@ $ go build -gcflags='-m -l' main.go
 2. https://mayurwadekar2.medium.com/escape-analysis-in-golang-ee40a1c064c1
 3. https://stackoverflow.com/questions/41178729/why-passing-pointers-to-channel-is-slower
 4. https://qcrao91.gitbook.io/go/bian-yi-he-lian-jie/tao-yi-fen-xi-shi-zen-mo-jin-hang-de
-

@@ -10,8 +10,8 @@
   服务重启后，上层应用每次都需要从头到尾执行一次全部 Log，这个恢复速度太慢
   解决 🔗 服务通过不时保存一下它的快照（SnapShot），然后告诉 Raft 快照点之前的日志可以丢了 使：1. Raft 不必维持所有 Log 2. crash 恢复速度也很快速  Lab 2D 实现 🔗我的理解 🔗下图是论文中给出的图，它很形象，让我们一下理解快照的含义。但是这个图给了我一个错觉：快照是经过 log 压缩产生的。然而这是错误的，快照是由上层服务产生，传给 raft 层，然后让 Raft 层丢弃这之前的日志。
 下面的交互图更加准确，让我们了解到数据流通的方向
- Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态  // For 2D 快照 	lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index 	lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term 	snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int { return len(rf.">
-<meta name="generator" content="Hugo 0.89.2" />
+ Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态   // For 2D 快照  lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index  lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term  snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int {  return len(rf.">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -72,7 +72,7 @@ if (!doNotTrack) {
     <h1 class="title">Lab2D-Raft-快照-实现过程</h1>
 
     <div class="tip">
-      <div>2022年1月3日</div>
+        <time datetime="2022-01-03 14:30:00 &#43;0800 CST">2022年01月03日</time>
         <span class="split">
           ·
         </span>
@@ -83,13 +83,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          4分钟 读完
+          4分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2f6.824%2f6.824-lab2d%25E5%25AE%259E%25E7%258E%25B0%25E8%25BF%2587%25E7%25A8%258B%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -130,86 +125,86 @@ if (!doNotTrack) {
 <h3 id="state">State <a href="#state" class="anchor">🔗</a></h3><ol>
 <li>首先我们需要在 Raft 实例中加入跟快照相关的状态</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">	<span style="color:#75715e">// For 2D 快照
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#66d9ef">int</span>    <span style="color:#75715e">// 保存到快照中的最后一个 Log 的 index
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">lastIncludedTerm</span>  <span style="color:#66d9ef">int</span>    <span style="color:#75715e">// 保存到快照中的最后一个 Log 的 term
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">snapshot</span>          []<span style="color:#66d9ef">byte</span> <span style="color:#75715e">// 保存的最近一个快照
-</span></code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>    <span style="color:#75715e">// For 2D 快照
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#66d9ef">int</span>    <span style="color:#75715e">// 保存到快照中的最后一个 Log 的 index
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">lastIncludedTerm</span>  <span style="color:#66d9ef">int</span>    <span style="color:#75715e">// 保存到快照中的最后一个 Log 的 term
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">snapshot</span>          []<span style="color:#66d9ef">byte</span> <span style="color:#75715e">// 保存的最近一个快照
+</span></span></span></code></pre></div><ol start="2">
 <li>既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLastIndex</span>() <span style="color:#66d9ef">int</span> {
-	<span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">LogEntry</span> {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>}
-	}
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>}
-	}
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">index</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>]
-}
-
-<span style="color:#75715e">// 包括: start 和 end, 深拷贝，不然极限情况下会有 race 的 bug
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">start</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">end</span> <span style="color:#66d9ef">int</span>) []<span style="color:#a6e22e">LogEntry</span> {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">start</span> &gt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
-		<span style="color:#66d9ef">return</span> []<span style="color:#a6e22e">LogEntry</span>{}
-	}
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> {
-		<span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[:<span style="color:#a6e22e">end</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>]<span style="color:#f92672">...</span>)
-	} <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">end</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> {
-		<span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>:]<span style="color:#f92672">...</span>)
-	} <span style="color:#66d9ef">else</span> {
-		<span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>:<span style="color:#a6e22e">end</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>]<span style="color:#f92672">...</span>)
-	}
-}
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLastIndex</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">+</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">LogEntry</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>}
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>}
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">index</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>]
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 包括: start 和 end, 深拷贝，不然极限情况下会有 race 的 bug
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">start</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">end</span> <span style="color:#66d9ef">int</span>) []<span style="color:#a6e22e">LogEntry</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">start</span> &gt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)<span style="color:#f92672">+</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> []<span style="color:#a6e22e">LogEntry</span>{}
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[:<span style="color:#a6e22e">end</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">end</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>:]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>:<span style="color:#a6e22e">end</span><span style="color:#f92672">-</span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="3">
 <li>这三个 state 也需要持久化，并且快照需要被上层服务读取，persister 额外对快照进行了处理，具体看代码的修改。然后要注意在修改了这个三个状态地方要加上</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">persist</span>() {
-	<span style="color:#75715e">// Your code here (2C).
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Example:
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
-	<span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;序列化状态失败&#34;</span>)
-	}
-	<span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Bytes</span>()
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">SaveStateAndSnapshot</span>(<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span>)
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> len(<span style="color:#a6e22e">data</span>) &lt; <span style="color:#ae81ff">1</span> { <span style="color:#75715e">// bootstrap without any state?
-</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#75715e">// Your code here (2C).
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Example:
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
-	<span style="color:#a6e22e">d</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>)
-	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">lastIncludedIndex</span>, <span style="color:#a6e22e">lastIncludedTerm</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lastIncludedIndex</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lastIncludedTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;反序列化状态失败&#34;</span>)
-	} <span style="color:#66d9ef">else</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">currentTerm</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">voteFor</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">logs</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span> = <span style="color:#a6e22e">lastIncludedTerm</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">ReadSnapshot</span>()
-}
-</code></pre></div><h3 id="snapshotindex-int-snapshot-byte"><code>Snapshot(index int, snapshot []byte)</code> <a href="#snapshotindex-int-snapshot-byte" class="anchor">🔗</a></h3><p>每一个服务单独保存自己的快照</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">persist</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here (2C).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Example:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;序列化状态失败&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Bytes</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">SaveStateAndSnapshot</span>(<span style="color:#a6e22e">data</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> len(<span style="color:#a6e22e">data</span>) &lt; <span style="color:#ae81ff">1</span> { <span style="color:#75715e">// bootstrap without any state?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here (2C).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Example:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">lastIncludedIndex</span>, <span style="color:#a6e22e">lastIncludedTerm</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lastIncludedIndex</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lastIncludedTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;反序列化状态失败&#34;</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">voteFor</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">logs</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span> = <span style="color:#a6e22e">lastIncludedTerm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">ReadSnapshot</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="snapshotindex-int-snapshot-byte"><code>Snapshot(index int, snapshot []byte)</code> <a href="#snapshotindex-int-snapshot-byte" class="anchor">🔗</a></h3><p>每一个服务单独保存自己的快照</p>
 <ol>
 <li>如果传过来的快照还有没当前已 applied 的日志新，拒绝</li>
 <li>接受快照
@@ -220,145 +215,144 @@ if (!doNotTrack) {
 </ol>
 </li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-GO" data-lang="GO"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">Snapshot</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">snapshot</span> []<span style="color:#66d9ef">byte</span>) {
-	<span style="color:#75715e">// Your code here (2D).
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">acceptSnapShot</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span>).<span style="color:#a6e22e">Term</span>, <span style="color:#a6e22e">index</span>, <span style="color:#a6e22e">snapshot</span>)
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">acceptSnapShot</span>(<span style="color:#a6e22e">lastIncludedTerm</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">snapshot</span> []<span style="color:#66d9ef">byte</span>) {
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">lastIncludedIndex</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span> = <span style="color:#a6e22e">lastIncludedTerm</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span> = append([]<span style="color:#66d9ef">byte</span>{}, <span style="color:#a6e22e">snapshot</span><span style="color:#f92672">...</span>)
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persist</span>()
-}
-</code></pre></div><h3 id="installsnapshotargs-installsnapshotargs-reply-installsnapshotreply"><code>InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply)</code> <a href="#installsnapshotargs-installsnapshotargs-reply-installsnapshotreply" class="anchor">🔗</a></h3><ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-GO" data-lang="GO"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">Snapshot</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">snapshot</span> []<span style="color:#66d9ef">byte</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here (2D).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">acceptSnapShot</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span>).<span style="color:#a6e22e">Term</span>, <span style="color:#a6e22e">index</span>, <span style="color:#a6e22e">snapshot</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">acceptSnapShot</span>(<span style="color:#a6e22e">lastIncludedTerm</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">snapshot</span> []<span style="color:#66d9ef">byte</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">lastIncludedIndex</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>, <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span> = <span style="color:#a6e22e">lastIncludedTerm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span> = append([]<span style="color:#66d9ef">byte</span>{}, <span style="color:#a6e22e">snapshot</span><span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persist</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="installsnapshotargs-installsnapshotargs-reply-installsnapshotreply"><code>InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply)</code> <a href="#installsnapshotargs-installsnapshotargs-reply-installsnapshotreply" class="anchor">🔗</a></h3><ol>
 <li>首先我们实现这个 RPC handler，主要就是发消息给上层应用安装快照，具体逻辑在论文中有描述，也可以直接看代码</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">InstallSnapshotArgs</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span>              <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">LeaderID</span>          <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">LastIncludedIndex</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">LastIncludedTerm</span>  <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">Snapshot</span>          []<span style="color:#66d9ef">byte</span>
-}
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">InstallSnapshotReply</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendInstallSnapshot</span>(<span style="color:#a6e22e">server</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotReply</span>) <span style="color:#66d9ef">bool</span> {
-	<span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">server</span>].<span style="color:#a6e22e">Call</span>(<span style="color:#e6db74">&#34;Raft.InstallSnapshot&#34;</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>)
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ok</span>
-}
-
-<span style="color:#75715e">// InstallSnapshot handler
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">InstallSnapshot</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotReply</span>) {
-	<span style="color:#75715e">// rpc handler 通常是并发，加锁
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 %d 的 InstallSnapshot request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderID</span>, <span style="color:#a6e22e">args</span>)
-	<span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">updateTerm</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>)
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-	}
-	<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-	<span style="color:#75715e">// 拒绝旧的快照
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastIncludedIndex</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span> {
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">msg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ApplyMsg</span>{
-		<span style="color:#a6e22e">SnapshotValid</span>: <span style="color:#66d9ef">true</span>,
-		<span style="color:#a6e22e">Snapshot</span>:      <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Snapshot</span>,
-		<span style="color:#a6e22e">SnapshotTerm</span>:  <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastIncludedTerm</span>,
-		<span style="color:#a6e22e">SnapshotIndex</span>: <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastIncludedIndex</span>,
-	}
-	<span style="color:#75715e">// 通知上层应用安装快照，然后上层应用会调用 Raft 中 CondInstallSnap 接口修改 Raft 中相关的值
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">msg</span>
-}
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">InstallSnapshotArgs</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span>              <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LeaderID</span>          <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LastIncludedIndex</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LastIncludedTerm</span>  <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Snapshot</span>          []<span style="color:#66d9ef">byte</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">InstallSnapshotReply</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendInstallSnapshot</span>(<span style="color:#a6e22e">server</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotReply</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">server</span>].<span style="color:#a6e22e">Call</span>(<span style="color:#e6db74">&#34;Raft.InstallSnapshot&#34;</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ok</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// InstallSnapshot handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">InstallSnapshot</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">InstallSnapshotReply</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通常是并发，加锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 %d 的 InstallSnapshot request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderID</span>, <span style="color:#a6e22e">args</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">updateTerm</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 拒绝旧的快照
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastIncludedIndex</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">msg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ApplyMsg</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">SnapshotValid</span>: <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Snapshot</span>:      <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Snapshot</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">SnapshotTerm</span>:  <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastIncludedTerm</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">SnapshotIndex</span>: <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastIncludedIndex</span>,
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 通知上层应用安装快照，然后上层应用会调用 Raft 中 CondInstallSnap 接口修改 Raft 中相关的值
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">msg</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="2">
 <li>什么时候触发这个请求 &ndash;&gt; Follower 中 log 落后 leader 太多 &ndash;&gt; leader 发送<code>AppendEntries</code> 时，发现自己已经没有保存 args 中 prevLog 了</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendAppendEntriesToAll</span>() {
-	<span style="color:#75715e">//log.Printf(&#34;%d 在 term %d 发起同步&#34;, rf.me, rf.currentTerm) // 这里 CurrentTerm 没加锁，可能会有 race
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> {
-		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> {
-			<span style="color:#66d9ef">continue</span>
-		}
-		<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-			<span style="color:#75715e">// For 2D, 如果需要对比的 prevLog 在 leader 上已经没有了
-</span><span style="color:#75715e"></span>			<span style="color:#75715e">// 发送 Leader 的最新快照过去
-</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">prevLogIndex</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
-			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">prevLogIndex</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
-				<span style="color:#a6e22e">prevLogIndex</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>
-				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">prevLogIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-				<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendSnapShot</span>(<span style="color:#a6e22e">i</span>)
-			}
-      <span style="color:#75715e">// ...
-</span><span style="color:#75715e"></span>    }
-  }
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendSnapShot</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>
-	<span style="color:#a6e22e">args</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">InstallSnapshotArgs</span>{
-		<span style="color:#a6e22e">Term</span>:              <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,
-		<span style="color:#a6e22e">LeaderID</span>:          <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,
-		<span style="color:#a6e22e">LastIncludedIndex</span>: <span style="color:#a6e22e">lastIncludedIndex</span>,
-		<span style="color:#a6e22e">LastIncludedTerm</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>,
-		<span style="color:#a6e22e">Snapshot</span>:          append([]<span style="color:#66d9ef">byte</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span><span style="color:#f92672">...</span>),
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">InstallSnapshotReply</span>{}
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendInstallSnapshot</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">updateTerm</span>(<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>)
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-	}
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> {
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">lastIncludedIndex</span>
-}
-
-</code></pre></div><h3 id="condinstallsnapshotlastincludedterm-int-lastincludedindex-int-snapshot-byte-bool"><code>CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool</code> <a href="#condinstallsnapshotlastincludedterm-int-lastincludedindex-int-snapshot-byte-bool" class="anchor">🔗</a></h3><p>上层服务收到 <code>InstallSnapshot</code> RPC handler 会调用这个接口</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendAppendEntriesToAll</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//log.Printf(&#34;%d 在 term %d 发起同步&#34;, rf.me, rf.currentTerm) // 这里 CurrentTerm 没加锁，可能会有 race
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// For 2D, 如果需要对比的 prevLog 在 leader 上已经没有了
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#75715e">// 发送 Leader 的最新快照过去
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">prevLogIndex</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">prevLogIndex</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">prevLogIndex</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">prevLogIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendSnapShot</span>(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>      <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>  }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendSnapShot</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">args</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">InstallSnapshotArgs</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Term</span>:              <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">LeaderID</span>:          <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">LastIncludedIndex</span>: <span style="color:#a6e22e">lastIncludedIndex</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">LastIncludedTerm</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Snapshot</span>:          append([]<span style="color:#66d9ef">byte</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">snapshot</span><span style="color:#f92672">...</span>),
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">InstallSnapshotReply</span>{}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendInstallSnapshot</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">updateTerm</span>(<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="condinstallsnapshotlastincludedterm-int-lastincludedindex-int-snapshot-byte-bool"><code>CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool</code> <a href="#condinstallsnapshotlastincludedterm-int-lastincludedindex-int-snapshot-byte-bool" class="anchor">🔗</a></h3><p>上层服务收到 <code>InstallSnapshot</code> RPC handler 会调用这个接口</p>
 <ol>
 <li>判断是否接受这个快照（Leader 发过来的）</li>
 <li>更新 <code>lastApplied</code>, <code>commitIndex</code></li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">CondInstallSnapshot</span>(<span style="color:#a6e22e">lastIncludedTerm</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">snapshot</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">bool</span> {
-   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-   <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 CondInstallSnapshot lastIncludedTerm %d LastIncludedIndex %d&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>)
-   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">lastIncludedIndex</span> {
-      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>
-   }
-   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">acceptSnapShot</span>(<span style="color:#a6e22e">lastIncludedTerm</span>, <span style="color:#a6e22e">lastIncludedIndex</span>, <span style="color:#a6e22e">snapshot</span>)
-   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
-   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">lastIncludedIndex</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> {
-      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
-   }
-   <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
-}
-</code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>lab 2D 是快照部分的实现，只要我们知道快照从上层服务而来，数据的流动方向，总体逻辑并不是很复杂。但是这部分极大增加的代码的复杂度，要达到 bug free，实现起来还是相对比较难的</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">CondInstallSnapshot</span>(<span style="color:#a6e22e">lastIncludedTerm</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">lastIncludedIndex</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">snapshot</span> []<span style="color:#66d9ef">byte</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 CondInstallSnapshot lastIncludedTerm %d LastIncludedIndex %d&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastIncludedIndex</span>)
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">lastIncludedIndex</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">acceptSnapShot</span>(<span style="color:#a6e22e">lastIncludedTerm</span>, <span style="color:#a6e22e">lastIncludedIndex</span>, <span style="color:#a6e22e">snapshot</span>)
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">lastIncludedIndex</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> = <span style="color:#a6e22e">lastIncludedIndex</span>
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>lab 2D 是快照部分的实现，只要我们知道快照从上层服务而来，数据的流动方向，总体逻辑并不是很复杂。但是这部分极大增加的代码的复杂度，要达到 bug free，实现起来还是相对比较难的</p>
 <p>至此，我们已经完成了 lab 2 的所有功能了。即使上述的代码通过了所有测试样例，它还是可能存在着 bug。让我们在 lab3 来验证它把。</p>
 <h3 id="后续补充">后续补充 <a href="#%e5%90%8e%e7%bb%ad%e8%a1%a5%e5%85%85" class="anchor">🔗</a></h3><p>上述实现会出现低概率偶发的死锁，还在排查中&hellip;</p>
 
@@ -379,14 +373,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

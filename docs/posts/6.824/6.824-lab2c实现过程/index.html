@@ -13,8 +13,8 @@
   logs：日志，重启回复需要重新执行一次命令
   因此代码中修改了上述三个变量的地方都要进行一次持久化。
 持久化一般到磁盘中，但在这个 lab，使用了 persister 来模拟，方便测试。
- 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) { if data == nil || len(data) &lt; 1 { // bootstrap without any state?">
-<meta name="generator" content="Hugo 0.89.2" />
+ 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) {  if data == nil || len(data) &lt; 1 { // bootstrap without any state?">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -75,7 +75,7 @@ if (!doNotTrack) {
     <h1 class="title">Lab2C-Raft-持久化状态与日志同步优化-实现过程</h1>
 
     <div class="tip">
-      <div>2022年1月1日</div>
+        <time datetime="2022-01-01 14:30:00 &#43;0800 CST">2022年01月01日</time>
         <span class="split">
           ·
         </span>
@@ -86,13 +86,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          2分钟 读完
+          2分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2f6.824%2f6.824-lab2c%25E5%25AE%259E%25E7%258E%25B0%25E8%25BF%2587%25E7%25A8%258B%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -128,46 +123,46 @@ if (!doNotTrack) {
 <ol>
 <li>读取持久化状态</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">//
-</span><span style="color:#75715e">// restore previously persisted state.
-</span><span style="color:#75715e">//
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> len(<span style="color:#a6e22e">data</span>) &lt; <span style="color:#ae81ff">1</span> { <span style="color:#75715e">// bootstrap without any state?
-</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#75715e">// Your code here (2C).
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Example:
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
-	<span style="color:#a6e22e">d</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>)
-	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">voteFor</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-	   <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
-	  <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;反序列化状态失败&#34;</span>)
-	} <span style="color:#66d9ef">else</span> {
-	  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">currentTerm</span>
-	  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">voteFor</span>
-	  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">logs</span>
-	  <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
-	}
-}
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// restore previously persisted state.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">data</span> []<span style="color:#66d9ef">byte</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">data</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> len(<span style="color:#a6e22e">data</span>) &lt; <span style="color:#ae81ff">1</span> { <span style="color:#75715e">// bootstrap without any state?
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here (2C).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Example:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">r</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">NewBuffer</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">d</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewDecoder</span>(<span style="color:#a6e22e">r</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">voteFor</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">d</span>.<span style="color:#a6e22e">Decode</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;反序列化状态失败&#34;</span>)
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">voteFor</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">logs</span>
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 从 disk 恢复数据:currentTerm=%d,voteFor=%d,logs=%+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="2">
 <li>持久化数据代码</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">persist</span>() {
-	<span style="color:#75715e">// Your code here (2C).
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Example:
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
-	<span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>)
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
-		<span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span>{
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;序列化状态失败&#34;</span>)
-	}
-	<span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Bytes</span>()
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">SaveRaftState</span>(<span style="color:#a6e22e">data</span>)
-}
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">persist</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your code here (2C).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Example:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">w</span> <span style="color:#f92672">:=</span> new(<span style="color:#a6e22e">bytes</span>.<span style="color:#a6e22e">Buffer</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">e</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">labgob</span>.<span style="color:#a6e22e">NewEncoder</span>(<span style="color:#a6e22e">w</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">e</span>.<span style="color:#a6e22e">Encode</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>) <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatalf</span>(<span style="color:#e6db74">&#34;序列化状态失败&#34;</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">data</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">w</span>.<span style="color:#a6e22e">Bytes</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">SaveRaftState</span>(<span style="color:#a6e22e">data</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="3">
 <li>
 <p>在修改了相关 state 的地方加入持久化调用，例如：</p>
 </li>
@@ -196,44 +191,44 @@ if (!doNotTrack) {
 <ol>
 <li>返回值中增加一个字段，代表下一次匹配的位置</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesReply</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">Success</span> <span style="color:#66d9ef">bool</span>
-	<span style="color:#a6e22e">ConflictIndex</span> <span style="color:#66d9ef">int</span>	<span style="color:#75715e">// 优化
-</span><span style="color:#75715e"></span>}
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesReply</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Success</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ConflictIndex</span> <span style="color:#66d9ef">int</span>    <span style="color:#75715e">// 优化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><ol start="2">
 <li>位于 AppendEntries handler, 修改直接返回 false 部分的代码，返回下一次匹配的位置</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// 
-</span><span style="color:#75715e">// ...
-</span><span style="color:#75715e">// 调用者需要减少 PrevLogIndex，重试
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() &lt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>{
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">prevTerm</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>).<span style="color:#a6e22e">Term</span>
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">prevTerm</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogTerm</span> {
-		<span style="color:#a6e22e">index</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>
-		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">prevTerm</span> {
-			<span style="color:#a6e22e">index</span> <span style="color:#f92672">--</span>
-		}
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span> = <span style="color:#a6e22e">index</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> = <span style="color:#66d9ef">true</span>
-	<span style="color:#75715e">// ...
-</span></code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 调用者需要减少 PrevLogIndex，重试
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() &lt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">prevTerm</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>).<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">prevTerm</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">index</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">prevTerm</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">index</span> <span style="color:#f92672">--</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span> = <span style="color:#a6e22e">index</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ...
+</span></span></span></code></pre></div><ol start="3">
 <li>使用下一次匹配的位置进行匹配</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// ...			
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> {
-  <span style="color:#75715e">// ...
-</span><span style="color:#75715e"></span>	}<span style="color:#66d9ef">else</span> {
-	<span style="color:#75715e">// 实际上把重试的机制推到了下次心跳
-</span><span style="color:#75715e"></span>		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span>
-}
-<span style="color:#75715e">// ....
-</span></code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>这部分实现代码比较简单：1. 持久化状态 2. 一个匹配位置的优化</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// ...            
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }<span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 实际上把重试的机制推到了下次心跳
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">ConflictIndex</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ....
+</span></span></span></code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>这部分实现代码比较简单：1. 持久化状态 2. 一个匹配位置的优化</p>
 <p>但 2C 测试样例比较复杂，在这一部分发现了许多之前没测出来的 bug，也加深了我对 Raft 的理解。</p>
 
     </div>
@@ -253,14 +248,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

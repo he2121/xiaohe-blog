@@ -1,5 +1,4 @@
 ---
-
 title: "Golang 常用日志库介绍"
 date: 2021-11-09T14:30:12+08:00
 tags: ["golang", "日志库", "log", "logrus", "zap"]
@@ -35,10 +34,10 @@ package main
 import "log"
 
 func main() {
-	log.Println("日志信息1")
-	log.Print("日志信息2")
-	log.Panicln("日志信息3")
-	log.Fatalln("日志信息4") // 运行不到
+    log.Println("日志信息1")
+    log.Print("日志信息2")
+    log.Panicln("日志信息3")
+    log.Fatalln("日志信息4") // 运行不到
 }
 ```
 
@@ -70,15 +69,15 @@ func Println(v ...interface{}) {
 var std = New(os.Stderr, "", LstdFlags)
 
 func New(out io.Writer, prefix string, flag int) *Logger {
-	return &Logger{out: out, prefix: prefix, flag: flag}
+    return &Logger{out: out, prefix: prefix, flag: flag}
 }
 
 type Logger struct {
-	mu     sync.Mutex // ensures atomic writes; protects the following fields
-	prefix string     // prefix on each line to identify the logger (but see Lmsgprefix)
-	flag   int        // properties
-	out    io.Writer  // destination for output
-	buf    []byte     // for accumulating text to write
+    mu     sync.Mutex // ensures atomic writes; protects the following fields
+    prefix string     // prefix on each line to identify the logger (but see Lmsgprefix)
+    flag   int        // properties
+    out    io.Writer  // destination for output
+    buf    []byte     // for accumulating text to write
 }
 ```
 
@@ -90,14 +89,14 @@ type Logger struct {
 
 ```go
 const (
-	Ldate         = 1 << iota     // the date in the local time zone: 2009/01/23
-	Ltime                         // the time in the local time zone: 01:23:23
-	Lmicroseconds                 // microsecond resolution: 01:23:23.123123.  assumes Ltime.
-	Llongfile                     // full file name and line number: /a/b/c/d.go:23
-	Lshortfile                    // final file name element and line number: d.go:23. overrides Llongfile
-	LUTC                          // if Ldate or Ltime is set, use UTC rather than the local time zone
-	Lmsgprefix                    // move the "prefix" from the beginning of the line to before the message
-	LstdFlags     = Ldate | Ltime // initial values for the standard logger
+    Ldate         = 1 << iota     // the date in the local time zone: 2009/01/23
+    Ltime                         // the time in the local time zone: 01:23:23
+    Lmicroseconds                 // microsecond resolution: 01:23:23.123123.  assumes Ltime.
+    Llongfile                     // full file name and line number: /a/b/c/d.go:23
+    Lshortfile                    // final file name element and line number: d.go:23. overrides Llongfile
+    LUTC                          // if Ldate or Ltime is set, use UTC rather than the local time zone
+    Lmsgprefix                    // move the "prefix" from the beginning of the line to before the message
+    LstdFlags     = Ldate | Ltime // initial values for the standard logger
 )
 ```
 
@@ -163,7 +162,6 @@ TraceLevel: 追踪级别
 2. 支持结构化日志
 
 3. 易用性
-
 - 钩子
 - `WithField` 
 - ...
@@ -176,17 +174,17 @@ package main
 import "github.com/sirupsen/logrus"
 
 func main() {
-	logrus.SetLevel(logrus.TraceLevel)	// 在测试环境中设置低等级级别，
-	//logrus.SetLevel(logrus.InfoLevel)	// 在生产环境中需要考虑性能，关注关键信息，level 设置高一点
-	//logrus.SetReportCaller(true)			// 调用者文件名与位置
-	//logrus.SetFormatter(new(logrus.JSONFormatter))	// 日志格式设置成json
-	logrus.Traceln("trace 日志")
-	logrus.Debugln("debug 日志")
-	logrus.Infoln("Info 日志")
-	logrus.Warnln("warn 日志")
-	logrus.Errorln("error msg")
-	logrus.Fatalf("fatal 日志")
-	logrus.Panicln("panic 日志")
+    logrus.SetLevel(logrus.TraceLevel)    // 在测试环境中设置低等级级别，
+    //logrus.SetLevel(logrus.InfoLevel)    // 在生产环境中需要考虑性能，关注关键信息，level 设置高一点
+    //logrus.SetReportCaller(true)            // 调用者文件名与位置
+    //logrus.SetFormatter(new(logrus.JSONFormatter))    // 日志格式设置成json
+    logrus.Traceln("trace 日志")
+    logrus.Debugln("debug 日志")
+    logrus.Infoln("Info 日志")
+    logrus.Warnln("warn 日志")
+    logrus.Errorln("error msg")
+    logrus.Fatalf("fatal 日志")
+    logrus.Panicln("panic 日志")
 }
 
 ```
@@ -240,7 +238,7 @@ import "go.uber.org/zap"
 func main() {
    // sugared
    sugar := zap.NewExample().Sugar()
-   sugar.Infof("hello! name:%s,age:%d", "xiaomin", 20)	// printf 风格，易用性
+   sugar.Infof("hello! name:%s,age:%d", "xiaomin", 20)    // printf 风格，易用性
    // logger
    logger := zap.NewExample()
    logger.Info("hello!", zap.String("name", "xiaomin"), zap.Int("age", 20)) // 强调性能
@@ -276,7 +274,7 @@ func main() {
 ```bash
 // output
 {"level":"info","msg":"example"}
-2021-11-09T21:02:07.181+0800    INFO    log_test/main.go:11     Development	
+2021-11-09T21:02:07.181+0800    INFO    log_test/main.go:11     Development    
 {"level":"info","ts":1636462927.182271,"caller":"log_test/main.go:14","msg":"Production"}
 
 ```
@@ -289,32 +287,32 @@ func main() {
 package main
 
 import (
-	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"os"
+    "go.uber.org/zap"
+    "go.uber.org/zap/zapcore"
+    "os"
 )
 
 func main() {
-	encoder := getEncoder()
-	sync := getWriteSync()
-	core := zapcore.NewCore(encoder, sync, zapcore.InfoLevel)
-	logger := zap.New(core)
-	
-	logger.Info("info 日志",zap.Int("line", 1))
-	logger.Error("info 日志", zap.Int("line", 2))
+    encoder := getEncoder()
+    sync := getWriteSync()
+    core := zapcore.NewCore(encoder, sync, zapcore.InfoLevel)
+    logger := zap.New(core)
+
+    logger.Info("info 日志",zap.Int("line", 1))
+    logger.Error("info 日志", zap.Int("line", 2))
 }
 
 // 负责设置 encoding 的日志格式
 func getEncoder() zapcore.Encoder {
-	return zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
+    return zapcore.NewJSONEncoder(zap.NewProductionEncoderConfig())
 }
 
 // 负责日志写入的位置
 func getWriteSync() zapcore.WriteSyncer {
-	file, _ := os.OpenFile("./log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
-	syncFile := zapcore.AddSync(file)
-	syncConsole := zapcore.AddSync(os.Stderr)
-	return zapcore.NewMultiWriteSyncer(syncConsole, syncFile)
+    file, _ := os.OpenFile("./log.txt", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
+    syncFile := zapcore.AddSync(file)
+    syncConsole := zapcore.AddSync(os.Stderr)
+    return zapcore.NewMultiWriteSyncer(syncConsole, syncFile)
 }
 // output
 // 创建 log.txt，追加日志
@@ -327,18 +325,20 @@ func getWriteSync() zapcore.WriteSyncer {
 从 ```New(core zapcore.Core, options ...Option) *Logger``` 出发，需要构造 `zapcore.Core `
 
 1. 通过 ```NewCore(enc Encoder, ws WriteSyncer, enab LevelEnabler) Core``` 方法，又需要传入三个参数
-
-   - ```Encoder``` : 负责设置 encoding 的日志格式, 可以设置 json 或者 text结构，也可以自定义json中 key 值，时间格式...
-
-   - ```ws WriteSyncer```: 负责日志写入的位置，上述例子往 file 与 console 同时写入，这里也可以写入网络。
-
-   - ```LevelEnabler```: 设置日志记录级别
    
+   - ```Encoder``` : 负责设置 encoding 的日志格式, 可以设置 json 或者 text结构，也可以自定义json中 key 值，时间格式...
+   
+   - ```ws WriteSyncer```: 负责日志写入的位置，上述例子往 file 与 console 同时写入，这里也可以写入网络。
+   
+   - ```LevelEnabler```: 设置日志记录级别
+
 2. `options` 是一个实现了```apply(*Logger)``` 方法的接口，可以扩展很多功能
+   
    - 覆盖 core 的配置
    - 增加 hook
    - 增加键值信息
    - error 日志单独输出
-   
+
 ## 总结
+
 首先介绍了 Go 标准库 log的使用以及自定义过程，总结了 log 的优缺点，由此引入了第三方库 logrus 与 zap 的话题，两个库都十分优秀与强大，十分推荐使用

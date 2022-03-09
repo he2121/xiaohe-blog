@@ -11,7 +11,7 @@
  编译器：将 go 代码生成 .s 汇编代码，go 中使用的是 plan9 汇编 汇编起：将汇编代码转成机器代码，即目标程序 .o 文件 链接器：将多个 .o 文件合并链接得到最终可执行文件  graph LR 0(写代码)--go程序--&gt; 1(编译器)--汇编代码--&gt; 2(汇编器)--.o目标程序--&gt;3(链接器)--可执行文件--&gt;4(结束) 二 操作系统加载 🔗 ./main  经上述几个步骤生成可执行文件后，二进制文件在被操作系统加载起来运行时会经过如下几个阶段：
  从磁盘上把可执行程序读入内存； 创建进程和主线程； 为主线程分配栈空间； 把由用户在命令行输入的参数拷贝到主线程的栈； 把主线程放入操作系统的运行队列等待被调度执起来运行；  START_THREAD(elf_ex, regs, elf_entry, bprm-&gt;p) 启动线程传入了 elf_entry 参数，这是程序的入口地址。
 这个 elf_entry 被写在 elf 可执行文件的 header 中">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -72,7 +72,7 @@ if (!doNotTrack) {
     <h1 class="title">Golang 程序启动过程</h1>
 
     <div class="tip">
-      <div>2021年11月26日</div>
+        <time datetime="2021-11-26 17:10:12 &#43;0800 CST">2021年11月26日</time>
         <span class="split">
           ·
         </span>
@@ -83,13 +83,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          3分钟 读完
+          3分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fgolang%2fgolang-%25E7%25A8%258B%25E5%25BA%258F%25E5%2590%25AF%25E5%258A%25A8%25E8%25BF%2587%25E7%25A8%258B%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -110,7 +105,7 @@ if (!doNotTrack) {
 <li>链接器：将多个 .o 文件合并链接得到最终可执行文件</li>
 </ul>
 <pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph LR
-	0(写代码)--go程序--&gt; 1(编译器)--汇编代码--&gt; 2(汇编器)--.o目标程序--&gt;3(链接器)--可执行文件--&gt;4(结束)
+    0(写代码)--go程序--&gt; 1(编译器)--汇编代码--&gt; 2(汇编器)--.o目标程序--&gt;3(链接器)--可执行文件--&gt;4(结束)
 </code></pre><h2 id="二-操作系统加载">二 操作系统加载 <a href="#%e4%ba%8c-%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f%e5%8a%a0%e8%bd%bd" class="anchor">🔗</a></h2><ul>
 <li><code>./main</code></li>
 </ul>
@@ -124,116 +119,115 @@ if (!doNotTrack) {
 </ol>
 <p><code>START_THREAD(elf_ex, regs, elf_entry, bprm-&gt;p)</code> 启动线程传入了 <code>elf_entry</code> 参数，这是程序的入口地址。</p>
 <p>这个 <code>elf_entry</code> 被写在 elf 可执行文件的 header 中</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ readelf -h main
-ELF Header:
-  Magic:   7f <span style="color:#ae81ff">45</span> 4c <span style="color:#ae81ff">46</span> <span style="color:#ae81ff">02</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>
-  Class:                             ELF64
-  Data:                              2<span style="color:#960050;background-color:#1e0010">&#39;</span>s complement, little endian
-  Version:                           <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>current<span style="color:#f92672">)</span>
-  OS/ABI:                            UNIX - System V
-  ABI Version:                       <span style="color:#ae81ff">0</span>
-  Type:                              EXEC <span style="color:#f92672">(</span>Executable file<span style="color:#f92672">)</span>
-  Machine:                           Advanced Micro Devices X86-64
-  Version:                           0x1
-  Entry point address:               0x45d430
-  Start of program headers:          <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes into file<span style="color:#f92672">)</span>
-  Start of section headers:          <span style="color:#ae81ff">456</span> <span style="color:#f92672">(</span>bytes into file<span style="color:#f92672">)</span>
-  Flags:                             0x0
-  Size of this header:               <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
-  Size of program headers:           <span style="color:#ae81ff">56</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
-  Number of program headers:         <span style="color:#ae81ff">7</span>
-  Size of section headers:           <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
-  Number of section headers:         <span style="color:#ae81ff">25</span>
-  Section header string table index: <span style="color:#ae81ff">3</span>
-</code></pre></div><p>并且通过反编译 可执行文件，可以看到这个地址对应的就是 _rt0_amd64_linux。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ objdump ./main -D &gt; tmp
-$ grep tmp <span style="color:#e6db74">&#39;45d430&#39;</span>
-000000000045d430 &lt;_rt0_amd64_linux&gt;:
-  45d430:	e9 2b c4 ff ff       	jmpq   <span style="color:#ae81ff">459860</span> &lt;_rt0_amd64&gt;
-</code></pre></div><p>从此进入了 Go 程序的启动过程</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ readelf -h main
+</span></span><span style="display:flex;"><span>ELF Header:
+</span></span><span style="display:flex;"><span>  Magic:   7f <span style="color:#ae81ff">45</span> 4c <span style="color:#ae81ff">46</span> <span style="color:#ae81ff">02</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">01</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span> <span style="color:#ae81ff">00</span>
+</span></span><span style="display:flex;"><span>  Class:                             ELF64
+</span></span><span style="display:flex;"><span>  Data:                              2<span style="color:#960050;background-color:#1e0010">&#39;</span>s complement, little endian
+</span></span><span style="display:flex;"><span>  Version:                           <span style="color:#ae81ff">1</span> <span style="color:#f92672">(</span>current<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  OS/ABI:                            UNIX - System V
+</span></span><span style="display:flex;"><span>  ABI Version:                       <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>  Type:                              EXEC <span style="color:#f92672">(</span>Executable file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Machine:                           Advanced Micro Devices X86-64
+</span></span><span style="display:flex;"><span>  Version:                           0x1
+</span></span><span style="display:flex;"><span>  Entry point address:               0x45d430
+</span></span><span style="display:flex;"><span>  Start of program headers:          <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes into file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Start of section headers:          <span style="color:#ae81ff">456</span> <span style="color:#f92672">(</span>bytes into file<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Flags:                             0x0
+</span></span><span style="display:flex;"><span>  Size of this header:               <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Size of program headers:           <span style="color:#ae81ff">56</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Number of program headers:         <span style="color:#ae81ff">7</span>
+</span></span><span style="display:flex;"><span>  Size of section headers:           <span style="color:#ae81ff">64</span> <span style="color:#f92672">(</span>bytes<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>  Number of section headers:         <span style="color:#ae81ff">25</span>
+</span></span><span style="display:flex;"><span>  Section header string table index: <span style="color:#ae81ff">3</span>
+</span></span></code></pre></div><p>并且通过反编译 可执行文件，可以看到这个地址对应的就是 _rt0_amd64_linux。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ objdump ./main -D &gt; tmp
+</span></span><span style="display:flex;"><span>$ grep tmp <span style="color:#e6db74">&#39;45d430&#39;</span>
+</span></span><span style="display:flex;"><span>000000000045d430 &lt;_rt0_amd64_linux&gt;:
+</span></span><span style="display:flex;"><span>  45d430:    e9 2b c4 ff ff           jmpq   <span style="color:#ae81ff">459860</span> &lt;_rt0_amd64&gt;
+</span></span></code></pre></div><p>从此进入了 Go 程序的启动过程</p>
 <h2 id="go-程序启动">Go 程序启动 <a href="#go-%e7%a8%8b%e5%ba%8f%e5%90%af%e5%8a%a8" class="anchor">🔗</a></h2><p>Go 程序<a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/runtime/asm_amd64.s#L15" target="_blank" rel="noopener">启动位置</a>, 把栈上的入口参数存到寄存器中，接下来跳转到 <code>rt0_go</code> 启动函数</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">TEXT _rt0_amd64<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>,NOSPLIT,$-<span style="color:#ae81ff">8</span>
-	MOVQ	0<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, DI	// argc
-	LEAQ	8<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, SI	// argv
-	JMP	runtime·rt0_go<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
-</code></pre></div><p><code>rt0_go</code> 代码比较长，可分为两个部分，第一部分是系统参数获取和运行时检查。第二部分是 go 程序启动的核心，这里只详细介绍第二部分，总体启动流程如下</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>TEXT _rt0_amd64<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>,NOSPLIT,$-<span style="color:#ae81ff">8</span>
+</span></span><span style="display:flex;"><span>    MOVQ    0<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, DI    // argc
+</span></span><span style="display:flex;"><span>    LEAQ    8<span style="color:#f92672">(</span>SP<span style="color:#f92672">)</span>, SI    // argv
+</span></span><span style="display:flex;"><span>    JMP    runtime·rt0_go<span style="color:#f92672">(</span>SB<span style="color:#f92672">)</span>
+</span></span></code></pre></div><p><code>rt0_go</code> 代码比较长，可分为两个部分，第一部分是系统参数获取和运行时检查。第二部分是 go 程序启动的核心，这里只详细介绍第二部分，总体启动流程如下</p>
 <p><p class="markdown-image">
   <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211128225903380-2021-11-28.png" alt="image-20211128225903380"  />
 </p></p>
 <pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
-	subgraph runtime.main
-	16 --&gt; 17
-	17(新建sysmon监视线程) --&gt; 18(执行所有runtime init方法) --&gt; 19(启动 gc 收集器) --&gt; 20(执行所有用户包依赖的init方法)--&gt; 21(执行main.main)
-	end
-	subgraph mstart
-	15(初始化M,开始调度) --&gt; 16(调度获取到newproc创建的G, 入口方法:runtime.main)
-	end
-	subgraph newproc
-	13(创建新的协程,入口地址 runtime.main) --&gt;14(放到P的队列中,等待调度)
-	end
-	subgraph schedinit
-	8(栈的初始化)--&gt;9(堆内存分配的初始化)--&gt;10(当前G系统线程初始化)--&gt;11(垃圾回收器参数初始化)--&gt;12(通过cpu核心数和gomaxprocs创建P)
-	end
-	subgraph go runtime 核心
-	5(schedinit:调度器初始化) --&gt; 6(newproc:创建新的 goroutine) --&gt; 7(mstart:开始调度)
-	7 --&gt; 15
-	6 --&gt; 13
-	5 --&gt; 8
-	end
-	subgraph rt0_go
-	0(入口参数复制) --&gt; 1(tls 线程本地存储初始化,关联当前线程,m0与g0)--&gt; 2(check:运行时类型检查) --&gt; 3(args:argc,argv,内存物理页系统参数的获取) --&gt; 4(osinit:cpu核心获取)
-	4 --&gt; 5
-	end
-
+    subgraph runtime.main
+    16 --&gt; 17
+    17(新建sysmon监视线程) --&gt; 18(执行所有runtime init方法) --&gt; 19(启动 gc 收集器) --&gt; 20(执行所有用户包依赖的init方法)--&gt; 21(执行main.main)
+    end
+    subgraph mstart
+    15(初始化M,开始调度) --&gt; 16(调度获取到newproc创建的G, 入口方法:runtime.main)
+    end
+    subgraph newproc
+    13(创建新的协程,入口地址 runtime.main) --&gt;14(放到P的队列中,等待调度)
+    end
+    subgraph schedinit
+    8(栈的初始化)--&gt;9(堆内存分配的初始化)--&gt;10(当前G系统线程初始化)--&gt;11(垃圾回收器参数初始化)--&gt;12(通过cpu核心数和gomaxprocs创建P)
+    end
+    subgraph go runtime 核心
+    5(schedinit:调度器初始化) --&gt; 6(newproc:创建新的 goroutine) --&gt; 7(mstart:开始调度)
+    7 --&gt; 15
+    6 --&gt; 13
+    5 --&gt; 8
+    end
+    subgraph rt0_go
+    0(入口参数复制) --&gt; 1(tls 线程本地存储初始化,关联当前线程,m0与g0)--&gt; 2(check:运行时类型检查) --&gt; 3(args:argc,argv,内存物理页系统参数的获取) --&gt; 4(osinit:cpu核心获取)
+    4 --&gt; 5
+    end
 </code></pre><p>go runtime 核心：</p>
 <ol>
 <li><code>schedinit</code>：进行各种运行时组件初始化工作，这包括我们的调度器与内存分配器、回收器的初始化</li>
 <li><code>newproc</code>：负责根据主 goroutine（即 main）入口地址创建可被运行时调度的执行单元，这里的main还不是用户的main函数，是<code>runtime.main</code></li>
 <li><code>mstart</code>：开始启动调度器的调度循环, 执行队列中 入口方法是<code>runtime.main</code> 的 G</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c">TEXT runtime<span style="color:#960050;background-color:#1e0010">·</span>rt0_go(SB),NOSPLIT,<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>
-	(...)
-	<span style="color:#75715e">// 调度器初始化
-</span><span style="color:#75715e"></span>	CALL	runtime<span style="color:#960050;background-color:#1e0010">·</span>schedinit(SB)
-
-	<span style="color:#75715e">// 创建一个新的 goroutine 来启动程序
-</span><span style="color:#75715e"></span>	MOVQ	<span style="color:#960050;background-color:#1e0010">$</span>runtime<span style="color:#960050;background-color:#1e0010">·</span>mainPC(SB), AX
-	PUSHQ	AX
-	PUSHQ	<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>			<span style="color:#75715e">// 参数大小
-</span><span style="color:#75715e"></span>	CALL	runtime<span style="color:#960050;background-color:#1e0010">·</span>newproc(SB)
-	POPQ	AX
-	POPQ	AX
-
-	<span style="color:#75715e">// 启动这个 M，mstart 应该永不返回
-</span><span style="color:#75715e"></span>	CALL	runtime<span style="color:#960050;background-color:#1e0010">·</span>mstart(SB)
-	(...)
-	RET
-</code></pre></div><p><code>shedinit</code>包括了所有核心组件的初始化工作</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// src/runtime/proc.go
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">schedinit</span>() {
-	<span style="color:#a6e22e">_g_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getg</span>()
-	(<span style="color:#f92672">...</span>)
-
-	<span style="color:#75715e">// 栈、内存分配器、调度器相关初始化
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">sched</span>.<span style="color:#a6e22e">maxmcount</span> = <span style="color:#ae81ff">10000</span>	<span style="color:#75715e">// 限制最大系统线程数量
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">stackinit</span>()			<span style="color:#75715e">// 初始化执行栈
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mallocinit</span>()		<span style="color:#75715e">// 初始化内存分配器
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">mcommoninit</span>(<span style="color:#a6e22e">_g_</span>.<span style="color:#a6e22e">m</span>)	<span style="color:#75715e">// 初始化当前系统线程
-</span><span style="color:#75715e"></span>	(<span style="color:#f92672">...</span>)
-
-	<span style="color:#a6e22e">gcinit</span>()	<span style="color:#75715e">// 垃圾回收器初始化
-</span><span style="color:#75715e"></span>	(<span style="color:#f92672">...</span>)
-
-	<span style="color:#75715e">// 创建 P
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// 通过 CPU 核心数和 GOMAXPROCS 环境变量确定 P 的数量
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">procs</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ncpu</span>
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">atoi32</span>(<span style="color:#a6e22e">gogetenv</span>(<span style="color:#e6db74">&#34;GOMAXPROCS&#34;</span>)); <span style="color:#a6e22e">ok</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">n</span> &gt; <span style="color:#ae81ff">0</span> {
-		<span style="color:#a6e22e">procs</span> = <span style="color:#a6e22e">n</span>
-	}
-	<span style="color:#a6e22e">procresize</span>(<span style="color:#a6e22e">procs</span>)
-	(<span style="color:#f92672">...</span>)
-}
-</code></pre></div><p>执行 <code>runtime.main</code>,  主要进行了</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-c" data-lang="c"><span style="display:flex;"><span>TEXT runtime<span style="color:#960050;background-color:#1e0010">·</span>rt0_go(SB),NOSPLIT,<span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    (...)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 调度器初始化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    CALL    runtime<span style="color:#960050;background-color:#1e0010">·</span>schedinit(SB)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 创建一个新的 goroutine 来启动程序
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    MOVQ    <span style="color:#960050;background-color:#1e0010">$</span>runtime<span style="color:#960050;background-color:#1e0010">·</span>mainPC(SB), AX
+</span></span><span style="display:flex;"><span>    PUSHQ    AX
+</span></span><span style="display:flex;"><span>    PUSHQ    <span style="color:#960050;background-color:#1e0010">$</span><span style="color:#ae81ff">0</span>            <span style="color:#75715e">// 参数大小
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    CALL    runtime<span style="color:#960050;background-color:#1e0010">·</span>newproc(SB)
+</span></span><span style="display:flex;"><span>    POPQ    AX
+</span></span><span style="display:flex;"><span>    POPQ    AX
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 启动这个 M，mstart 应该永不返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    CALL    runtime<span style="color:#960050;background-color:#1e0010">·</span>mstart(SB)
+</span></span><span style="display:flex;"><span>    (...)
+</span></span><span style="display:flex;"><span>    RET
+</span></span></code></pre></div><p><code>shedinit</code>包括了所有核心组件的初始化工作</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// src/runtime/proc.go
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">schedinit</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_g_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getg</span>()
+</span></span><span style="display:flex;"><span>    (<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 栈、内存分配器、调度器相关初始化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">sched</span>.<span style="color:#a6e22e">maxmcount</span> = <span style="color:#ae81ff">10000</span>    <span style="color:#75715e">// 限制最大系统线程数量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">stackinit</span>()            <span style="color:#75715e">// 初始化执行栈
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">mallocinit</span>()        <span style="color:#75715e">// 初始化内存分配器
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">mcommoninit</span>(<span style="color:#a6e22e">_g_</span>.<span style="color:#a6e22e">m</span>)    <span style="color:#75715e">// 初始化当前系统线程
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    (<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">gcinit</span>()    <span style="color:#75715e">// 垃圾回收器初始化
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    (<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 创建 P
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// 通过 CPU 核心数和 GOMAXPROCS 环境变量确定 P 的数量
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">procs</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ncpu</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">n</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">atoi32</span>(<span style="color:#a6e22e">gogetenv</span>(<span style="color:#e6db74">&#34;GOMAXPROCS&#34;</span>)); <span style="color:#a6e22e">ok</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">n</span> &gt; <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">procs</span> = <span style="color:#a6e22e">n</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">procresize</span>(<span style="color:#a6e22e">procs</span>)
+</span></span><span style="display:flex;"><span>    (<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>执行 <code>runtime.main</code>,  主要进行了</p>
 <ol>
 <li>启动系统后台监控sysmon 线程</li>
 <li>执行 runtime 包内 init</li>
@@ -241,64 +235,64 @@ $ grep tmp <span style="color:#e6db74">&#39;45d430&#39;</span>
 <li>用户包依赖 init 的执行</li>
 <li>执行用户main.mian 方法</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// The main goroutine.
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-    <span style="color:#a6e22e">g</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getg</span>()
-
-    <span style="color:#f92672">...</span>
-    <span style="color:#75715e">// 执行栈最大限制：1GB（64位系统）或者 250MB（32位系统）
-</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">8</span> {
-        <span style="color:#a6e22e">maxstacksize</span> = <span style="color:#ae81ff">1000000000</span>
-    } <span style="color:#66d9ef">else</span> {
-        <span style="color:#a6e22e">maxstacksize</span> = <span style="color:#ae81ff">250000000</span>
-    }
-    <span style="color:#f92672">...</span>
-
-    <span style="color:#75715e">// 启动系统后台监控（定期垃圾回收、抢占调度等等）
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">systemstack</span>(<span style="color:#66d9ef">func</span>() {
-        <span style="color:#a6e22e">newm</span>(<span style="color:#a6e22e">sysmon</span>, <span style="color:#66d9ef">nil</span>)
-    })
-
-    <span style="color:#f92672">...</span>
-    <span style="color:#75715e">// 让goroute独占当前线程， 
-</span><span style="color:#75715e"></span>    <span style="color:#75715e">// runtime.lockOSThread的用法详见http://xiaorui.cc/archives/5320
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">lockOSThread</span>()
-
-    <span style="color:#f92672">...</span>
-    <span style="color:#75715e">// runtime包内部的init函数执行
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">runtime_init</span>() <span style="color:#75715e">// must be before defer
-</span><span style="color:#75715e"></span>
-    <span style="color:#75715e">// Defer unlock so that runtime.Goexit during init does the unlock too.
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">needUnlock</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">true</span>
-    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
-        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">needUnlock</span> {
-                <span style="color:#a6e22e">unlockOSThread</span>()
-        }
-    }()
-    <span style="color:#75715e">// 启动GC
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">gcenable</span>()
-
-    <span style="color:#f92672">...</span>
-    <span style="color:#75715e">// 用户包的init执行
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">main_init</span>()
-    <span style="color:#f92672">...</span>
-
-    <span style="color:#a6e22e">needUnlock</span> = <span style="color:#66d9ef">false</span>
-    <span style="color:#a6e22e">unlockOSThread</span>()
-
-    <span style="color:#f92672">...</span>
-    <span style="color:#75715e">// 执行用户的main主函数
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">main_main</span>()
-  
-    <span style="color:#f92672">...</span>
-    <span style="color:#75715e">// 退出
-</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">0</span>)
-    <span style="color:#66d9ef">for</span> {
-        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">*</span><span style="color:#66d9ef">int32</span>
-        <span style="color:#f92672">*</span><span style="color:#a6e22e">x</span> = <span style="color:#ae81ff">0</span>
-    }
-}
-</code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>启动一个 Go 程序时，首先要经过操作系统的加载，通过可执行文件中 <code>Entry point address</code> 记录的地址，找到 go 程序启动入口: <code>_rt0_amd64</code> -&gt;  <code>rt0_go</code>。<code>rt0_go</code> 中 先进行了 go 程序的 runtime 的初始化，其中包括:调度器，栈，堆内存空间初始化，垃圾回收器的初始化，最后最后通过 <code>newproc</code>和 <code>mstart</code>调度执行 <code>runtime.main</code>,完成一系列初始化过程，再然后才是执行用户的主函数。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// The main goroutine.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">g</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getg</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 执行栈最大限制：1GB（64位系统）或者 250MB（32位系统）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">sys</span>.<span style="color:#a6e22e">PtrSize</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">8</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">maxstacksize</span> = <span style="color:#ae81ff">1000000000</span>
+</span></span><span style="display:flex;"><span>    } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">maxstacksize</span> = <span style="color:#ae81ff">250000000</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 启动系统后台监控（定期垃圾回收、抢占调度等等）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">systemstack</span>(<span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">newm</span>(<span style="color:#a6e22e">sysmon</span>, <span style="color:#66d9ef">nil</span>)
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 让goroute独占当前线程， 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// runtime.lockOSThread的用法详见http://xiaorui.cc/archives/5320
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">lockOSThread</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// runtime包内部的init函数执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">runtime_init</span>() <span style="color:#75715e">// must be before defer
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Defer unlock so that runtime.Goexit during init does the unlock too.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">needUnlock</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">needUnlock</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">unlockOSThread</span>()
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 启动GC
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">gcenable</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 用户包的init执行
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">main_init</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">needUnlock</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">unlockOSThread</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 执行用户的main主函数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">main_main</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 退出
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">exit</span>(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span> <span style="color:#f92672">*</span><span style="color:#66d9ef">int32</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">*</span><span style="color:#a6e22e">x</span> = <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>启动一个 Go 程序时，首先要经过操作系统的加载，通过可执行文件中 <code>Entry point address</code> 记录的地址，找到 go 程序启动入口: <code>_rt0_amd64</code> -&gt;  <code>rt0_go</code>。<code>rt0_go</code> 中 先进行了 go 程序的 runtime 的初始化，其中包括:调度器，栈，堆内存空间初始化，垃圾回收器的初始化，最后最后通过 <code>newproc</code>和 <code>mstart</code>调度执行 <code>runtime.main</code>,完成一系列初始化过程，再然后才是执行用户的主函数。</p>
 <h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
 <li><a href="https://www.bookstack.cn/read/qcrao-Go-Questions/%E7%BC%96%E8%AF%91%E5%92%8C%E9%93%BE%E6%8E%A5-Go%20%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84.md" target="_blank" rel="noopener">https://www.bookstack.cn/read/qcrao-Go-Questions/%E7%BC%96%E8%AF%91%E5%92%8C%E9%93%BE%E6%8E%A5-Go%20%E7%A8%8B%E5%BA%8F%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%E6%98%AF%E6%80%8E%E6%A0%B7%E7%9A%84.md</a></li>
 <li><a href="https://eddycjy.com/posts/go/go-bootstrap0/" target="_blank" rel="noopener">https://eddycjy.com/posts/go/go-bootstrap0/</a></li>
@@ -319,14 +313,6 @@ $ grep tmp <span style="color:#e6db74">&#39;45d430&#39;</span>
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

@@ -1,9 +1,12 @@
 ---
+
 title: "Golang 程序启动过程"
 author: "小贺"
 date: 2021-11-26T17:10:12+08:00
 tags: ["golang"]
+
 ---
+
 > `go run main.go` 一个 Go 程序就启动了。然而这背后操作系统如何执行到 Go 代码的，Go 为了运行用户 main 函数，又做了什么？
 
 ## 一 编译
@@ -18,7 +21,7 @@ tags: ["golang"]
 
 ```mermaid
 graph LR
-	0(写代码)--go程序--> 1(编译器)--汇编代码--> 2(汇编器)--.o目标程序-->3(链接器)--可执行文件-->4(结束)
+    0(写代码)--go程序--> 1(编译器)--汇编代码--> 2(汇编器)--.o目标程序-->3(链接器)--可执行文件-->4(结束)
 ```
 
 ## 二 操作系统加载
@@ -67,7 +70,7 @@ ELF Header:
 $ objdump ./main -D > tmp
 $ grep tmp '45d430'
 000000000045d430 <_rt0_amd64_linux>:
-  45d430:	e9 2b c4 ff ff       	jmpq   459860 <_rt0_amd64>
+  45d430:    e9 2b c4 ff ff           jmpq   459860 <_rt0_amd64>
 ```
 
 从此进入了 Go 程序的启动过程
@@ -78,9 +81,9 @@ Go 程序[启动位置](https://github.com/golang/go/blob/5786a54cfe34069c865fea
 
 ```bash
 TEXT _rt0_amd64(SB),NOSPLIT,$-8
-	MOVQ	0(SP), DI	// argc
-	LEAQ	8(SP), SI	// argv
-	JMP	runtime·rt0_go(SB)
+    MOVQ    0(SP), DI    // argc
+    LEAQ    8(SP), SI    // argv
+    JMP    runtime·rt0_go(SB)
 ```
 
 `rt0_go` 代码比较长，可分为两个部分，第一部分是系统参数获取和运行时检查。第二部分是 go 程序启动的核心，这里只详细介绍第二部分，总体启动流程如下
@@ -89,29 +92,29 @@ TEXT _rt0_amd64(SB),NOSPLIT,$-8
 
 ```mermaid
 graph TB
-	subgraph runtime.main
-	16 --> 17
-	17(新建sysmon监视线程) --> 18(执行所有runtime init方法) --> 19(启动 gc 收集器) --> 20(执行所有用户包依赖的init方法)--> 21(执行main.main)
-	end
-	subgraph mstart
-	15(初始化M,开始调度) --> 16(调度获取到newproc创建的G, 入口方法:runtime.main)
-	end
-	subgraph newproc
-	13(创建新的协程,入口地址 runtime.main) -->14(放到P的队列中,等待调度)
-	end
-	subgraph schedinit
-	8(栈的初始化)-->9(堆内存分配的初始化)-->10(当前G系统线程初始化)-->11(垃圾回收器参数初始化)-->12(通过cpu核心数和gomaxprocs创建P)
-	end
-	subgraph go runtime 核心
-	5(schedinit:调度器初始化) --> 6(newproc:创建新的 goroutine) --> 7(mstart:开始调度)
-	7 --> 15
-	6 --> 13
-	5 --> 8
-	end
-	subgraph rt0_go
-	0(入口参数复制) --> 1(tls 线程本地存储初始化,关联当前线程,m0与g0)--> 2(check:运行时类型检查) --> 3(args:argc,argv,内存物理页系统参数的获取) --> 4(osinit:cpu核心获取)
-	4 --> 5
-	end
+    subgraph runtime.main
+    16 --> 17
+    17(新建sysmon监视线程) --> 18(执行所有runtime init方法) --> 19(启动 gc 收集器) --> 20(执行所有用户包依赖的init方法)--> 21(执行main.main)
+    end
+    subgraph mstart
+    15(初始化M,开始调度) --> 16(调度获取到newproc创建的G, 入口方法:runtime.main)
+    end
+    subgraph newproc
+    13(创建新的协程,入口地址 runtime.main) -->14(放到P的队列中,等待调度)
+    end
+    subgraph schedinit
+    8(栈的初始化)-->9(堆内存分配的初始化)-->10(当前G系统线程初始化)-->11(垃圾回收器参数初始化)-->12(通过cpu核心数和gomaxprocs创建P)
+    end
+    subgraph go runtime 核心
+    5(schedinit:调度器初始化) --> 6(newproc:创建新的 goroutine) --> 7(mstart:开始调度)
+    7 --> 15
+    6 --> 13
+    5 --> 8
+    end
+    subgraph rt0_go
+    0(入口参数复制) --> 1(tls 线程本地存储初始化,关联当前线程,m0与g0)--> 2(check:运行时类型检查) --> 3(args:argc,argv,内存物理页系统参数的获取) --> 4(osinit:cpu核心获取)
+    4 --> 5
+    end
 
 ```
 
@@ -123,22 +126,22 @@ go runtime 核心：
 
 ```c
 TEXT runtime·rt0_go(SB),NOSPLIT,$0
-	(...)
-	// 调度器初始化
-	CALL	runtime·schedinit(SB)
+    (...)
+    // 调度器初始化
+    CALL    runtime·schedinit(SB)
 
-	// 创建一个新的 goroutine 来启动程序
-	MOVQ	$runtime·mainPC(SB), AX
-	PUSHQ	AX
-	PUSHQ	$0			// 参数大小
-	CALL	runtime·newproc(SB)
-	POPQ	AX
-	POPQ	AX
+    // 创建一个新的 goroutine 来启动程序
+    MOVQ    $runtime·mainPC(SB), AX
+    PUSHQ    AX
+    PUSHQ    $0            // 参数大小
+    CALL    runtime·newproc(SB)
+    POPQ    AX
+    POPQ    AX
 
-	// 启动这个 M，mstart 应该永不返回
-	CALL	runtime·mstart(SB)
-	(...)
-	RET
+    // 启动这个 M，mstart 应该永不返回
+    CALL    runtime·mstart(SB)
+    (...)
+    RET
 ```
 
 `shedinit`包括了所有核心组件的初始化工作
@@ -146,27 +149,27 @@ TEXT runtime·rt0_go(SB),NOSPLIT,$0
 ```go
 // src/runtime/proc.go
 func schedinit() {
-	_g_ := getg()
-	(...)
+    _g_ := getg()
+    (...)
 
-	// 栈、内存分配器、调度器相关初始化
-	sched.maxmcount = 10000	// 限制最大系统线程数量
-	stackinit()			// 初始化执行栈
-	mallocinit()		// 初始化内存分配器
-	mcommoninit(_g_.m)	// 初始化当前系统线程
-	(...)
+    // 栈、内存分配器、调度器相关初始化
+    sched.maxmcount = 10000    // 限制最大系统线程数量
+    stackinit()            // 初始化执行栈
+    mallocinit()        // 初始化内存分配器
+    mcommoninit(_g_.m)    // 初始化当前系统线程
+    (...)
 
-	gcinit()	// 垃圾回收器初始化
-	(...)
+    gcinit()    // 垃圾回收器初始化
+    (...)
 
-	// 创建 P
-	// 通过 CPU 核心数和 GOMAXPROCS 环境变量确定 P 的数量
-	procs := ncpu
-	if n, ok := atoi32(gogetenv("GOMAXPROCS")); ok && n > 0 {
-		procs = n
-	}
-	procresize(procs)
-	(...)
+    // 创建 P
+    // 通过 CPU 核心数和 GOMAXPROCS 环境变量确定 P 的数量
+    procs := ncpu
+    if n, ok := atoi32(gogetenv("GOMAXPROCS")); ok && n > 0 {
+        procs = n
+    }
+    procresize(procs)
+    (...)
 }
 ```
 
@@ -227,7 +230,7 @@ func main() {
     ...
     // 执行用户的main主函数
     main_main()
-  
+
     ...
     // 退出
     exit(0)

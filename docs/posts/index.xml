@@ -43,7 +43,7 @@ ASCII 意义 🔗包含了使用最广泛的控制字符、数字符号、英文
       <pubDate>Wed, 12 Jan 2022 16:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E9%80%83%E9%80%B8%E5%88%86%E6%9E%90/</guid>
-      <description>问题 🔗 Go 中 New/Make 出来的对象存在哪，栈还是堆？ 下面 FooA 与 FooB 函数哪个性能高一点，为什么(来自 stack overflow)？  package main import ( &amp;#34;fmt&amp;#34; &amp;#34;time&amp;#34; ) type User struct { Name string Age int } func main() { fooA() fooB() } func fooA() { start := time.Now() var c = make(chan User, 1024) for i := 0; i &amp;lt; 1024; i ++ { user := User{Name: &amp;#34;he&amp;#34;, Age: 25} c &amp;lt;- user } since := time.</description>
+      <description>问题 🔗 Go 中 New/Make 出来的对象存在哪，栈还是堆？ 下面 FooA 与 FooB 函数哪个性能高一点，为什么(来自 stack overflow)？  package main  import (  &amp;#34;fmt&amp;#34;  &amp;#34;time&amp;#34; )  type User struct {  Name string  Age int }  func main() {  fooA()  fooB() }  func fooA() {  start := time.Now()  var c = make(chan User, 1024)  for i := 0; i &amp;lt; 1024; i ++ {  user := User{Name: &amp;#34;he&amp;#34;, Age: 25}  c &amp;lt;- user  }  since := time.</description>
     </item>
     
     <item>
@@ -59,7 +59,7 @@ B 站视频学习
 个人博客在线阅读
 声明：
  不生产知识，只是知识的搬运工 遵循协议实验代码不公开，但博客中会记录个人实现思路 在每个翻译文档开头都放了原链接，若翻译不行（我也大部分都是翻译器复制的），请直接查看原文档  文件夹说明：
-docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学习过程想法，笔记记录，lab 实现等相关博客 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
+docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog --&amp;gt; 个人学习过程想法，笔记记录，lab 实现等相关博客 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
 如有文档中存在错误/想参与此项目（翻译文档/实验实现思路），请：
  直接提 issue / mr 发邮件联系 1070259395@qq.com 6.824 讨论群【todo】  导航目录: 已完成（个人实现部分）：
  Lab1-MapReduce-实现过程 Lab2A&amp;amp;2B-Raft-leader选举与日志同步-实现过程 Lab2C-Raft-持久化状态与日志同步优化-实现过程 Lab2D-Raft-快照-实现过程  已完成（翻译部分）：
@@ -78,7 +78,7 @@ docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学�
   服务重启后，上层应用每次都需要从头到尾执行一次全部 Log，这个恢复速度太慢
   解决 🔗 服务通过不时保存一下它的快照（SnapShot），然后告诉 Raft 快照点之前的日志可以丢了 使：1. Raft 不必维持所有 Log 2. crash 恢复速度也很快速  Lab 2D 实现 🔗我的理解 🔗下图是论文中给出的图，它很形象，让我们一下理解快照的含义。但是这个图给了我一个错觉：快照是经过 log 压缩产生的。然而这是错误的，快照是由上层服务产生，传给 raft 层，然后让 Raft 层丢弃这之前的日志。
 下面的交互图更加准确，让我们了解到数据流通的方向
- Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态  // For 2D 快照 	lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index 	lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term 	snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int { return len(rf.</description>
+ Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态   // For 2D 快照  lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index  lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term  snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int {  return len(rf.</description>
     </item>
     
     <item>
@@ -94,7 +94,7 @@ docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学�
   logs：日志，重启回复需要重新执行一次命令
   因此代码中修改了上述三个变量的地方都要进行一次持久化。
 持久化一般到磁盘中，但在这个 lab，使用了 persister 来模拟，方便测试。
- 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) { if data == nil || len(data) &amp;lt; 1 { // bootstrap without any state?</description>
+ 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) {  if data == nil || len(data) &amp;lt; 1 { // bootstrap without any state?</description>
     </item>
     
     <item>
@@ -141,7 +141,7 @@ Go汇编语言是基于 plan9 汇编，但是现实世界还有这么多不同�
     </item>
     
     <item>
-      <title>分布式链路追踪 Jaeger 快速入门-01</title>
+      <title>分布式链路追踪 Jaeger快速入门-01</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/%E5%88%86%E5%B8%83%E5%BC%8F%E9%93%BE%E8%B7%AF%E8%BF%BD%E8%B8%AAjaeger%E5%BF%AB%E9%80%9F%E5%85%A5%E9%97%A8-01/</link>
       <pubDate>Thu, 09 Dec 2021 14:30:00 +0800</pubDate>
       
@@ -210,8 +210,8 @@ Prometheus 以时序数据的形式收集和存储其指标，同时支持添加
       <pubDate>Thu, 02 Dec 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E7%9A%84%E9%AA%9A%E6%93%8D%E4%BD%9Clinkname/</guid>
-      <description>背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
- time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) { sec, nsec = walltime() return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.</description>
+      <description>背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64)  func Sleep(d Duration)  func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
+ time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) {  sec, nsec = walltime()  return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.</description>
     </item>
     
     <item>
@@ -220,7 +220,7 @@ Prometheus 以时序数据的形式收集和存储其指标，同时支持添加
       <pubDate>Mon, 29 Nov 2021 17:10:12 +0800</pubDate>
       
       <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-channel-%E4%BB%8B%E7%BB%8D/</guid>
-      <description>问题 🔗 从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() { ch := make(chan int,2) ch &amp;lt;- 1 close(ch) num1, ok1 := &amp;lt;- ch num2,ok2 := &amp;lt;- ch println(num1,ok1) println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介 🔗 Do not communicate by sharing memory; instead, share memory by communicating.
+      <description>问题 🔗 从关闭的 channel 读取数据，如以下情况输出什么。如果是发送数据，再关闭一次 channel的操作呢？怎么判断 channel 的是否关闭  func main() {  ch := make(chan int,2)  ch &amp;lt;- 1  close(ch)  num1, ok1 := &amp;lt;- ch  num2,ok2 := &amp;lt;- ch  println(num1,ok1)  println(num2,ok2) } channel 底层实现 无缓冲 channel 与有缓存 channel 区别 channel VS mutex  channel 简介 🔗 Do not communicate by sharing memory; instead, share memory by communicating.
  不要通过共享内存来通信，而要通过通信来实现内存共享。这是 CSP（Communicating Sequential Processes）的思想，也是 Go 并发设计上的哲学。CSP 认为如果编程语言中把侧重点放在 processes 间的通信，那么并发编程会变得很简单，而 Go 中 channel 就是通信实体的实现，可以看作成一个协程间的消息队列。</description>
     </item>
     
@@ -307,7 +307,7 @@ SBL 优点 🔗 产生的日志文件少， io 次数少  SBL 缺点 🔗  在�
 Go 标准库 Log 🔗使用 🔗我们常使用 Go log 以下三组函数：
  Print/Printf/Println : 打印日志信息  Panic/Panicf/Panicln : 打印日志信息后，以拼装好的字符串为参数调用 Panic  Fatal/Fatalf/Fatalln : 打印日志信息后，os.Exit(1) 退出程序  带 f 后缀的是格式化输出，ln 后缀增加换行符，不过在打印日志场景中会自动增加一个换行符，这里 ln 后缀差别不大。Panic 与 Fatal 的区别在于 Panic 可以被捕获。
 示例如下:
-package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日志信息1&amp;#34;) log.Print(&amp;#34;日志信息2&amp;#34;) log.Panicln(&amp;#34;日志信息3&amp;#34;) log.Fatalln(&amp;#34;日志信息4&amp;#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.</description>
+package main  import &amp;#34;log&amp;#34;  func main() {  log.Println(&amp;#34;日志信息1&amp;#34;)  log.Print(&amp;#34;日志信息2&amp;#34;)  log.Panicln(&amp;#34;日志信息3&amp;#34;)  log.Fatalln(&amp;#34;日志信息4&amp;#34;) // 运行不到 } 2021/11/09 15:41:34 日志信息1 2021/11/09 15:41:34 日志信息2 2021/11/09 15:41:34 日志信息3 panic: 日志信息3 goroutine 1 [running]: log.</description>
     </item>
     
     <item>
@@ -326,7 +326,7 @@ package main import &amp;#34;log&amp;#34; func main() { log.Println(&amp;#34;日
 Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
-  // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
+  // 位于 src/runtime/runtime2.go type eface struct {  _type *_type // 具体的类型  data unsafe.</description>
     </item>
     
   </channel>

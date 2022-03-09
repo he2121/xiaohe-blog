@@ -23,7 +23,7 @@
 Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
-  // 位于 src/runtime/runtime2.go type eface struct { _type *_type	// 具体的类型 	data unsafe.Pointer	// 数据 } type iface struct { tab *itab	// 指向itab 的指针 	data unsafe.</description>
+  // 位于 src/runtime/runtime2.go type eface struct {  _type *_type // 具体的类型  data unsafe.</description>
     </item>
     
   </channel>

@@ -83,10 +83,13 @@ GOMAXPROCS：在这个版本代表了最多同时支持 GOMAXPROCS 个活跃的�
 - M 通过 P 取 G 时，并发访问大大降低，本地队列不需要全局锁了。
 
 - 每个 P 的本地 G 队列长度限定在 256，而 goroutine 的数量是不定的，因此 Go 还保留了一个无限长度的全局队列。
+
 - 本地队列数据结构是数组，全局队列数据结构是链表
 
 - P 中除了本地队列，还加了一个 runnext 的结构，为了优先执行刚创建的 goroutine
+
 - MCache 从 M 移到了P
+
 - 通过设置 GOMAXPROCS 控制 P 的数量
 
 #### M 的消费逻辑（获取G）
@@ -116,7 +119,7 @@ GOMAXPROCS：在这个版本代表了最多同时支持 GOMAXPROCS 个活跃的�
 1. https://docs.google.com/document/d/1TTj4T2JO42uD5ID9e89oa0sLKhJYD0Y_kqxDv3I3XMw/edit
 2. https://stackoverflow.com/questions/68312082/when-will-go-scheduler-create-a-new-m-and-p
 3. https://cloud.tencent.com/developer/article/1819618
-3. https://yizhi.ren/2019/06/03/goscheduler/
-3. https://segmentfault.com/a/1190000040710568
-3. https://www.zhihu.com/question/308641794
-3. https://www.bookstack.cn/read/qcrao-Go-Questions/goroutine%20%E8%B0%83%E5%BA%A6%E5%99%A8-M%20%E5%A6%82%E4%BD%95%E6%89%BE%E5%B7%A5%E4%BD%9C.md
+4. https://yizhi.ren/2019/06/03/goscheduler/
+5. https://segmentfault.com/a/1190000040710568
+6. https://www.zhihu.com/question/308641794
+7. https://www.bookstack.cn/read/qcrao-Go-Questions/goroutine%20%E8%B0%83%E5%BA%A6%E5%99%A8-M%20%E5%A6%82%E4%BD%95%E6%89%BE%E5%B7%A5%E4%BD%9C.md

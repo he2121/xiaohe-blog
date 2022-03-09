@@ -22,6 +22,3 @@ tags: ["云服务器"]
 5. `cmd + shift + p` 搜索 `Remote-SSH: Connect to Host`，选择需要连接的 IP 进行连接。然后弹出的 vscode 界面即是远程开发的环境了
 
 ![image-20211216153632258](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211216153632258-2021-12-16.png)
-
- 
-

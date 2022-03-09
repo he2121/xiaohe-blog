@@ -21,7 +21,7 @@ GM 模型 🔗goroutine 的调度其实是一个生产者-消费者模型。
 消费者：系统线程（M）去消费（执行）goroutine
 自然的，在生产者与消费者中间还需要有一个队列来暂存没有消费过的 goroutine。在 Go 1.1 版本，用的就是这种模型。
 GM 模型问题">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -82,7 +82,7 @@ if (!doNotTrack) {
     <h1 class="title">Golang 协程与调度器原理</h1>
 
     <div class="tip">
-      <div>2021年11月17日</div>
+        <time datetime="2021-11-17 14:30:00 &#43;0800 CST">2021年11月17日</time>
         <span class="split">
           ·
         </span>
@@ -93,13 +93,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          2分钟 读完
+          2分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fgolang%2fgolang%25E5%258D%258F%25E7%25A8%258B%25E4%25B8%258E%25E8%25B0%2583%25E5%25BA%25A6%25E5%2599%25A8%25E5%258E%259F%25E7%2590%2586%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -219,14 +214,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

@@ -1,8 +1,9 @@
 ---
-title: "分布式链路追踪 Jaeger 快速入门-01"
+title: "分布式链路追踪 Jaeger快速入门-01"
 date: 2021-12-09T14:30:00+08:00
 tags: ["Open Tracing", "Jaeger", "cloud native"]
 ---
+
 ### Logging，Metrics 与 Tracing 关系
 
 **同**：都是为了提高基础设施和应用程序的**可观测性**

@@ -6,9 +6,9 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
 <meta name="viewport" content="width=device-width,minimum-scale=1">
-<meta name="description" content="背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64) func Sleep(d Duration) func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
- time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) { sec, nsec = walltime() return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="description" content="背景 🔗 在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：time.Now 调用的 now(), time.Sleep , reflect.makechan  // Provided by package runtime. func now() (sec int64, nsec int32, mono int64)  func Sleep(d Duration)  func makechan(typ *rtype, size int) (ch unsafe.Pointer) 在写代码时，如果我们想使用别的包下没有导出的方法或者变量时，怎么操作  go:linkname 的用法 🔗实际上，上述提到的三个没有方法体的方法，其实现都在 src/runtime包下
+ time.now timestub.go 文件中  //go:linkname time_now time.now func time_now() (sec int64, nsec int32, mono int64) {  sec, nsec = walltime()  return sec, nsec, nanotime() } time.Sleep time.go 文件中  // timeSleep puts the current goroutine to sleep for at least ns nanoseconds.">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -69,7 +69,7 @@ if (!doNotTrack) {
     <h1 class="title">Golang 的骚操作：go:linkname</h1>
 
     <div class="tip">
-      <div>2021年12月2日</div>
+        <time datetime="2021-12-02 17:10:12 &#43;0800 CST">2021年12月02日</time>
         <span class="split">
           ·
         </span>
@@ -80,13 +80,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          2分钟 读完
+          2分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fgolang%2fgolang-%25E7%259A%2584%25E9%25AA%259A%25E6%2593%258D%25E4%25BD%259Clinkname%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -97,141 +92,137 @@ if (!doNotTrack) {
       <h2 id="背景">背景 <a href="#%e8%83%8c%e6%99%af" class="anchor">🔗</a></h2><ol>
 <li>在看源码时，一些源码方法没有方法体，难道说明这些方法为空？例如：<a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/time/time.go#L1073" target="_blank" rel="noopener"><code>time.Now</code></a> 调用的 <a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/time/time.go#L1057" target="_blank" rel="noopener"><code>now()</code></a>, <a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/time/sleep.go#L9" target="_blank" rel="noopener"><code>time.Sleep</code></a> , <a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/reflect/value.go#L3383" target="_blank" rel="noopener"><code>reflect.makechan</code></a></li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// Provided by package runtime.
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">now</span>() (<span style="color:#a6e22e">sec</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">nsec</span> <span style="color:#66d9ef">int32</span>, <span style="color:#a6e22e">mono</span> <span style="color:#66d9ef">int64</span>)
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">d</span> <span style="color:#a6e22e">Duration</span>)
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">makechan</span>(<span style="color:#a6e22e">typ</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">ch</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>)
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// Provided by package runtime.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">now</span>() (<span style="color:#a6e22e">sec</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">nsec</span> <span style="color:#66d9ef">int32</span>, <span style="color:#a6e22e">mono</span> <span style="color:#66d9ef">int64</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">d</span> <span style="color:#a6e22e">Duration</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">makechan</span>(<span style="color:#a6e22e">typ</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">rtype</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int</span>) (<span style="color:#a6e22e">ch</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>)
+</span></span></code></pre></div><ol start="2">
 <li>在写代码时，如果我们想<strong>使用</strong>别的包下<strong>没有导出的方法或者变量</strong>时，怎么操作</li>
 </ol>
 <h2 id="golinkname-的用法">go:linkname 的用法 <a href="#golinkname-%e7%9a%84%e7%94%a8%e6%b3%95" class="anchor">🔗</a></h2><p>实际上，上述提到的三个没有方法体的方法，其实现都在 <code>src/runtime</code>包下</p>
 <ol>
 <li><a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/runtime/timestub.go#L18" target="_blank" rel="noopener">time.now</a> timestub.go 文件中</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">//go:linkname time_now time.now
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">time_now</span>() (<span style="color:#a6e22e">sec</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">nsec</span> <span style="color:#66d9ef">int32</span>, <span style="color:#a6e22e">mono</span> <span style="color:#66d9ef">int64</span>) {
-	<span style="color:#a6e22e">sec</span>, <span style="color:#a6e22e">nsec</span> = <span style="color:#a6e22e">walltime</span>()
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sec</span>, <span style="color:#a6e22e">nsec</span>, <span style="color:#a6e22e">nanotime</span>()
-}
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">//go:linkname time_now time.now
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">time_now</span>() (<span style="color:#a6e22e">sec</span> <span style="color:#66d9ef">int64</span>, <span style="color:#a6e22e">nsec</span> <span style="color:#66d9ef">int32</span>, <span style="color:#a6e22e">mono</span> <span style="color:#66d9ef">int64</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">sec</span>, <span style="color:#a6e22e">nsec</span> = <span style="color:#a6e22e">walltime</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sec</span>, <span style="color:#a6e22e">nsec</span>, <span style="color:#a6e22e">nanotime</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="2">
 <li><a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/runtime/time.go#L177" target="_blank" rel="noopener">time.Sleep</a> time.go 文件中</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// timeSleep puts the current goroutine to sleep for at least ns nanoseconds.
-</span><span style="color:#75715e">//go:linkname timeSleep time.Sleep
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">timeSleep</span>(<span style="color:#a6e22e">ns</span> <span style="color:#66d9ef">int64</span>) {
-   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ns</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
-      <span style="color:#66d9ef">return</span>
-   }
-
-   <span style="color:#a6e22e">gp</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getg</span>()
-   <span style="color:#a6e22e">t</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gp</span>.<span style="color:#a6e22e">timer</span>
-   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
-      <span style="color:#a6e22e">t</span> = new(<span style="color:#a6e22e">timer</span>)
-      <span style="color:#a6e22e">gp</span>.<span style="color:#a6e22e">timer</span> = <span style="color:#a6e22e">t</span>
-   }
-   <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">f</span> = <span style="color:#a6e22e">goroutineReady</span>
-   <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">arg</span> = <span style="color:#a6e22e">gp</span>
-   <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nextwhen</span> = <span style="color:#a6e22e">nanotime</span>() <span style="color:#f92672">+</span> <span style="color:#a6e22e">ns</span>
-   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nextwhen</span> &lt; <span style="color:#ae81ff">0</span> { <span style="color:#75715e">// check for overflow.
-</span><span style="color:#75715e"></span>      <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nextwhen</span> = <span style="color:#a6e22e">maxWhen</span>
-   }
-   <span style="color:#a6e22e">gopark</span>(<span style="color:#a6e22e">resetForSleep</span>, <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">t</span>), <span style="color:#a6e22e">waitReasonSleep</span>, <span style="color:#a6e22e">traceEvGoSleep</span>, <span style="color:#ae81ff">1</span>)
-}
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// timeSleep puts the current goroutine to sleep for at least ns nanoseconds.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//go:linkname timeSleep time.Sleep
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">timeSleep</span>(<span style="color:#a6e22e">ns</span> <span style="color:#66d9ef">int64</span>) {
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ns</span> <span style="color:#f92672">&lt;=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">gp</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getg</span>()
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">t</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gp</span>.<span style="color:#a6e22e">timer</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">t</span> = new(<span style="color:#a6e22e">timer</span>)
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">gp</span>.<span style="color:#a6e22e">timer</span> = <span style="color:#a6e22e">t</span>
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">f</span> = <span style="color:#a6e22e">goroutineReady</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">arg</span> = <span style="color:#a6e22e">gp</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nextwhen</span> = <span style="color:#a6e22e">nanotime</span>() <span style="color:#f92672">+</span> <span style="color:#a6e22e">ns</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nextwhen</span> &lt; <span style="color:#ae81ff">0</span> { <span style="color:#75715e">// check for overflow.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      <span style="color:#a6e22e">t</span>.<span style="color:#a6e22e">nextwhen</span> = <span style="color:#a6e22e">maxWhen</span>
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">gopark</span>(<span style="color:#a6e22e">resetForSleep</span>, <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">t</span>), <span style="color:#a6e22e">waitReasonSleep</span>, <span style="color:#a6e22e">traceEvGoSleep</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="3">
 <li><a href="https://github.com/golang/go/blob/5786a54cfe34069c865fead1b6d9c9e3485a40a5/src/runtime/chan.go#L59" target="_blank" rel="noopener">reflect.makechan</a></li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">//go:linkname reflect_makechan reflect.makechan
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">reflect_makechan</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">chantype</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span> {
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">makechan</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">size</span>)
-}
-</code></pre></div><p>我们可以看到具体实现都具有 <code>go:linkname</code>, 可以推测就是这个东西把两个不同包下的函数链接到一起了</p>
-<h3 id="官方介绍">官方介绍 <a href="#%e5%ae%98%e6%96%b9%e4%bb%8b%e7%bb%8d" class="anchor">🔗</a></h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">//go:linkname localname [importpath.name]
-</span></code></pre></div><p>这个特殊的指令的作用域并不是紧跟的下一行代码，而是同一个包下生效。<code>//go:linkname</code>告诉 Go 的编译器把本地的(私有)变量或者方法<code>localname</code>链接到指定的变量或者方法<code>importpath.name</code>。简单来说，<code>localname</code>  <code>import.name</code>指向的变量或者方法是同一个。因为这个指令破坏了类型系统和包的模块化原则，只有在引入 <code>unsafe</code> 包的前提下才能使用这个指令。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">//go:linkname reflect_makechan reflect.makechan
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">reflect_makechan</span>(<span style="color:#a6e22e">t</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">chantype</span>, <span style="color:#a6e22e">size</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">hchan</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">makechan</span>(<span style="color:#a6e22e">t</span>, <span style="color:#a6e22e">size</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>我们可以看到具体实现都具有 <code>go:linkname</code>, 可以推测就是这个东西把两个不同包下的函数链接到一起了</p>
+<h3 id="官方介绍">官方介绍 <a href="#%e5%ae%98%e6%96%b9%e4%bb%8b%e7%bb%8d" class="anchor">🔗</a></h3><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">//go:linkname localname [importpath.name]
+</span></span></span></code></pre></div><p>这个特殊的指令的作用域并不是紧跟的下一行代码，而是同一个包下生效。<code>//go:linkname</code>告诉 Go 的编译器把本地的(私有)变量或者方法<code>localname</code>链接到指定的变量或者方法<code>importpath.name</code>。简单来说，<code>localname</code>  <code>import.name</code>指向的变量或者方法是同一个。因为这个指令破坏了类型系统和包的模块化原则，只有在引入 <code>unsafe</code> 包的前提下才能使用这个指令。</p>
 <h3 id="使用实例">使用实例 <a href="#%e4%bd%bf%e7%94%a8%e5%ae%9e%e4%be%8b" class="anchor">🔗</a></h3><p>文件结构如下图所示, <code>inner</code> 包模拟 go 源码包/外部引入包，<code>outer</code>包需要调用<code>inner</code>包中的方法, <code>main.go</code> 调试</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> tree
-.
-├── go.mod
-├── inner
-│   └── inner.go
-├── main
-├── main.go
-└── outer
-    ├── 1.s
-    └── outer.go
-
-</code></pre></div><h4 id="空body方法复现">空body方法复现： <a href="#%e7%a9%babody%e6%96%b9%e6%b3%95%e5%a4%8d%e7%8e%b0" class="anchor">🔗</a></h4><p>模拟方法无 body方法，真实实现在另外一个包中的案例</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span> tree
+</span></span><span style="display:flex;"><span>.
+</span></span><span style="display:flex;"><span>├── go.mod
+</span></span><span style="display:flex;"><span>├── inner
+</span></span><span style="display:flex;"><span>│   └── inner.go
+</span></span><span style="display:flex;"><span>├── main
+</span></span><span style="display:flex;"><span>├── main.go
+</span></span><span style="display:flex;"><span>└── outer
+</span></span><span style="display:flex;"><span>    ├── 1.s
+</span></span><span style="display:flex;"><span>    └── outer.go
+</span></span></code></pre></div><h4 id="空body方法复现">空body方法复现： <a href="#%e7%a9%babody%e6%96%b9%e6%b3%95%e5%a4%8d%e7%8e%b0" class="anchor">🔗</a></h4><p>模拟方法无 body方法，真实实现在另外一个包中的案例</p>
 <p>outer.go</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">outer</span>
-
-<span style="color:#f92672">import</span> (
-	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/inner&#34;</span>	<span style="color:#75715e">// 真实方法在 inner 包，必须引用这个编译器才能找到链接
-</span><span style="color:#75715e"></span>)
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Hello</span>()
-</code></pre></div><p>如果出现：<code>missing function body </code> 在包内加一个 <code>.s</code>文件。因为<code>go build</code>默认加会加上<code>-complete</code>参数，加这个 .s 可绕开这个限制。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">outer</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/inner&#34;</span>    <span style="color:#75715e">// 真实方法在 inner 包，必须引用这个编译器才能找到链接
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Hello</span>()
+</span></span></code></pre></div><p>如果出现：<code>missing function body </code> 在包内加一个 <code>.s</code>文件。因为<code>go build</code>默认加会加上<code>-complete</code>参数，加这个 .s 可绕开这个限制。</p>
 <p>inner.go</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">inner</span>
-
-<span style="color:#f92672">import</span> (
-	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;unsafe&#34;</span>
-)
-
-<span style="color:#75715e">//go:linkname hello github.com/he2121/demos/linkname_example/outer.Hello
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hello</span>()  {
-	println(<span style="color:#e6db74">&#34;hello&#34;</span>)
-}
-
-</code></pre></div><p>main.go</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-
-<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/outer&#34;</span>
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>()  {
-	<span style="color:#a6e22e">outer</span>.<span style="color:#a6e22e">Hello</span>()
-}
-<span style="color:#75715e">// output:
-</span><span style="color:#75715e">// hello
-</span></code></pre></div><p>这就是 go 源码中这么多没有 body 的方法的原因了，一般到 <code>src/runtime</code>包中搜索就能发现 <code>//go:linkname</code>的实现。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">inner</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;unsafe&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//go:linkname hello github.com/he2121/demos/linkname_example/outer.Hello
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hello</span>()  {
+</span></span><span style="display:flex;"><span>    println(<span style="color:#e6db74">&#34;hello&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>main.go</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/outer&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>()  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">outer</span>.<span style="color:#a6e22e">Hello</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// output:
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// hello
+</span></span></span></code></pre></div><p>这就是 go 源码中这么多没有 body 的方法的原因了，一般到 <code>src/runtime</code>包中搜索就能发现 <code>//go:linkname</code>的实现。</p>
 <h4 id="实际使用">实际使用 <a href="#%e5%ae%9e%e9%99%85%e4%bd%bf%e7%94%a8" class="anchor">🔗</a></h4><p>实现中，如果我们有一些骚操作需要使用源代码/第三方包中的未导出变量/方法，就可使用 <code>//go:linkname</code>实现, 如下例子</p>
 <p>outer.go: 使用 inner 包中的未导出变量/方法</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">outer</span>
-
-<span style="color:#f92672">import</span> (
-	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;unsafe&#34;</span>
-
-	<span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/inner&#34;</span>
-)
-
-<span style="color:#75715e">//go:linkname A github.com/he2121/demos/linkname_example/inner.a
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">A</span> <span style="color:#66d9ef">int</span>
-
-<span style="color:#75715e">//go:linkname Hello github.com/he2121/demos/linkname_example/inner.hello
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Hello</span>()
-</code></pre></div><p>inner.go</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">inner</span>
-
-<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">a</span> = <span style="color:#ae81ff">100</span>
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hello</span>()  {
-	println(<span style="color:#e6db74">&#34;hello&#34;</span>)
-}
-
-</code></pre></div><p>main.go</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-
-<span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/outer&#34;</span>
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>()  {
-	<span style="color:#a6e22e">outer</span>.<span style="color:#a6e22e">Hello</span>()
-	println(<span style="color:#a6e22e">outer</span>.<span style="color:#a6e22e">A</span>)
-}
-<span style="color:#75715e">// output
-</span><span style="color:#75715e">// hello
-</span><span style="color:#75715e">// 100
-</span><span style="color:#75715e"></span>
-</code></pre></div><p><a href="git@github.com:he2121/demos.git">示例 repo</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">outer</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;unsafe&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/inner&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//go:linkname A github.com/he2121/demos/linkname_example/inner.a
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">A</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">//go:linkname Hello github.com/he2121/demos/linkname_example/inner.hello
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Hello</span>()
+</span></span></code></pre></div><p>inner.go</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">inner</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">a</span> = <span style="color:#ae81ff">100</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hello</span>()  {
+</span></span><span style="display:flex;"><span>    println(<span style="color:#e6db74">&#34;hello&#34;</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>main.go</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> <span style="color:#e6db74">&#34;github.com/he2121/demos/linkname_example/outer&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>()  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">outer</span>.<span style="color:#a6e22e">Hello</span>()
+</span></span><span style="display:flex;"><span>    println(<span style="color:#a6e22e">outer</span>.<span style="color:#a6e22e">A</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// output
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// hello
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// 100
+</span></span></span></code></pre></div><p><a href="git@github.com:he2121/demos.git">示例 repo</a></p>
 <h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><ol>
 <li>能读懂多一点源码</li>
 <li>掌握获取并使用其它包中未导出变量/方法的骚操作</li>
@@ -255,14 +246,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

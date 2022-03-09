@@ -12,9 +12,11 @@ tags: ["golang"]
 #### 按指令集架构分类（针对 CPU）
 
 1. **x86汇编(32bit)**:这种架构常被称为`i386`, `x86`
+
 2. **x86汇编(64bit)**, 这种架构常被称为 `AMD64`, `Intel64`, `x86-64`, `x64`, 它是 AMD 设计的, 是 x86 架构的 64 位扩展, 后来公开
 
 3. **ARM汇编**, ARM处理器由于高性能, 低耗电, 常用于嵌入式, 移动设备.
+
 4. ...
 
 #### 按汇编格式分类（针对人的阅读习惯）
@@ -28,7 +30,7 @@ Go汇编语言是基于 [plan9 汇编](https://www.symbolcrash.com/2021/03/02/go
 
 ## 在哪能看到 Golang 汇编代码
 
-1. Golang 源代码中，如`src/runtime/asm_amd64.s` ，`src/math/big/`	...
+1. Golang 源代码中，如`src/runtime/asm_amd64.s` ，`src/math/big/`    ...
 2. `go tool compile -S main.go`,把自己编写的代码编译成汇编代码。如：在我的 Mac Intel 机器上，`amd64`的架构，汇编代码生成如下:
 
 ```bash
@@ -70,9 +72,9 @@ $ go tool compile -S main.go
 
 plan9 汇编语言提供了如下映射，在汇编语言中直接引用就可使用物理寄存器了。
 
-| amd64 | rax  | rbx  | rcx  | rdx  | rdi  | rsi  | rbp  | rsp  | r8   | r9   | r10  | r11  | r12  | r13  | r14  | rip  |
-| ----- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
-| Plan9 | AX   | BX   | CX   | DX   | DI   | SI   | BP   | SP   | R8   | R9   | R10  | R11  | R12  | R13  | R14  | PC   |
+| amd64 | rax | rbx | rcx | rdx | rdi | rsi | rbp | rsp | r8  | r9  | r10 | r11 | r12 | r13 | r14 | rip |
+| ----- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Plan9 | AX  | BX  | CX  | DX  | DI  | SI  | BP  | SP  | R8  | R9  | R10 | R11 | R12 | R13 | R14 | PC  |
 
 如上文的例子中使用到了：`SP`,`AX`,`R14`,`BP`
 
@@ -80,7 +82,7 @@ plan9 汇编语言提供了如下映射，在汇编语言中直接引用就可�
 
 Go 汇编引入了 4 个 虚拟寄存器
 
-- `FP`: Frame pointer: arguments and locals. 	 帧指针，快速访问函数的参数和返回值
+- `FP`: Frame pointer: arguments and locals.      帧指针，快速访问函数的参数和返回值
 - `PC`: Program counter: jumps and branches.   程序计数器，指向下一条指令的地址。在 `amd64` 其实就是 rip 寄存器
 - `SB`: Static base pointer: global symbols.          静态基址指针，全局符号。
 - `SP`: Stack pointer: the highest address within the local stack frame. 栈指针, 指向局部变量
@@ -90,6 +92,7 @@ Go 汇编引入了 4 个 虚拟寄存器
 - FP：`0(FP)` 表示第一个**参数**，`8(FP)` 表示第二个参数(AMD64 架构)。`first_arg+0(FP)` 表示把第一个参数地址绑定到符号 first_arg
 
 - SP：`localvar0-8(SP)`  在 plan9 中表示函数中第一个**局部变量**。物理寄存器中也有 SP，硬件 SP 才是真正表示 栈顶位置。所以为了**区分 SP** 到底是指硬件 SP 还是指虚拟寄存器。plan9 代码中需要以特定的格式来区分。eg：`symbol+offset(SP)` 表示虚拟寄存器 SP。`offset(SP)` 则表示硬件 SP。如上述例子中的 `8(SP)` 指的是硬件 SP
+
 - PC：除个别跳转治理，一般用不到
 
 - SB：表示全局内存起点。`foo(SB)` 表示符号 foo 作为内存地址使用。这种形式用于声明全局函数、数据。`foo+4(SB)`表示 foo 往后 4 字节的地址。`<> `限制符号只能在当前源文件使用
@@ -192,9 +195,9 @@ $ go tool compile -S main.go
 - `MOV` 指令：其后缀表示搬运长度, `$NUM` 表示具体的数字，如下面例子
 
 ```go
-MOVB $1, DI      	// 1 byte,  DI=1
-MOVW $0x10, BX   	// 2 bytes, BX=10
-MOVD $1, DX      	// 4 bytes, DX=1
+MOVB $1, DI          // 1 byte,  DI=1
+MOVW $0x10, BX       // 2 bytes, BX=10
+MOVD $1, DX          // 4 bytes, DX=1
 MOVQ $-10, AX     // 8 bytes, AX=-10
 ```
 
@@ -202,7 +205,7 @@ MOVQ $-10, AX     // 8 bytes, AX=-10
 
 ```go
 // ret+24(FP) 这代表了第三个函数参数，是个地址
-LEAQ	ret+24(FP), AX	// 把 ret+24(FP) 地址移到 AX 寄存器中
+LEAQ    ret+24(FP), AX    // 把 ret+24(FP) 地址移到 AX 寄存器中
 ```
 
 ##### 2. 计算指令
@@ -236,16 +239,16 @@ JMP -2(PC) // 同上
 
 // 有条件跳转
 JZ target // 如果 zero flag 被 set 过，则跳转
-JLS num		// 如果上一行的比较结果，左边小于右边则执行跳到 num 地址处
+JLS num        // 如果上一行的比较结果，左边小于右边则执行跳到 num 地址处
 ```
 
 ##### 4. 其它
 
 - 比较：`CMP`, 与挑战指令搭配使用
-
+  
   ```go
-  CMPQ	BX, $0	// 比较与 BX 与 0 的大小
-  JNE	3(PC)			// 左边小于右边则执行跳到当前 PC 指令后第三条指令的位置
+  CMPQ    BX, $0    // 比较与 BX 与 0 的大小
+  JNE    3(PC)            // 左边小于右边则执行跳到当前 PC 指令后第三条指令的位置
   ```
 
 - 位运算： `AND`,`OR`,`XOR`
@@ -257,7 +260,7 @@ JLS num		// 如果上一行的比较结果，左边小于右边则执行跳到 n
 - Go 程序的起点：`src/runtime/asm_amd64.s` 中的 `rt0_go(SB)` 函数
 - Go 原子包：`src/runtime/internal/atomic_amd64.s` 中的 `Case` 函数
 
-## 参考 
+## 参考
 
 1. https://segmentfault.com/a/1190000039978109
 2. https://go.dev/doc/asm
@@ -266,4 +269,3 @@ JLS num		// 如果上一行的比较结果，左边小于右边则执行跳到 n
 5. https://kcode.icu/posts/go/2021-03-20-go-%E4%BD%BF%E7%94%A8%E7%9A%84-plan9-%E6%B1%87%E7%BC%96%E8%AF%AD%E8%A8%80%E5%88%9D%E6%8E%A2/
 6. https://mioto.me/2021/01/plan9-assembly/
 7. https://www.symbolcrash.com/2021/03/02/go-assembly-on-the-arm64/
-

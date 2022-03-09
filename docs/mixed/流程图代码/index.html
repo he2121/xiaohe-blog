@@ -6,8 +6,8 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
 <meta name="viewport" content="width=device-width,minimum-scale=1">
-<meta name="description" content="channel 🔗graph LR 1(channel) --&gt; 2(向 channel 发送消息) 1 --&gt; 3(接受消息) 1 --&gt; 4(关闭channel) 2 -- full channel--&gt; 5(阻塞) 2 --closed channel--&gt; 6(panic) 3 --empty channel--&gt;5 3 --closed channel--&gt; 7(读到零值) 4 --closed/nil channel--&gt; 6  graph TB 1(向 channel 发送消息) --&gt; 2{channel 是否 nil} --否--&gt; 4{channel 是否 closed}--否--&gt; 6{recvq 队列是否存在值}--否--&gt;8{buf 是否未满} --否--&gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&gt; 3(阻塞) 4 --是--&gt; 5(panic) 6 --是--&gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&gt; 2{channel是否nil} --否--&gt; 4{channel是否closed &amp;&amp; buf中元素为空}--否--&gt; 6{sendq队列是否存在值}--否--&gt;8{buf 是否为空} --是--&gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&gt; 3(阻塞) 4 --是--&gt; 5(返回零值) 6 --是--&gt; 7(sendq队首出队) --无缓冲channel--&gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&gt; 12(将buf队首消息copy到返回数据) --&gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&gt; 9(将 buf 队首消息 copy 到返回数据) ">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="description" content="channel 🔗graph LR  1(channel) --&gt; 2(向 channel 发送消息)  1 --&gt; 3(接受消息)  1 --&gt; 4(关闭channel)  2 -- full channel--&gt; 5(阻塞)  2 --closed channel--&gt; 6(panic)  3 --empty channel--&gt;5  3 --closed channel--&gt; 7(读到零值)  4 --closed/nil channel--&gt; 6  graph TB 1(向 channel 发送消息) --&gt; 2{channel 是否 nil} --否--&gt; 4{channel 是否 closed}--否--&gt; 6{recvq 队列是否存在值}--否--&gt;8{buf 是否未满} --否--&gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&gt; 3(阻塞) 4 --是--&gt; 5(panic) 6 --是--&gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&gt; 2{channel是否nil} --否--&gt; 4{channel是否closed &amp;&amp; buf中元素为空}--否--&gt; 6{sendq队列是否存在值}--否--&gt;8{buf 是否为空} --是--&gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&gt; 3(阻塞) 4 --是--&gt; 5(返回零值) 6 --是--&gt; 7(sendq队首出队) --无缓冲channel--&gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&gt; 12(将buf队首消息copy到返回数据) --&gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&gt; 9(将 buf 队首消息 copy 到返回数据) ">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -68,7 +68,7 @@ if (!doNotTrack) {
     <h1 class="title"></h1>
 
     <div class="tip">
-      <div>1年1月1日</div>
+        <time datetime="0001-01-01 00:00:00 &#43;0000 UTC">0001年01月01日</time>
         <span class="split">
           ·
         </span>
@@ -79,13 +79,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          1分钟 读完
+          1分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fmixed%2f%25E6%25B5%2581%25E7%25A8%258B%25E5%259B%25BE%25E4%25BB%25A3%25E7%25A0%2581%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -93,28 +88,28 @@ if (!doNotTrack) {
 
 
     <div class="content">
-      <h2 id="channel">channel <a href="#channel" class="anchor">🔗</a></h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">graph LR
-	1<span style="color:#f92672">(</span>channel<span style="color:#f92672">)</span> --&gt; 2<span style="color:#f92672">(</span>向 channel 发送消息<span style="color:#f92672">)</span>
-	<span style="color:#ae81ff">1</span> --&gt; 3<span style="color:#f92672">(</span>接受消息<span style="color:#f92672">)</span>
-	<span style="color:#ae81ff">1</span> --&gt; 4<span style="color:#f92672">(</span>关闭channel<span style="color:#f92672">)</span>
-	<span style="color:#ae81ff">2</span> -- full channel--&gt; 5<span style="color:#f92672">(</span>阻塞<span style="color:#f92672">)</span>
-	<span style="color:#ae81ff">2</span> --closed channel--&gt; 6<span style="color:#f92672">(</span>panic<span style="color:#f92672">)</span>
-	<span style="color:#ae81ff">3</span> --empty channel--&gt;5
-	<span style="color:#ae81ff">3</span> --closed channel--&gt; 7<span style="color:#f92672">(</span>读到零值<span style="color:#f92672">)</span>
-	<span style="color:#ae81ff">4</span> --closed/nil channel--&gt; <span style="color:#ae81ff">6</span>
-</code></pre></div><pre tabindex="0"><code> graph TB
-	1(向 channel 发送消息) --&gt; 2{channel 是否 nil} --否--&gt; 4{channel 是否 closed}--否--&gt; 6{recvq 队列是否存在值}--否--&gt;8{buf 是否未满} --否--&gt; 10(阻塞协程,并放到 sendq 队列中)
+      <h2 id="channel">channel <a href="#channel" class="anchor">🔗</a></h2><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>graph LR
+</span></span><span style="display:flex;"><span>    1<span style="color:#f92672">(</span>channel<span style="color:#f92672">)</span> --&gt; 2<span style="color:#f92672">(</span>向 channel 发送消息<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">1</span> --&gt; 3<span style="color:#f92672">(</span>接受消息<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">1</span> --&gt; 4<span style="color:#f92672">(</span>关闭channel<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">2</span> -- full channel--&gt; 5<span style="color:#f92672">(</span>阻塞<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">2</span> --closed channel--&gt; 6<span style="color:#f92672">(</span>panic<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">3</span> --empty channel--&gt;5
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">3</span> --closed channel--&gt; 7<span style="color:#f92672">(</span>读到零值<span style="color:#f92672">)</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#ae81ff">4</span> --closed/nil channel--&gt; <span style="color:#ae81ff">6</span>
+</span></span></code></pre></div><pre tabindex="0"><code> graph TB
+    1(向 channel 发送消息) --&gt; 2{channel 是否 nil} --否--&gt; 4{channel 是否 closed}--否--&gt; 6{recvq 队列是否存在值}--否--&gt;8{buf 是否未满} --否--&gt; 10(阻塞协程,并放到 sendq 队列中)
 2 --是--&gt; 3(阻塞)
-	4  --是--&gt; 5(panic)
-	6 --是--&gt; 7(队首出队,消息直接发送至该 goroutine 中)
-	8--是--&gt; 9(消息拷贝到 buf sendx位置中,等待唤醒)
+    4  --是--&gt; 5(panic)
+    6 --是--&gt; 7(队首出队,消息直接发送至该 goroutine 中)
+    8--是--&gt; 9(消息拷贝到 buf sendx位置中,等待唤醒)
 </code></pre><pre tabindex="0"><code class="language-mermaid" data-lang="mermaid">graph TB
-	1(向channel接受消息) --&gt; 2{channel是否nil} --否--&gt; 4{channel是否closed &amp;&amp; buf中元素为空}--否--&gt; 6{sendq队列是否存在值}--否--&gt;8{buf 是否为空} --是--&gt; 10(阻塞协程,并放到recvq队列中)
+    1(向channel接受消息) --&gt; 2{channel是否nil} --否--&gt; 4{channel是否closed &amp;&amp; buf中元素为空}--否--&gt; 6{sendq队列是否存在值}--否--&gt;8{buf 是否为空} --是--&gt; 10(阻塞协程,并放到recvq队列中)
 2 --是--&gt; 3(阻塞)
-	4  --是--&gt; 5(返回零值)
-	6 --是--&gt; 7(sendq队首出队) --无缓冲channel--&gt; 11(将出队goroutine发送的消息拷贝到返回数据)
-	7 --缓冲channel--&gt; 12(将buf队首消息copy到返回数据) --&gt; 13(再将sendq出队的goroutine发送消息拷贝到buf)
-	8--否--&gt; 9(将 buf 队首消息 copy 到返回数据)
+    4  --是--&gt; 5(返回零值)
+    6 --是--&gt; 7(sendq队首出队) --无缓冲channel--&gt; 11(将出队goroutine发送的消息拷贝到返回数据)
+    7 --缓冲channel--&gt; 12(将buf队首消息copy到返回数据) --&gt; 13(再将sendq出队的goroutine发送消息拷贝到buf)
+    8--否--&gt; 9(将 buf 队首消息 copy 到返回数据)
 </code></pre>
     </div>
 
@@ -123,14 +118,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

@@ -5,6 +5,7 @@ tags: ["6.824"]
 ---
 
 # MIT6.824-2021
+
 MIT6.824 Distributed Systems Engineering 2021 个人学习记录
 
 [仓库地址](https://github.com/he2121/MIT6.824-2021)
@@ -25,7 +26,7 @@ MIT6.824 Distributed Systems Engineering 2021 个人学习记录
 
 ```bash
 docs-cn   -->   官方 note，lab 中文翻译
-my-blog		-->   个人学习过程想法，笔记记录，lab 实现等相关博客
+my-blog        -->   个人学习过程想法，笔记记录，lab 实现等相关博客
 ```
 
 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
@@ -52,7 +53,6 @@ my-blog		-->   个人学习过程想法，笔记记录，lab 实现等相关博�
 - [x] [Lab1-实验文档-MapReduce-翻译](https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-01.md)
 - [x] [Lab2-实验文档-Raft-翻译](https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lab-02.md)
 
-
 Todo（翻译部分）：
 
 - [ ] [Lecture-07-笔记-Raft(2)-翻译](https://github.com/he2121/MIT6.824-2021/blob/main/docs-cn/lect-note-07.md)
@@ -71,4 +71,3 @@ Todo（个人实现部分）：
 - https://mit-public-courses-cn-translatio.gitbook.io/mit6-824/lecture-01-introduction/1.3-fen-bu-shi-xi-tong-de-chou-xiang-he-shi-xian-gong-ju-abstraction-and-implementation
 
 - https://github.com/feixiao/Distributed-Systems
-

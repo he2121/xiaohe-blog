@@ -28,7 +28,7 @@
 在(/cloudreve)创建上述四个文件夹，如，
 mkdir -p &amp;lt;PATH TO config&amp;gt; 创建配置文件vim &amp;lt;PATH TO config&amp;gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
 # conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器
-docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # optional -e TZ=&amp;#34;Asia/Shanghai&amp;#34; \ # optional -p 5212:5212 \  --restart=unless-stopped \  -v &amp;lt;PATH TO uploads&amp;gt;:/cloudreve/uploads \  -v &amp;lt;PATH TO config&amp;gt;:/cloudreve/config \  -v &amp;lt;PATH TO db&amp;gt;:/cloudreve/db \  -v &amp;lt;PATH TO avatar&amp;gt;:/cloudreve/avatar \  xavierniu/cloudreve  服务器开放所需端口（5212）</description>
+docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional  -e PGID=1000 \ # optional  -e TZ=&amp;#34;Asia/Shanghai&amp;#34; \ # optional  -p 5212:5212 \  --restart=unless-stopped \  -v &amp;lt;PATH TO uploads&amp;gt;:/cloudreve/uploads \  -v &amp;lt;PATH TO config&amp;gt;:/cloudreve/config \  -v &amp;lt;PATH TO db&amp;gt;:/cloudreve/db \  -v &amp;lt;PATH TO avatar&amp;gt;:/cloudreve/avatar \  xavierniu/cloudreve  服务器开放所需端口（5212）</description>
     </item>
     
   </channel>

@@ -13,7 +13,7 @@ MESI 的具体设计 🔗MESI：由缓存行（缓存中操作的基本单位，
  Modified（修改）：这一行数据修改过了，与内存中的数据不一致了，这意味着如果其它 cpu 中的缓存具有这行数据，其状态要修改成 invalid Exclusive（独占）：只有一个 cache 读了这个数据行，并且没有修改过 Shared（共享）：有多个 cpu 的cahe 读了这个数据行，没有被修改过 Invalid（无效）：该缓存这一行的数据无效  状态流转 🔗缓存行的状态流转如下图，通过对各个缓存行状态位的控制，达到了多核 cpu 缓存中数据一致的目的
 一个例子
  现在有两个 cpu，假定其缓存都为空，内存中有一个 x = 0 的数据 cpu1 通过 bus 从内存中读取 x， 该缓存行状态设置为 E cpu2 通过 bus 从内存中读取 x，cpu 1 嗅探到地址冲突，两个 cpu 中 x 所在缓存行状态位设置为 S cpu1 需要修改其缓存中 x 的值，设置其 x 所在缓存行状态为 M，通知 cpu2 把 x 所在缓存行状态位设置为 I，再修改缓存中 x 的值  **模拟网站：**https://www.">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -74,7 +74,7 @@ if (!doNotTrack) {
     <h1 class="title">MESI 协议引发的一些思考</h1>
 
     <div class="tip">
-      <div>2021年11月17日</div>
+        <time datetime="2021-11-17 14:30:00 &#43;0800 CST">2021年11月17日</time>
         <span class="split">
           ·
         </span>
@@ -85,13 +85,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          2分钟 读完
+          2分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fmesi%25E5%258D%258F%25E8%25AE%25AE%25E5%25BC%2595%25E5%258F%2591%25E7%259A%2584%25E4%25B8%2580%25E4%25BA%259B%25E6%2580%259D%25E8%2580%2583%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -223,14 +218,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

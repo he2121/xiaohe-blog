@@ -45,12 +45,12 @@ tags: ["golang", "反射"]
 ```go
 // 位于 src/runtime/runtime2.go
 type eface struct {
-	_type *_type					// 具体的类型
-	data  unsafe.Pointer			// 数据
+    _type *_type                    // 具体的类型
+    data  unsafe.Pointer            // 数据
 }
 type iface struct {
-	tab  *itab					// 指向itab 的指针
-	data unsafe.Pointer			// 数据
+    tab  *itab                    // 指向itab 的指针
+    data unsafe.Pointer            // 数据
 }
 
 ```
@@ -59,14 +59,14 @@ _type 就是所有类型最原始的元信息
 
 ```go
 type _type struct {
-	size       uintptr 		// 类型占用内存大小
-	ptrdata    uintptr
-	hash       uint32
-	tflag      	tflag   	  // 标记位，主要用于反射
-	align      uint8   		// 对齐字节信息
-	fieldAlign 	uint8   
-	kind       uint8   		// 基础类型枚举值,  26 个基础类型, int，ptr，struct，interface 
-	equal func(unsafe.Pointer, unsafe.Pointer) bool // 比较两个形参对应对象的类型是否相等
+    size       uintptr         // 类型占用内存大小
+    ptrdata    uintptr
+    hash       uint32
+    tflag          tflag         // 标记位，主要用于反射
+    align      uint8           // 对齐字节信息
+    fieldAlign     uint8   
+    kind       uint8           // 基础类型枚举值,  26 个基础类型, int，ptr，struct，interface 
+    equal func(unsafe.Pointer, unsafe.Pointer) bool // 比较两个形参对应对象的类型是否相等
   ...
 }
 ```
@@ -76,12 +76,12 @@ iface 中 itab 相对复杂，存放的是类型、方法等信息
 ```go
 // 位于 src/runtime/iface.go
 type itab struct {
-    inter  *interfacetype	// 包装了一层*_type，代表接口类型，go 中 中基础类型slice，chan 的类型 都有定义，并且都是包装了一层*_type
-    _type  *_type			// 等同于 eface 中的 *_type, 具体对象的类型
+    inter  *interfacetype    // 包装了一层*_type，代表接口类型，go 中 中基础类型slice，chan 的类型 都有定义，并且都是包装了一层*_type
+    _type  *_type            // 等同于 eface 中的 *_type, 具体对象的类型
     link   *itab
     bad    int32
-    inhash int32      		// has this itab been added to hash?
-    fun    [1]uintptr 		// 这里存的是指向第一个方法的指针，其他方法在这个地址后按字典序存储，偏移量即可
+    inhash int32              // has this itab been added to hash?
+    fun    [1]uintptr         // 这里存的是指向第一个方法的指针，其他方法在这个地址后按字典序存储，偏移量即可
 }
 ```
 
@@ -89,21 +89,21 @@ type itab struct {
 ```go
 // 位于 src/runtime/type.go
 type interfacetype struct {
-	typ     _type
-	pkgpath name		// 包路径
-	mhdr    []imethod	// 方法
+    typ     _type
+    pkgpath name        // 包路径
+    mhdr    []imethod    // 方法
 }
 
 type arraytype struct {
     typ   _type
-    elem  *_type	// array 上具体元素的类型
+    elem  *_type    // array 上具体元素的类型
     slice *_type
     len   uintptr
 }
 
 type chantype struct {
     typ  _type
-    elem *_type		// channel 上具体元素的类型
+    elem *_type        // channel 上具体元素的类型
     dir  uintptr
 }
 // ...
@@ -120,8 +120,8 @@ type chantype struct {
 
 反射最基本的两个方法
 ```go
-TypeOf(i interface{}) Type		// 对应着 interface 结构体中 *_type
-ValueOf(i interface{}) Value	// 结合了data指针与 *_type 类型信息
+TypeOf(i interface{}) Type        // 对应着 interface 结构体中 *_type
+ValueOf(i interface{}) Value    // 结合了data指针与 *_type 类型信息
 ```
 在继续解析代码前，我们可以先思考以下几个问题
 - 为什么 Value 有 Interface() (i interface{}) 而 Type 没有
@@ -135,38 +135,38 @@ ValueOf(i interface{}) Value	// 结合了data指针与 *_type 类型信息
 ```go
 // 位于 src/reflect/type.go 下
 type Type interface {
-	Align() int
-	FieldAlign() int
-	Method(int) Method										// 返回类型方法集里的第 `i` (传入的参数)个方法
-	MethodByName(string) (Method, bool) 	// 通过名称获取方法
-	NumMethod() int												// 方法个数
-	Name() string													// 类型名字
-	Size() uintptr
-	String() string
-	Kind() Kind														// 所属基础类型
-	Implements(u Type) bool
-	AssignableTo(u Type) bool							
-	ConvertibleTo(u Type) bool						// 能否转换 u
-	Comparable() bool
-	Bits() int
-	ChanDir() ChanDir											// channel 类型的方向
-	IsVariadic() bool
-	Elem() Type														// 返回内部子元素类型，只能由类型 Array, Chan, Map, Ptr, or Slice 调用
-	Field(i int) StructField							// 获取结构体中的 字段
-	FieldByIndex(index []int) StructField
-	FieldByName(name string) (StructField, bool)
-	FieldByNameFunc(match func(string) bool) (StructField, bool)
-	In(i int) Type
-	Key() Type												// 返回 map 的 key 类型，只能由类型 map 调用
-	Len() int
-	NumField() int
-	NumIn() int									// 入参个数
-	NumOut() int								// 出参个数
+    Align() int
+    FieldAlign() int
+    Method(int) Method                                        // 返回类型方法集里的第 `i` (传入的参数)个方法
+    MethodByName(string) (Method, bool)     // 通过名称获取方法
+    NumMethod() int                                                // 方法个数
+    Name() string                                                    // 类型名字
+    Size() uintptr
+    String() string
+    Kind() Kind                                                        // 所属基础类型
+    Implements(u Type) bool
+    AssignableTo(u Type) bool                            
+    ConvertibleTo(u Type) bool                        // 能否转换 u
+    Comparable() bool
+    Bits() int
+    ChanDir() ChanDir                                            // channel 类型的方向
+    IsVariadic() bool
+    Elem() Type                                                        // 返回内部子元素类型，只能由类型 Array, Chan, Map, Ptr, or Slice 调用
+    Field(i int) StructField                            // 获取结构体中的 字段
+    FieldByIndex(index []int) StructField
+    FieldByName(name string) (StructField, bool)
+    FieldByNameFunc(match func(string) bool) (StructField, bool)
+    In(i int) Type
+    Key() Type                                                // 返回 map 的 key 类型，只能由类型 map 调用
+    Len() int
+    NumField() int
+    NumIn() int                                    // 入参个数
+    NumOut() int                                // 出参个数
 
-	Out(i int) Type
+    Out(i int) Type
 
-	common() *rtype							// 与 interface 结构中 _type 一一对应
-	uncommon() *uncommonType		// 与 interface 结构中 itab 所包含内容对应，所具备的方法，包名
+    common() *rtype                            // 与 interface 结构中 _type 一一对应
+    uncommon() *uncommonType        // 与 interface 结构中 itab 所包含内容对应，所具备的方法，包名
 }
 ```
 
@@ -200,29 +200,29 @@ Type 的方法比较多, 个人认为下面几个比较**常用**，可以仔细
 ```go
 // 位于/reflect/type.go 下 struct 类型的结构
 type structType struct {
-	rtype
-	pkgPath name
-	fields  []structField // sorted by offset
+    rtype
+    pkgPath name
+    fields  []structField // sorted by offset
 }
 
 func (t *rtype) FieldByName(name string) (StructField, bool) {
-	if t.Kind() != Struct {
-		panic("reflect: FieldByName of non-struct type " + t.String())
-	}
-	tt := (*structType)(unsafe.Pointer(t))
-	return tt.FieldByName(name)
+    if t.Kind() != Struct {
+        panic("reflect: FieldByName of non-struct type " + t.String())
+    }
+    tt := (*structType)(unsafe.Pointer(t))
+    return tt.FieldByName(name)
 }
 
 // A StructField describes a single field in a struct.
 type StructField struct {
-	Name string					// 字段名
-	PkgPath string			// 包路径
+    Name string                    // 字段名
+    PkgPath string            // 包路径
 
-	Type      Type      // 字段类型
-	Tag       StructTag // 字段 tag
-	Offset    uintptr   // offset within struct, in bytes
-	Index     []int     // index sequence for Type.FieldByIndex
-	Anonymous bool      // is an embedded field
+    Type      Type      // 字段类型
+    Tag       StructTag // 字段 tag
+    Offset    uintptr   // offset within struct, in bytes
+    Index     []int     // index sequence for Type.FieldByIndex
+    Anonymous bool      // is an embedded field
 }
 ```
 
@@ -236,9 +236,9 @@ Value 是一个结构体， 其包含类型与数据信息
 
 ```go
 type Value struct {
-	typ *rtype						// 类型
-	ptr unsafe.Pointer		// 实际数据
-	flag					 				// 标记位
+    typ *rtype                        // 类型
+    ptr unsafe.Pointer        // 实际数据
+    flag                                     // 标记位
 }
 
 ```
@@ -258,11 +258,11 @@ Value 常用的方法
   ```
 
 - ```go
-  FieldByName(name string) Value	根据字段名找出字段对应的值，在 Type 有类似的方法，不过 Type 返回的是字段类型信息
+  FieldByName(name string) Value    根据字段名找出字段对应的值，在 Type 有类似的方法，不过 Type 返回的是字段类型信息
   ```
 
 - ```
-  Indirect(v Value) Value	 这个 value 如果是指针，返回它指向的 value，不是返回本身，实际使用 Elem() 实现
+  Indirect(v Value) Value     这个 value 如果是指针，返回它指向的 value，不是返回本身，实际使用 Elem() 实现
   ```
 
 - ```go
@@ -278,16 +278,16 @@ Value 常用的方法
   ```
 
 - ```
-  Call(in []Value) []Value	调用 Call Value Kind必须是函数，用 in 作为参数，返回 []Value, 反射执行方法
+  Call(in []Value) []Value    调用 Call Value Kind必须是函数，用 in 作为参数，返回 []Value, 反射执行方法
   ```
 
 - 取出 value 中的值转换成具体类型
 
   ```go
-  Float() float64	取出 float得值
+  Float() float64    取出 float得值
   ```
   ```go
-  Int() int64	 取出 int64 的值
+  Int() int64     取出 int64 的值
   ```
   ...
 
@@ -315,37 +315,37 @@ web 开发PO 转化成 DTO 的代码必不可少，这些代码比较重复枯�
 
 ```go
 func Copy(dest, src interface{}) error {
-	// dest 预期是指向对象的ptr，Go 中是值传递，不是 ptr 的话，修改会无效
-	// Indirect 如果这个值是指针，会返回指向的值，其中 flag 会加上 CanAddr 的标记
-	destValue := reflect.Indirect(reflect.ValueOf(dest))
-	if !destValue.CanAddr() {
-		return fmt.Errorf("dest type is not ptr")
-	}
-	
-	// 反射 src 得到 src 的类型 与 对象值
-	srcValue := reflect.ValueOf(src)
-	srcType := reflect.TypeOf(src)
-	if srcType.Kind() == reflect.Ptr {
-		srcType = srcType.Elem()
-	}
-	// 遍历 src类型字段
-	for i := 0; i < srcType.NumField(); i ++ {
-		fieldSrc := srcType.Field(i)
-		// 根据 src 的字段名 在 dest 的结构中查找
-		fieldDest, exist := destValue.Type().FieldByName(fieldSrc.Name)
-		// dest 不存在同名的字段跳过
-		if !exist {
-			continue
-		}
-		// 判断 src 字段类型能否转化成 dest 字段类型
-		if ok := fieldSrc.Type.ConvertibleTo(fieldDest.Type); ok {
-			// 获取 src value 对象中具体的字段值，并且转换成 dest 字段的类型
-			convertValue := srcValue.FieldByName(fieldSrc.Name).Convert(fieldDest.Type)
-			// 设置 dest value 对象的相应字段的值
-			destValue.FieldByName(fieldSrc.Name).Set(convertValue)
-		}
-	}
-	return nil
+    // dest 预期是指向对象的ptr，Go 中是值传递，不是 ptr 的话，修改会无效
+    // Indirect 如果这个值是指针，会返回指向的值，其中 flag 会加上 CanAddr 的标记
+    destValue := reflect.Indirect(reflect.ValueOf(dest))
+    if !destValue.CanAddr() {
+        return fmt.Errorf("dest type is not ptr")
+    }
+
+    // 反射 src 得到 src 的类型 与 对象值
+    srcValue := reflect.ValueOf(src)
+    srcType := reflect.TypeOf(src)
+    if srcType.Kind() == reflect.Ptr {
+        srcType = srcType.Elem()
+    }
+    // 遍历 src类型字段
+    for i := 0; i < srcType.NumField(); i ++ {
+        fieldSrc := srcType.Field(i)
+        // 根据 src 的字段名 在 dest 的结构中查找
+        fieldDest, exist := destValue.Type().FieldByName(fieldSrc.Name)
+        // dest 不存在同名的字段跳过
+        if !exist {
+            continue
+        }
+        // 判断 src 字段类型能否转化成 dest 字段类型
+        if ok := fieldSrc.Type.ConvertibleTo(fieldDest.Type); ok {
+            // 获取 src value 对象中具体的字段值，并且转换成 dest 字段的类型
+            convertValue := srcValue.FieldByName(fieldSrc.Name).Convert(fieldDest.Type)
+            // 设置 dest value 对象的相应字段的值
+            destValue.FieldByName(fieldSrc.Name).Set(convertValue)
+        }
+    }
+    return nil
 }
 ```
 
@@ -360,53 +360,53 @@ func Copy(dest, src interface{}) error {
 ```go
 // Schema 解析 model 得到的元数据
 type Schema struct {
-	Model      interface{}			// 实体对象
-	Name       string			 	// 实体的名字，作为表名
-	Fields     []*Field				// 字段列表，转化成 sql 中用到的信息
-	FieldNames []string				// 字段名列表，这里用实体字段名作为 sql 中字段名
-	fieldMap   map[string]*Field	// map[字段名] 字段
+    Model      interface{}            // 实体对象
+    Name       string                 // 实体的名字，作为表名
+    Fields     []*Field                // 字段列表，转化成 sql 中用到的信息
+    FieldNames []string                // 字段名列表，这里用实体字段名作为 sql 中字段名
+    fieldMap   map[string]*Field    // map[字段名] 字段
 }
 
 // Field sql 表中字段
 type Field struct {
-	Name string		// sql 字段名
-	Type string		// sql 类型 int bigint..
-	Tag  string		// 额外信息，例如 primary key
+    Name string        // sql 字段名
+    Type string        // sql 类型 int bigint..
+    Tag  string        // 额外信息，例如 primary key
 }
 
 // model 作为与数据库表一一对应的实体，dialect 代表一种类型转换规则，例如 go -> mysql 中 string -> varchar
 // 而 go -> sqlite中， string -> text
 func Parse(model interface{}, dialect dialect.Dialect) *Schema {
-	// 获取 model 的实际类型
-	modelType := reflect.Indirect(reflect.ValueOf(model)).Type()
-	schema := &Schema{
-		Model:    model,
-		Name:     modelType.Name(),		// 类型信息中 有实体名字
-		fieldMap: map[string]*Field{},
-	}
-	// 遍历实体中每个字段
-	for i := 0; i < modelType.NumField(); i++ {
-		// 字段信息
-		structField := modelType.Field(i)
-		// 字段必须是不是匿名的和对外暴露的
-		if !structField.Anonymous && ast.IsExported(structField.Name) {
-			// 根据 go 对象 构建 sql 表中字段
-			field := &Field{
-				Name: structField.Name,		// 字段的名字
-				Type: dialect.DataTypeOf(reflect.Indirect(reflect.New(structField.Type))),
-				// 这里把 go 中的类型转换成 sql 中的类型，dialect 有多个实现，例如 sqlite， mysql
-			}
-			// 从 structFiled 获取需要的 tag 信息
-			if v, ok := structField.Tag.Lookup("orm"); ok {
-				field.Tag = v
-			}
-			// 存入 schema 中
-			schema.Fields = append(schema.Fields, field)
-			schema.FieldNames = append(schema.FieldNames, field.Name)
-			schema.fieldMap[field.Name] = field
-		}
-	}
-	return schema
+    // 获取 model 的实际类型
+    modelType := reflect.Indirect(reflect.ValueOf(model)).Type()
+    schema := &Schema{
+        Model:    model,
+        Name:     modelType.Name(),        // 类型信息中 有实体名字
+        fieldMap: map[string]*Field{},
+    }
+    // 遍历实体中每个字段
+    for i := 0; i < modelType.NumField(); i++ {
+        // 字段信息
+        structField := modelType.Field(i)
+        // 字段必须是不是匿名的和对外暴露的
+        if !structField.Anonymous && ast.IsExported(structField.Name) {
+            // 根据 go 对象 构建 sql 表中字段
+            field := &Field{
+                Name: structField.Name,        // 字段的名字
+                Type: dialect.DataTypeOf(reflect.Indirect(reflect.New(structField.Type))),
+                // 这里把 go 中的类型转换成 sql 中的类型，dialect 有多个实现，例如 sqlite， mysql
+            }
+            // 从 structFiled 获取需要的 tag 信息
+            if v, ok := structField.Tag.Lookup("orm"); ok {
+                field.Tag = v
+            }
+            // 存入 schema 中
+            schema.Fields = append(schema.Fields, field)
+            schema.FieldNames = append(schema.FieldNames, field.Name)
+            schema.fieldMap[field.Name] = field
+        }
+    }
+    return schema
 }
 ```
 

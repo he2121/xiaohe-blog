@@ -6,8 +6,8 @@
     <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
 <meta name="viewport" content="width=device-width,minimum-scale=1">
-<meta name="description" content="问题 🔗 Go 中 New/Make 出来的对象存在哪，栈还是堆？ 下面 FooA 与 FooB 函数哪个性能高一点，为什么(来自 stack overflow)？  package main import ( &#34;fmt&#34; &#34;time&#34; ) type User struct { Name string Age int } func main() { fooA() fooB() } func fooA() { start := time.Now() var c = make(chan User, 1024) for i := 0; i &lt; 1024; i &#43;&#43; { user := User{Name: &#34;he&#34;, Age: 25} c &lt;- user } since := time.">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="description" content="问题 🔗 Go 中 New/Make 出来的对象存在哪，栈还是堆？ 下面 FooA 与 FooB 函数哪个性能高一点，为什么(来自 stack overflow)？  package main  import (  &#34;fmt&#34;  &#34;time&#34; )  type User struct {  Name string  Age int }  func main() {  fooA()  fooB() }  func fooA() {  start := time.Now()  var c = make(chan User, 1024)  for i := 0; i &lt; 1024; i &#43;&#43; {  user := User{Name: &#34;he&#34;, Age: 25}  c &lt;- user  }  since := time.">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -68,7 +68,7 @@ if (!doNotTrack) {
     <h1 class="title">Golang 逃逸分析</h1>
 
     <div class="tip">
-      <div>2022年1月12日</div>
+        <time datetime="2022-01-12 16:10:12 &#43;0800 CST">2022年01月12日</time>
         <span class="split">
           ·
         </span>
@@ -79,13 +79,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          3分钟 读完
+          3分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fgolang%2fgolang-%25E9%2580%2583%25E9%2580%25B8%25E5%2588%2586%25E6%259E%2590%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -97,45 +92,45 @@ if (!doNotTrack) {
 <li>Go 中 New/Make 出来的对象存在哪，栈还是堆？</li>
 <li>下面 FooA 与 FooB 函数哪个性能高一点，为什么(来自 <a href="https://stackoverflow.com/questions/41178729/why-passing-pointers-to-channel-is-slower" target="_blank" rel="noopener">stack overflow</a>)？</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
-
-<span style="color:#f92672">import</span> (
-	<span style="color:#e6db74">&#34;fmt&#34;</span>
-	<span style="color:#e6db74">&#34;time&#34;</span>
-)
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
-	<span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">fooA</span>()
-	<span style="color:#a6e22e">fooB</span>()
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fooA</span>()  {
-	<span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
-	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">User</span>, <span style="color:#ae81ff">1024</span>)
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">1024</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
-		<span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">User</span>{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;he&#34;</span>, <span style="color:#a6e22e">Age</span>: <span style="color:#ae81ff">25</span>}
-		<span style="color:#a6e22e">c</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">user</span>
-	}
-	<span style="color:#a6e22e">since</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;FooA User&#34;</span>, <span style="color:#a6e22e">since</span>.<span style="color:#a6e22e">Microseconds</span>())
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fooB</span>()  {
-	<span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
-	<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">User</span>, <span style="color:#ae81ff">1024</span>)
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">1024</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
-		<span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">User</span>{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;he&#34;</span>, <span style="color:#a6e22e">Age</span>: <span style="color:#ae81ff">25</span>}
-		<span style="color:#a6e22e">c</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">user</span>
-	}
-	<span style="color:#a6e22e">since</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
-	<span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;FooB *User &#34;</span>, <span style="color:#a6e22e">since</span>.<span style="color:#a6e22e">Microseconds</span>())
-}
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#e6db74">&#34;time&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fooA</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fooB</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fooA</span>()  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">User</span>, <span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">1024</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">User</span>{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;he&#34;</span>, <span style="color:#a6e22e">Age</span>: <span style="color:#ae81ff">25</span>}
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">user</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">since</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;FooA User&#34;</span>, <span style="color:#a6e22e">since</span>.<span style="color:#a6e22e">Microseconds</span>())
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fooB</span>()  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">start</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">c</span> = make(<span style="color:#66d9ef">chan</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">User</span>, <span style="color:#ae81ff">1024</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">1024</span>; <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">User</span>{<span style="color:#a6e22e">Name</span>: <span style="color:#e6db74">&#34;he&#34;</span>, <span style="color:#a6e22e">Age</span>: <span style="color:#ae81ff">25</span>}
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">c</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">user</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">since</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Since</span>(<span style="color:#a6e22e">start</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;FooB *User &#34;</span>, <span style="color:#a6e22e">since</span>.<span style="color:#a6e22e">Microseconds</span>())
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="3">
 <li>参数 值传递 VS 指针传递</li>
 </ol>
 <h2 id="问题解答">问题解答 <a href="#%e9%97%ae%e9%a2%98%e8%a7%a3%e7%ad%94" class="anchor">🔗</a></h2><h4 id="1-go-中-newmake-出来的对象存在哪栈还是堆">1. Go 中 New/Make 出来的对象存在哪，栈还是堆？ <a href="#1-go-%e4%b8%ad-newmake-%e5%87%ba%e6%9d%a5%e7%9a%84%e5%af%b9%e8%b1%a1%e5%ad%98%e5%9c%a8%e5%93%aa%e6%a0%88%e8%bf%98%e6%98%af%e5%a0%86" class="anchor">🔗</a></h4><p>Linux 进程布局：</p>
@@ -160,113 +155,111 @@ if (!doNotTrack) {
 </ol>
 <p>在一般情况下，推荐值传递。因为由于逃逸分析的存在，值传递情况下性能一般比指针传递性能要高。</p>
 <h2 id="golang-逃逸分析">Golang 逃逸分析 <a href="#golang-%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90" class="anchor">🔗</a></h2><p>以下命令查看 Go 编译器的逃逸分析结果，一般搭配 <code>-l</code> 禁止内联使用</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-m&#34;</span>
-</code></pre></div><p>上述 FooB 的例子:</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
-<span style="color:#75715e"># command-line-arguments</span>
-./main.go:33:11: &amp;User<span style="color:#f92672">{</span>...<span style="color:#f92672">}</span> escapes to heap
-./main.go:37:13: ... argument does not escape
-./main.go:37:14: <span style="color:#e6db74">&#34;FooB *User &#34;</span> escapes to heap
-./main.go:37:47: since.Microseconds<span style="color:#f92672">()</span> escapes to heap
-</code></pre></div><h3 id="逃逸分析基本原则">逃逸分析基本原则 <a href="#%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90%e5%9f%ba%e6%9c%ac%e5%8e%9f%e5%88%99" class="anchor">🔗</a></h3><ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;-m&#34;</span>
+</span></span></code></pre></div><p>上述 FooB 的例子:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-line-arguments</span>
+</span></span><span style="display:flex;"><span>./main.go:33:11: &amp;User<span style="color:#f92672">{</span>...<span style="color:#f92672">}</span> escapes to heap
+</span></span><span style="display:flex;"><span>./main.go:37:13: ... argument does not escape
+</span></span><span style="display:flex;"><span>./main.go:37:14: <span style="color:#e6db74">&#34;FooB *User &#34;</span> escapes to heap
+</span></span><span style="display:flex;"><span>./main.go:37:47: since.Microseconds<span style="color:#f92672">()</span> escapes to heap
+</span></span></code></pre></div><h3 id="逃逸分析基本原则">逃逸分析基本原则 <a href="#%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90%e5%9f%ba%e6%9c%ac%e5%8e%9f%e5%88%99" class="anchor">🔗</a></h3><ol>
 <li>指向堆栈对象的指针不能存储在堆中</li>
 <li>指向堆栈对象的指针不能超过那个对象的寿命</li>
 </ol>
 <p>这是逃逸分析算法的两点原则与工作内容，当然还有一些其它情况决定对象需要直接分配在堆上。</p>
 <h3 id="发生逃逸的情形">发生逃逸的情形 <a href="#%e5%8f%91%e7%94%9f%e9%80%83%e9%80%b8%e7%9a%84%e6%83%85%e5%bd%a2" class="anchor">🔗</a></h3><h4 id="1-指针逃逸-将对象指针作为函数返回值">1. 指针逃逸, 将对象指针作为函数返回值 <a href="#1-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8-%e5%b0%86%e5%af%b9%e8%b1%a1%e6%8c%87%e9%92%88%e4%bd%9c%e4%b8%ba%e5%87%bd%e6%95%b0%e8%bf%94%e5%9b%9e%e5%80%bc" class="anchor">🔗</a></h4><p>如下面例子，违背了原则 2：指向堆栈对象的指针不能超过那个对象的寿命</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Go" data-lang="Go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">struct</span> {
-  <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
-	<span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
-}
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">GetUser</span>()
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetUser</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">User</span> {
-  <span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">User</span>{}
-	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">user</span>
-}
-</code></pre></div><p>由于 *user 这个指针被传到 main 函数中使用，而 User 这个对象在 GetUser 方法中 New 出来，如果不逃逸到堆上，则指针的寿命比对象长。因此需要逃逸到堆上，让对象的寿命比其指针长。因此上述例子发生了逃逸</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
-<span style="color:#75715e"># command-line-arguments</span>
-./main.go:13:2: moved to heap: user
-</code></pre></div><h4 id="2-指针逃逸将对象指针赋值到一个堆对象中">2. 指针逃逸，将对象指针赋值到一个堆对象中 <a href="#2-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8%e5%b0%86%e5%af%b9%e8%b1%a1%e6%8c%87%e9%92%88%e8%b5%8b%e5%80%bc%e5%88%b0%e4%b8%80%e4%b8%aa%e5%a0%86%e5%af%b9%e8%b1%a1%e4%b8%ad" class="anchor">🔗</a></h4><p>如下面例子，违背了原则 1：指向堆栈对象的指针不能存储在堆中</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">struct</span> {
-  <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
-	<span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">Car</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Car</span>
-}
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Car</span> <span style="color:#66d9ef">struct</span> {
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">GetUser</span>()
-	<span style="color:#a6e22e">car</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Car</span>{}
-	<span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">Car</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">car</span>
-}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetUser</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">User</span> {
-	<span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">User</span>{}
-}
-</code></pre></div><p><code>GetUser</code> 返回的是一个逃逸的对象，即其已经存在堆中。我们给其一个字段赋值 <code>*Car</code>,  如果把 Car 对象分配在栈中，发生了指向 栈中对象（Car）的指针存储在堆中对象中（User） ，违背了原则 1，所以 Car 对象需要逃逸到堆。<a href="https://github.com/golang/go/issues/8618" target="_blank" rel="noopener"><code>fmt.Println</code></a> 也是这个原因存在逃逸</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
-<span style="color:#75715e"># command-line-arguments</span>
-./main.go:20:9: &amp;User<span style="color:#f92672">{}</span> escapes to heap
-./main.go:15:2: moved to heap: car
-</code></pre></div><h4 id="3-大对象分配在堆上">3. 大对象分配在堆上 <a href="#3-%e5%a4%a7%e5%af%b9%e8%b1%a1%e5%88%86%e9%85%8d%e5%9c%a8%e5%a0%86%e4%b8%8a" class="anchor">🔗</a></h4><p>经过测试，大于 64 KB 的对象分在在堆上，小于或等于 64 KB 的对象分配在堆上。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">_</span> = make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">16</span>)	<span style="color:#75715e">// 1 &lt;&lt; 16 B 的 slice 没有逃逸，分配在栈上
-</span><span style="color:#75715e"></span>}
-
-<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">_</span> = make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">16</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)	<span style="color:#75715e">// 1 &lt;&lt; 16 + 1 B 的 slice 逃逸到堆上
-</span><span style="color:#75715e"></span>}
-<span style="color:#75715e">// output 1
-</span><span style="color:#75715e">// $ go build -gcflags=&#39;-m -l&#39; main.go 
-</span><span style="color:#75715e">// # command-line-arguments
-</span><span style="color:#75715e">// ./main.go:11:10: make([]byte, 1 &lt;&lt; 16) does not escape
-</span><span style="color:#75715e"></span>
-<span style="color:#75715e">// output 2
-</span><span style="color:#75715e">// $ go build -gcflags=&#39;-m -l&#39; main.go 
-</span><span style="color:#75715e">// # command-line-arguments
-</span><span style="color:#75715e">// ./main.go:11:10: make([]byte, 1 &lt;&lt; 16 + 1) escapes to heap
-</span><span style="color:#75715e"></span>
-</code></pre></div><p>这里测试出的 64 KB 与 当前 Golang 内存分配器讲的 32 KB 的大对象直接分配在堆中<strong>不符</strong>， 原因还<strong>待查</strong>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Go" data-lang="Go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">GetUser</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetUser</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">User</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">User</span>{}
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">user</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>由于 *user 这个指针被传到 main 函数中使用，而 User 这个对象在 GetUser 方法中 New 出来，如果不逃逸到堆上，则指针的寿命比对象长。因此需要逃逸到堆上，让对象的寿命比其指针长。因此上述例子发生了逃逸</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-line-arguments</span>
+</span></span><span style="display:flex;"><span>./main.go:13:2: moved to heap: user
+</span></span></code></pre></div><h4 id="2-指针逃逸将对象指针赋值到一个堆对象中">2. 指针逃逸，将对象指针赋值到一个堆对象中 <a href="#2-%e6%8c%87%e9%92%88%e9%80%83%e9%80%b8%e5%b0%86%e5%af%b9%e8%b1%a1%e6%8c%87%e9%92%88%e8%b5%8b%e5%80%bc%e5%88%b0%e4%b8%80%e4%b8%aa%e5%a0%86%e5%af%b9%e8%b1%a1%e4%b8%ad" class="anchor">🔗</a></h4><p>如下面例子，违背了原则 1：指向堆栈对象的指针不能存储在堆中</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">User</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">Name</span> <span style="color:#66d9ef">string</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Age</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Car</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Car</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Car</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">GetUser</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">car</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Car</span>{}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">user</span>.<span style="color:#a6e22e">Car</span> = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">car</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">GetUser</span>() <span style="color:#f92672">*</span><span style="color:#a6e22e">User</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">User</span>{}
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>GetUser</code> 返回的是一个逃逸的对象，即其已经存在堆中。我们给其一个字段赋值 <code>*Car</code>,  如果把 Car 对象分配在栈中，发生了指向 栈中对象（Car）的指针存储在堆中对象中（User） ，违背了原则 1，所以 Car 对象需要逃逸到堆。<a href="https://github.com/golang/go/issues/8618" target="_blank" rel="noopener"><code>fmt.Println</code></a> 也是这个原因存在逃逸</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-line-arguments</span>
+</span></span><span style="display:flex;"><span>./main.go:20:9: &amp;User<span style="color:#f92672">{}</span> escapes to heap
+</span></span><span style="display:flex;"><span>./main.go:15:2: moved to heap: car
+</span></span></code></pre></div><h4 id="3-大对象分配在堆上">3. 大对象分配在堆上 <a href="#3-%e5%a4%a7%e5%af%b9%e8%b1%a1%e5%88%86%e9%85%8d%e5%9c%a8%e5%a0%86%e4%b8%8a" class="anchor">🔗</a></h4><p>经过测试，大于 64 KB 的对象分在在堆上，小于或等于 64 KB 的对象分配在堆上。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> = make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">16</span>)    <span style="color:#75715e">// 1 &lt;&lt; 16 B 的 slice 没有逃逸，分配在栈上
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> = make([]<span style="color:#66d9ef">byte</span>, <span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#ae81ff">16</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>)    <span style="color:#75715e">// 1 &lt;&lt; 16 + 1 B 的 slice 逃逸到堆上
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// output 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// $ go build -gcflags=&#39;-m -l&#39; main.go 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// # command-line-arguments
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// ./main.go:11:10: make([]byte, 1 &lt;&lt; 16) does not escape
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// output 2
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// $ go build -gcflags=&#39;-m -l&#39; main.go 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// # command-line-arguments
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// ./main.go:11:10: make([]byte, 1 &lt;&lt; 16 + 1) escapes to heap
+</span></span></span></code></pre></div><p>这里测试出的 64 KB 与 当前 Golang 内存分配器讲的 32 KB 的大对象直接分配在堆中<strong>不符</strong>， 原因还<strong>待查</strong>。</p>
 <h4 id="3-动态分配空间">3. 动态分配空间 <a href="#3-%e5%8a%a8%e6%80%81%e5%88%86%e9%85%8d%e7%a9%ba%e9%97%b4" class="anchor">🔗</a></h4><p>在编译期间难以确定其分配内存的大小，需要在运行期间确定，动态分配 slice 的长度。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">l</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">10</span>
-	<span style="color:#a6e22e">_</span> = make([]<span style="color:#66d9ef">byte</span>,<span style="color:#a6e22e">l</span>)
-}
-</code></pre></div><p>上面例子，<code>l</code> 是变量，编译器不确定其分配内存的大小，所以分配到堆上。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
-<span style="color:#75715e"># command-line-arguments</span>
-./main.go:13:10: make<span style="color:#f92672">([]</span>byte, l<span style="color:#f92672">)</span> escapes to heap
-</code></pre></div><h4 id="4-slice-map-chan-上的指针指向的对象">4. slice, map, chan 上的指针指向的对象 <a href="#4-slice-map-chan-%e4%b8%8a%e7%9a%84%e6%8c%87%e9%92%88%e6%8c%87%e5%90%91%e7%9a%84%e5%af%b9%e8%b1%a1" class="anchor">🔗</a></h4><p>如问题2 中的 FooB，如下面例子</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
-	<span style="color:#a6e22e">users</span> <span style="color:#f92672">:=</span> make([]<span style="color:#f92672">*</span><span style="color:#a6e22e">User</span>, <span style="color:#ae81ff">1</span>)
-	<span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">User</span>{}
-	<span style="color:#a6e22e">users</span>[<span style="color:#ae81ff">0</span>] = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">user</span>
-}
-</code></pre></div><p>users slice 没有逃逸， user 结构分配了堆上</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
-<span style="color:#75715e"># command-line-arguments</span>
-./main.go:17:2: moved to heap: user
-./main.go:16:15: make<span style="color:#f92672">([]</span>*User, 1<span style="color:#f92672">)</span> does not escape
-</code></pre></div><h4 id="5-闭包函数引用对象">5. 闭包函数引用对象 <a href="#5-%e9%97%ad%e5%8c%85%e5%87%bd%e6%95%b0%e5%bc%95%e7%94%a8%e5%af%b9%e8%b1%a1" class="anchor">🔗</a></h4><p>如下例子</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">add</span>() <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">int</span> {
-	<span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>
-	<span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">int</span> {
-		<span style="color:#a6e22e">a</span> <span style="color:#f92672">++</span>
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>
-	}
-}
-</code></pre></div><p>其实这里违背了原则 2：指向堆栈对象的指针不能超过那个对象的寿命。这里的例子如果不把 <code>a</code> 逃逸到 堆上，会导致闭包函数对 <code>a</code>的引用超过 <code>a</code>的生命周期。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
-<span style="color:#75715e"># command-line-arguments</span>
-./main.go:16:2: moved to heap: a
-./main.go:17:9: func literal escapes to heap
-
-</code></pre></div><h4 id="golang-编译器逃逸分析算法">Golang 编译器逃逸分析算法 <a href="#golang-%e7%bc%96%e8%af%91%e5%99%a8%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90%e7%ae%97%e6%b3%95" class="anchor">🔗</a></h4><p><a href="https://github.com/golang/go/blob/master/src/cmd/compile/internal/escape/escape.go" target="_blank" rel="noopener">源代码</a></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">l</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">_</span> = make([]<span style="color:#66d9ef">byte</span>,<span style="color:#a6e22e">l</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>上面例子，<code>l</code> 是变量，编译器不确定其分配内存的大小，所以分配到堆上。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-line-arguments</span>
+</span></span><span style="display:flex;"><span>./main.go:13:10: make<span style="color:#f92672">([]</span>byte, l<span style="color:#f92672">)</span> escapes to heap
+</span></span></code></pre></div><h4 id="4-slice-map-chan-上的指针指向的对象">4. slice, map, chan 上的指针指向的对象 <a href="#4-slice-map-chan-%e4%b8%8a%e7%9a%84%e6%8c%87%e9%92%88%e6%8c%87%e5%90%91%e7%9a%84%e5%af%b9%e8%b1%a1" class="anchor">🔗</a></h4><p>如问题2 中的 FooB，如下面例子</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">users</span> <span style="color:#f92672">:=</span> make([]<span style="color:#f92672">*</span><span style="color:#a6e22e">User</span>, <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">user</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">User</span>{}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">users</span>[<span style="color:#ae81ff">0</span>] = <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">user</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>users slice 没有逃逸， user 结构分配了堆上</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-line-arguments</span>
+</span></span><span style="display:flex;"><span>./main.go:17:2: moved to heap: user
+</span></span><span style="display:flex;"><span>./main.go:16:15: make<span style="color:#f92672">([]</span>*User, 1<span style="color:#f92672">)</span> does not escape
+</span></span></code></pre></div><h4 id="5-闭包函数引用对象">5. 闭包函数引用对象 <a href="#5-%e9%97%ad%e5%8c%85%e5%87%bd%e6%95%b0%e5%bc%95%e7%94%a8%e5%af%b9%e8%b1%a1" class="anchor">🔗</a></h4><p>如下例子</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">add</span>() <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">a</span> <span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>其实这里违背了原则 2：指向堆栈对象的指针不能超过那个对象的寿命。这里的例子如果不把 <code>a</code> 逃逸到 堆上，会导致闭包函数对 <code>a</code>的引用超过 <code>a</code>的生命周期。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>$ go build -gcflags<span style="color:#f92672">=</span><span style="color:#e6db74">&#39;-m -l&#39;</span> main.go 
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># command-line-arguments</span>
+</span></span><span style="display:flex;"><span>./main.go:16:2: moved to heap: a
+</span></span><span style="display:flex;"><span>./main.go:17:9: func literal escapes to heap
+</span></span></code></pre></div><h4 id="golang-编译器逃逸分析算法">Golang 编译器逃逸分析算法 <a href="#golang-%e7%bc%96%e8%af%91%e5%99%a8%e9%80%83%e9%80%b8%e5%88%86%e6%9e%90%e7%ae%97%e6%b3%95" class="anchor">🔗</a></h4><p><a href="https://github.com/golang/go/blob/master/src/cmd/compile/internal/escape/escape.go" target="_blank" rel="noopener">源代码</a></p>
 <p>这里简要说下过程（没仔细看），算法基于以上两个基本原则进行的。</p>
 <p>输入：编译器解析用户程序代码得到的抽象语法树（AST）</p>
 <p>过程：</p>
@@ -297,14 +290,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

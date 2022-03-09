@@ -12,8 +12,8 @@
 在(/cloudreve)创建上述四个文件夹，如，
 mkdir -p &lt;PATH TO config&gt; 创建配置文件vim &lt;PATH TO config&gt;/conf.ini（该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档）
 # conf.ini [Database] DBFile = /cloudreve/db/cloudreve.db 启动cloudreve容器
-docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional -e PGID=1000 \ # optional -e TZ=&#34;Asia/Shanghai&#34; \ # optional -p 5212:5212 \  --restart=unless-stopped \  -v &lt;PATH TO uploads&gt;:/cloudreve/uploads \  -v &lt;PATH TO config&gt;:/cloudreve/config \  -v &lt;PATH TO db&gt;:/cloudreve/db \  -v &lt;PATH TO avatar&gt;:/cloudreve/avatar \  xavierniu/cloudreve  服务器开放所需端口（5212）">
-<meta name="generator" content="Hugo 0.89.2" />
+docker run -d \  --name cloudreve \  -e PUID=1000 \ # optional  -e PGID=1000 \ # optional  -e TZ=&#34;Asia/Shanghai&#34; \ # optional  -p 5212:5212 \  --restart=unless-stopped \  -v &lt;PATH TO uploads&gt;:/cloudreve/uploads \  -v &lt;PATH TO config&gt;:/cloudreve/config \  -v &lt;PATH TO db&gt;:/cloudreve/db \  -v &lt;PATH TO avatar&gt;:/cloudreve/avatar \  xavierniu/cloudreve  服务器开放所需端口（5212）">
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -74,7 +74,7 @@ if (!doNotTrack) {
     <h1 class="title">云服务器可以干什么系列:自建云盘</h1>
 
     <div class="tip">
-      <div>2021年11月21日</div>
+        <time datetime="2021-11-21 20:39:11 &#43;0800 CST">2021年11月21日</time>
         <span class="split">
           ·
         </span>
@@ -85,13 +85,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          1分钟 读完
+          1分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fmixed%2f%25E4%25BA%2591%25E6%259C%258D%25E5%258A%25A1%25E5%2599%25A8%25E5%258F%25AF%25E4%25BB%25A5%25E5%25B9%25B2%25E4%25BB%2580%25E4%25B9%2588%25E7%25B3%25BB%25E5%2588%2597-%25E8%2587%25AA%25E5%25BB%25BA%25E4%25BA%2591%25E7%259B%2598%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -107,31 +102,31 @@ if (!doNotTrack) {
 <li>登陆服务器，<a href="https://docs.docker.com/engine/install/centos/" target="_blank" rel="noopener">安装 docker</a></li>
 <li>以 <a href="https://hub.docker.com/r/xavierniu/cloudreve" target="_blank" rel="noopener">docker 镜像</a> 方式，部署服务</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">&lt;PATH TO uploads&gt;:上传目录，如/sharedfolders
-&lt;PATH TO config&gt;: 配置文件夹，如/dockercnf/cloudreve/config
-&lt;PATH TO db&gt;: 数据库文件夹，如/dockercnf/cloudreve/db
-&lt;PATH TO avatar&gt;: 头像文件夹，如/dockercnf/cloudreve/avatar
-</code></pre></div><p>新建目录（/cloudreve）</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>&lt;PATH TO uploads&gt;:上传目录，如/sharedfolders
+</span></span><span style="display:flex;"><span>&lt;PATH TO config&gt;: 配置文件夹，如/dockercnf/cloudreve/config
+</span></span><span style="display:flex;"><span>&lt;PATH TO db&gt;: 数据库文件夹，如/dockercnf/cloudreve/db
+</span></span><span style="display:flex;"><span>&lt;PATH TO avatar&gt;: 头像文件夹，如/dockercnf/cloudreve/avatar
+</span></span></code></pre></div><p>新建目录（/cloudreve）</p>
 <p>在(/cloudreve)创建上述四个文件夹，如，</p>
 <pre tabindex="0"><code>mkdir -p &lt;PATH TO config&gt;
 </code></pre><p>创建配置文件<code>vim &lt;PATH TO config&gt;/conf.ini</code>（<em>该配置文件针对SQLite数据库，如需使用MySQL等数据库，请参见 cloudreve官方文档</em>）</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-ini" data-lang="ini"><span style="color:#75715e"># conf.ini</span>
-<span style="color:#66d9ef">[Database]</span>
-<span style="color:#a6e22e">DBFile</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/cloudreve/db/cloudreve.db</span>
-</code></pre></div><p>启动cloudreve容器</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">docker run -d <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --name cloudreve <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -e PUID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
-  -e PGID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
-  -e TZ<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Asia/Shanghai&#34;</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
-  -p 5212:5212 <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  --restart<span style="color:#f92672">=</span>unless-stopped <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO uploads&gt;:/cloudreve/uploads <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO config&gt;:/cloudreve/config <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO db&gt;:/cloudreve/db <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  -v &lt;PATH TO avatar&gt;:/cloudreve/avatar <span style="color:#ae81ff">\
-</span><span style="color:#ae81ff"></span>  xavierniu/cloudreve
-</code></pre></div><ol start="3">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ini" data-lang="ini"><span style="display:flex;"><span><span style="color:#75715e"># conf.ini</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">[Database]</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">DBFile</span> <span style="color:#f92672">=</span> <span style="color:#e6db74">/cloudreve/db/cloudreve.db</span>
+</span></span></code></pre></div><p>启动cloudreve容器</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>docker run -d <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --name cloudreve <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -e PUID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
+</span></span><span style="display:flex;"><span>  -e PGID<span style="color:#f92672">=</span><span style="color:#ae81ff">1000</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
+</span></span><span style="display:flex;"><span>  -e TZ<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;Asia/Shanghai&#34;</span> <span style="color:#ae81ff">\ </span><span style="color:#75715e"># optional</span>
+</span></span><span style="display:flex;"><span>  -p 5212:5212 <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  --restart<span style="color:#f92672">=</span>unless-stopped <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -v &lt;PATH TO uploads&gt;:/cloudreve/uploads <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -v &lt;PATH TO config&gt;:/cloudreve/config <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -v &lt;PATH TO db&gt;:/cloudreve/db <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  -v &lt;PATH TO avatar&gt;:/cloudreve/avatar <span style="color:#ae81ff">\
+</span></span></span><span style="display:flex;"><span><span style="color:#ae81ff"></span>  xavierniu/cloudreve
+</span></span></code></pre></div><ol start="3">
 <li>
 <p>服务器开放所需端口（5212）</p>
 </li>
@@ -160,14 +155,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

@@ -6,5 +6,6 @@ tags: ["golang"]
 ---
 
 ## 背景
+
 在分析 Golang channel 源码时
 todo

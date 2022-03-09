@@ -25,21 +25,21 @@ KMP 算法是字符串匹配中经典算法，由 Knuth，Morris 和 Pratt 发�
 
 ```go
 func strStr(haystack string, needle string) int {
-	if len(needle) == 0 {
-		return 0
-	}
-	for i := 0; i <= len(haystack) -len(needle); i ++ {
-		j := 0
-		for ; j < len(needle); j ++ {
-			if haystack[i + j] != needle[j] {
-				break
-			}
-		}
-		if j == len(needle) {
-			return i
-		}
-	}
-	return -1
+    if len(needle) == 0 {
+        return 0
+    }
+    for i := 0; i <= len(haystack) -len(needle); i ++ {
+        j := 0
+        for ; j < len(needle); j ++ {
+            if haystack[i + j] != needle[j] {
+                break
+            }
+        }
+        if j == len(needle) {
+            return i
+        }
+    }
+    return -1
 }
 ```
 
@@ -67,16 +67,16 @@ KMP 思路：
 
 ![image-20220123221403556](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220123221403556-2022-01-23.png)
 
-| i    | 子字符串 | 前缀                    | 后缀                                 | next[i] |
-| ---- | -------- | ----------------------- | ------------------------------------ | ------- |
-| 0    | A        | ""                      | ""                                   | 0       |
-| 1    | AB       | [A]                     | [B]                                  | 0       |
-| 2    | ABB      | [A,AB]                  | [B,BB]                               | 0       |
-| 3    | ABBC     | [A,AB,ABB]              | [C,BC,BBC]                           | 0       |
-| 4    | ABBCA    | [A,AB,ABB,ABBC]         | [A,CA,BCA,BBCA]                      | 1       |
-| 5    | ABBCAB   | [A,AB,ABB,ABBC,ABBCA]   | [B,AB,CAB,BCAB,BBCAB]                | 2       |
-| 6    | ABBCABB  | [A,AB,ABB,ABBC,ABBCAB]  | [B,BB,ABB,CABB,BCABB,BBCABB]         | 3       |
-| 7    | ABBCABBD | [A,AB,ABB,ABBC,ABBCABB] | [D,BD,BBD,ABBD,CABBD,BCABBD,BBCABBD] | 0       |
+| i   | 子字符串     | 前缀                      | 后缀                                   | next[i] |
+| --- | -------- | ----------------------- | ------------------------------------ | ------- |
+| 0   | A        | ""                      | ""                                   | 0       |
+| 1   | AB       | [A]                     | [B]                                  | 0       |
+| 2   | ABB      | [A,AB]                  | [B,BB]                               | 0       |
+| 3   | ABBC     | [A,AB,ABB]              | [C,BC,BBC]                           | 0       |
+| 4   | ABBCA    | [A,AB,ABB,ABBC]         | [A,CA,BCA,BBCA]                      | 1       |
+| 5   | ABBCAB   | [A,AB,ABB,ABBC,ABBCA]   | [B,AB,CAB,BCAB,BBCAB]                | 2       |
+| 6   | ABBCABB  | [A,AB,ABB,ABBC,ABBCAB]  | [B,BB,ABB,CABB,BCABB,BBCABB]         | 3       |
+| 7   | ABBCABBD | [A,AB,ABB,ABBC,ABBCABB] | [D,BD,BBD,ABBD,CABBD,BCABBD,BBCABBD] | 0       |
 
 假设我们已经计算出了上述 NEXT 数组，回溯过程为：
 
@@ -87,31 +87,31 @@ KMP 思路：
 
 ```Go
 func strStr(haystack string, needle string) int {
-	if len(needle) == 0 {
-		return 0
-	}
-	// 计算 Next 数据
-	next := getNext(needle)
-	j := 0
-	for i := 0; i < len(haystack); i ++ {
-		// 如果字符不匹配, 两种情况: 1. j 回溯匹配 2. j == 0, 则跳出此循环 i ++ 再来匹配 
-		for haystack[i] != needle[j] {
-			if j == 0 {
-				break
-			}
-			// j 回溯 next[j-1] 的位置比较
-			j = next[j - 1]
-		}
-		// 字符匹配上了：j++
-		if haystack[i] == needle[j] {
-			j ++
-		}
-		if j == len(needle) {
-			return i - j + 1
-		}
+    if len(needle) == 0 {
+        return 0
+    }
+    // 计算 Next 数据
+    next := getNext(needle)
+    j := 0
+    for i := 0; i < len(haystack); i ++ {
+        // 如果字符不匹配, 两种情况: 1. j 回溯匹配 2. j == 0, 则跳出此循环 i ++ 再来匹配 
+        for haystack[i] != needle[j] {
+            if j == 0 {
+                break
+            }
+            // j 回溯 next[j-1] 的位置比较
+            j = next[j - 1]
+        }
+        // 字符匹配上了：j++
+        if haystack[i] == needle[j] {
+            j ++
+        }
+        if j == len(needle) {
+            return i - j + 1
+        }
 
-	}
-	return -1
+    }
+    return -1
 }
 ```
 
@@ -121,22 +121,22 @@ func strStr(haystack string, needle string) int {
 
 ```Go
 func getNext(needle string) []int {
-	next := make([]int, len(needle))
-	for j := 1; j < len(needle); j++ {
-		max := 0
-		// 遍历 i 的所有前后缀，找出最长相等的
-		for l := 1; l <= j; l ++ {
-			prefix := needle[0:l]
-			suffix := needle[j-l+1:j + 1]
-			if prefix == suffix {
-				if l > max {
-					max = l
-				}
-			}
-		}
-		next[j] = max
-	}
-	return next
+    next := make([]int, len(needle))
+    for j := 1; j < len(needle); j++ {
+        max := 0
+        // 遍历 i 的所有前后缀，找出最长相等的
+        for l := 1; l <= j; l ++ {
+            prefix := needle[0:l]
+            suffix := needle[j-l+1:j + 1]
+            if prefix == suffix {
+                if l > max {
+                    max = l
+                }
+            }
+        }
+        next[j] = max
+    }
+    return next
 }
 ```
 
@@ -149,26 +149,26 @@ func getNext(needle string) []int {
 ![image-20220124011048162](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220124011048162-2022-01-24.png)
 
 2. 若`needle[j] != needle[i]`, j 需要回溯`j = next[j-1]` 处重新比较 j 与 i 处的字符串是否相等
-
+   
    ![image-20220124011148225](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20220124011148225-2022-01-24.png)
 
 因此完整`getNext(needle string)[]int`方法为：
 
 ```Go
 func getNext(s string) []int {
-	next := make([]int, len(s))
-	j := 0
-	next[0] = j
-	for i := 1; i < len(s); i ++  {
-		for j > 0 && s[i] != s[j] {
-			j = next[j-1]
-		}
-		if s[i] == s[j] {
-			j ++
-		}
-		next[i] = j
-	}
-	return next
+    next := make([]int, len(s))
+    j := 0
+    next[0] = j
+    for i := 1; i < len(s); i ++  {
+        for j > 0 && s[i] != s[j] {
+            j = next[j-1]
+        }
+        if s[i] == s[j] {
+            j ++
+        }
+        next[i] = j
+    }
+    return next
 }
 ```
 
@@ -179,4 +179,3 @@ leetcode 28 虽然只是个简单题，但仅仅在接受暴力解法时简单�
 ## 参考
 
 http://www.ruanyifeng.com/blog/2013/05/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm.html
-

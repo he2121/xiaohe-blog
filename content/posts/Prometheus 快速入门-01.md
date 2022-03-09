@@ -85,13 +85,13 @@ node exporter 提供的监控数据都以 `node_`开头，下图是 Prometheus �
 ![image-20211207154341339](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211207154341339-2021-12-07.png)
 
 - 手动添加看板比较麻烦，可以使用 [Grafana 模版库](https://grafana.com/grafana/dashboards/) 
-
+  
   1. 模版库中搜索 `node_exporter`, 复制 ID
-
+  
   2. 在 Grafana 界面操作： `+` -> `import` -> 粘贴 ID -> 选择导入的 prometheus 数据源 
-
+  
   一个监控主机数据的完整监控看板就诞生了！
-
+  
   ![image-20211207160620537](http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211207160620537-2021-12-07.png)
 
 ## 总结
@@ -104,11 +104,10 @@ node exporter 提供的监控数据都以 `node_`开头，下图是 Prometheus �
 
 1. Prometheus 数据类型介绍
 2. Prometheus 查询语句 PromQL 介绍
-2. 使用 Prometheus Go client sdk 打点上报自定义指标 
+3. 使用 Prometheus Go client sdk 打点上报自定义指标 
 
 ## 参考
 
 1. https://prometheus.io/
 2. https://www.cncf.io/
 3. https://songjiayang.gitbooks.io/prometheus/content/concepts/data-model.html
-

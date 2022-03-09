@@ -13,7 +13,7 @@
   选看 🔗 lec 3,4 课程视频 lec 6, 7  建议 🔗  lecture 3 讲 GFS，lecture 4 讲一个复制容错的论文。与我们要实现的 raft 的关系不大，最多算一些前置知识，建议不看。
   建议 lab2A 与 lab2B 一起做，虽然 lab2 文档把 lab 分开为两个部分。但是我们是去对照论文实现，尤其在 RequestVote 与 AppendEnties 两个 RPC 中，这两者混杂在一起
   多读几遍论文与 lab2 文档，尤其是论文中的图 2, 再开始 lab&hellip;">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -74,7 +74,7 @@ if (!doNotTrack) {
     <h1 class="title">Lab2A&amp;2B-Raft-leader选举与日志同步-实现过程</h1>
 
     <div class="tip">
-      <div>2021年12月28日</div>
+        <time datetime="2021-12-28 14:30:00 &#43;0800 CST">2021年12月28日</time>
         <span class="split">
           ·
         </span>
@@ -85,13 +85,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          11分钟 读完
+          11分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2f6.824%2f6.824-lab2a-2b%25E5%25AE%259E%25E7%258E%25B0%25E8%25BF%2587%25E7%25A8%258B%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -142,46 +137,46 @@ if (!doNotTrack) {
 </ul>
 <h4 id="三种角色">三种角色 <a href="#%e4%b8%89%e7%a7%8d%e8%a7%92%e8%89%b2" class="anchor">🔗</a></h4><h5 id="字段意义">字段意义 <a href="#%e5%ad%97%e6%ae%b5%e6%84%8f%e4%b9%89" class="anchor">🔗</a></h5><p>按照论文描述和我的实际实现，我在 Raft 实例中增加了以下字段。</p>
 <p>这些字段大多数都会被并发读写，请在访问前后加锁</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go">
-<span style="color:#75715e">// A Go object implementing a single Raft peer.
-</span><span style="color:#75715e">//
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Raft</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">mu</span>        <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>          <span style="color:#75715e">// Lock to protect shared access to this peer&#39;s state
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">peers</span>     []<span style="color:#f92672">*</span><span style="color:#a6e22e">labrpc</span>.<span style="color:#a6e22e">ClientEnd</span> <span style="color:#75715e">// RPC end points of all peers
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">persister</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Persister</span>          <span style="color:#75715e">// Object to hold this peer&#39;s persisted state
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">me</span>        <span style="color:#66d9ef">int</span>                 <span style="color:#75715e">// this peer&#39;s index into peers[]
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">dead</span>      <span style="color:#66d9ef">int32</span>               <span style="color:#75715e">// set by Kill()
-</span><span style="color:#75715e"></span>
-	<span style="color:#75715e">// Your data here (2A, 2B, 2C).
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// Look at the paper&#39;s Figure 2 for a description of what
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// state a Raft server must maintain.
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">state</span> <span style="color:#a6e22e">State</span>			<span style="color:#75715e">// 此实例状态: Follower, Candidate, Leader
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">currentTerm</span> <span style="color:#66d9ef">int</span>		<span style="color:#75715e">// 当前任期
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">voteFor</span> <span style="color:#66d9ef">int</span>			<span style="color:#75715e">// 当前任期投票
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>		<span style="color:#75715e">// 所有日志条目
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">commitIndex</span> <span style="color:#66d9ef">int</span>		<span style="color:#75715e">// for 2b,已经提交的最新日志的 index, &#34;已经提交&#34; == 这条日志已经被大多数 server 所接受
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">lastApplied</span> <span style="color:#66d9ef">int</span>		<span style="color:#75715e">// for 2b, 已应用到的上层应用日志最新的 index，后台定时根据 commitIndex 的增加去提交
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">applyCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">ApplyMsg</span>	<span style="color:#75715e">// for 2b, 需要把已经 committed 的 log apply 到 上层应用
-</span><span style="color:#75715e"></span>	<span style="color:#75715e">// for leader
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">nextIndex</span> []<span style="color:#66d9ef">int</span>		<span style="color:#75715e">// 记录各个 Server 写入新 Log 的位置 index（意味着这个位置以前的日志在 leader 与 follower 完全一致）
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">matchIndex</span> []<span style="color:#66d9ef">int</span>	<span style="color:#75715e">// 各个 Server 已有 Log 的与 leader 保持一致最后的位置 = nextIndex - 1
-</span><span style="color:#75715e"></span>
-	<span style="color:#a6e22e">electionTimeout</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span> 	<span style="color:#75715e">// 应该被不断 reset，始终比 time.Now() 小。但如果到点了，说明过期了，发起选举
-</span><span style="color:#75715e"></span>}
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">State</span> <span style="color:#66d9ef">int</span>
-
-<span style="color:#66d9ef">const</span> (
-	<span style="color:#a6e22e">Follower</span> <span style="color:#a6e22e">State</span> = <span style="color:#ae81ff">1</span>
-	<span style="color:#a6e22e">Candidate</span> <span style="color:#a6e22e">State</span> = <span style="color:#ae81ff">2</span>
-	<span style="color:#a6e22e">Leader</span> <span style="color:#a6e22e">State</span> = <span style="color:#ae81ff">3</span>
-)
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">LogEntry</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Command</span> <span style="color:#66d9ef">interface</span>{}
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-}
-</code></pre></div><p>状态流转如下图所示（论文图 4），<strong>牢记</strong>，按照这个顺序去一一实现代码逻辑</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// A Go object implementing a single Raft peer.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">//
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Raft</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">mu</span>        <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">Mutex</span>          <span style="color:#75715e">// Lock to protect shared access to this peer&#39;s state
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">peers</span>     []<span style="color:#f92672">*</span><span style="color:#a6e22e">labrpc</span>.<span style="color:#a6e22e">ClientEnd</span> <span style="color:#75715e">// RPC end points of all peers
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">persister</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Persister</span>          <span style="color:#75715e">// Object to hold this peer&#39;s persisted state
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">me</span>        <span style="color:#66d9ef">int</span>                 <span style="color:#75715e">// this peer&#39;s index into peers[]
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">dead</span>      <span style="color:#66d9ef">int32</span>               <span style="color:#75715e">// set by Kill()
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your data here (2A, 2B, 2C).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// Look at the paper&#39;s Figure 2 for a description of what
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// state a Raft server must maintain.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">state</span> <span style="color:#a6e22e">State</span>            <span style="color:#75715e">// 此实例状态: Follower, Candidate, Leader
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">currentTerm</span> <span style="color:#66d9ef">int</span>        <span style="color:#75715e">// 当前任期
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">voteFor</span> <span style="color:#66d9ef">int</span>            <span style="color:#75715e">// 当前任期投票
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">logs</span> []<span style="color:#a6e22e">LogEntry</span>        <span style="color:#75715e">// 所有日志条目
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">commitIndex</span> <span style="color:#66d9ef">int</span>        <span style="color:#75715e">// for 2b,已经提交的最新日志的 index, &#34;已经提交&#34; == 这条日志已经被大多数 server 所接受
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">lastApplied</span> <span style="color:#66d9ef">int</span>        <span style="color:#75715e">// for 2b, 已应用到的上层应用日志最新的 index，后台定时根据 commitIndex 的增加去提交
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">applyCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">ApplyMsg</span>    <span style="color:#75715e">// for 2b, 需要把已经 committed 的 log apply 到 上层应用
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#75715e">// for leader
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">nextIndex</span> []<span style="color:#66d9ef">int</span>        <span style="color:#75715e">// 记录各个 Server 写入新 Log 的位置 index（意味着这个位置以前的日志在 leader 与 follower 完全一致）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">matchIndex</span> []<span style="color:#66d9ef">int</span>    <span style="color:#75715e">// 各个 Server 已有 Log 的与 leader 保持一致最后的位置 = nextIndex - 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">electionTimeout</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>     <span style="color:#75715e">// 应该被不断 reset，始终比 time.Now() 小。但如果到点了，说明过期了，发起选举
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">State</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Follower</span> <span style="color:#a6e22e">State</span> = <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Candidate</span> <span style="color:#a6e22e">State</span> = <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Leader</span> <span style="color:#a6e22e">State</span> = <span style="color:#ae81ff">3</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">LogEntry</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Command</span> <span style="color:#66d9ef">interface</span>{}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>状态流转如下图所示（论文图 4），<strong>牢记</strong>，按照这个顺序去一一实现代码逻辑</p>
 <p><p class="markdown-image">
   <img src="http://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/image-20211229172959678-2021-12-29.png" alt="image-20211229172959678"  />
 </p></p>
@@ -433,34 +428,34 @@ if (!doNotTrack) {
 <li>sleep 一个短的时间间隔（5ms）去检查超时时间与当前时间，如果 Now() 大于 超时时间，则说明超时了，需要进行逻辑处理</li>
 <li>其它协程可以不断重置超时时间</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
-  <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">After</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadTimeout</span>()) {
-    <span style="color:#75715e">// do ....
-</span><span style="color:#75715e"></span>  }
-  <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">5</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">resetTimeout</span>() {
-	<span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Seed</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">UnixNano</span>())
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">electionTimeout</span> = <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">ElectionTimeoutMinMs</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Intn</span>(<span style="color:#a6e22e">ElectionTimeOutMaxMs</span><span style="color:#f92672">-</span><span style="color:#a6e22e">ElectionTimeoutMinMs</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)))
-}
-
-<span style="color:#66d9ef">const</span> (
-	<span style="color:#a6e22e">HeartbeatMs</span> = <span style="color:#ae81ff">100</span>	<span style="color:#75715e">// leader 100Ms 发起一次心跳
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ElectionTimeoutMinMs</span> = <span style="color:#ae81ff">250</span> <span style="color:#75715e">// 最小的选举时间
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">ElectionTimeOutMaxMs</span> = <span style="color:#ae81ff">400</span>	<span style="color:#75715e">// 最大的选举时间
-</span><span style="color:#75715e"></span>)
-</code></pre></div><h4 id="个人经验与踩坑">个人经验与踩坑 <a href="#%e4%b8%aa%e4%ba%ba%e7%bb%8f%e9%aa%8c%e4%b8%8e%e8%b8%a9%e5%9d%91" class="anchor">🔗</a></h4><h5 id="1-raft-实现-log-index-从-1-开始">1. Raft 实现 Log Index 从 1 开始 <a href="#1-raft-%e5%ae%9e%e7%8e%b0-log-index-%e4%bb%8e-1-%e5%bc%80%e5%a7%8b" class="anchor">🔗</a></h5><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">After</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadTimeout</span>()) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// do ....
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  }
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">5</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">resetTimeout</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Seed</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">UnixNano</span>())
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">electionTimeout</span> = <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Duration</span>(<span style="color:#a6e22e">ElectionTimeoutMinMs</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">rand</span>.<span style="color:#a6e22e">Intn</span>(<span style="color:#a6e22e">ElectionTimeOutMaxMs</span><span style="color:#f92672">-</span><span style="color:#a6e22e">ElectionTimeoutMinMs</span><span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>)))
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">const</span> (
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">HeartbeatMs</span> = <span style="color:#ae81ff">100</span>    <span style="color:#75715e">// leader 100Ms 发起一次心跳
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ElectionTimeoutMinMs</span> = <span style="color:#ae81ff">250</span> <span style="color:#75715e">// 最小的选举时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">ElectionTimeOutMaxMs</span> = <span style="color:#ae81ff">400</span>    <span style="color:#75715e">// 最大的选举时间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>)
+</span></span></code></pre></div><h4 id="个人经验与踩坑">个人经验与踩坑 <a href="#%e4%b8%aa%e4%ba%ba%e7%bb%8f%e9%aa%8c%e4%b8%8e%e8%b8%a9%e5%9d%91" class="anchor">🔗</a></h4><h5 id="1-raft-实现-log-index-从-1-开始">1. Raft 实现 Log Index 从 1 开始 <a href="#1-raft-%e5%ae%9e%e7%8e%b0-log-index-%e4%bb%8e-1-%e5%bc%80%e5%a7%8b" class="anchor">🔗</a></h5><ul>
 <li>Index = 0 即代表刚启动时的 Raft，还没有一条 Log，此时发起投票或者心跳，需要处理这个特殊的 log，mock 一个 term为 -1的 log 返回。</li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">LogEntry</span> {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>}
-	}<span style="color:#66d9ef">else</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">index</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
-	}
-}
-</code></pre></div><h5 id="2-如何加锁防止-race">2. 如何加锁防止 race <a href="#2-%e5%a6%82%e4%bd%95%e5%8a%a0%e9%94%81%e9%98%b2%e6%ad%a2-race" class="anchor">🔗</a></h5><ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">LogEntry</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>}
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">index</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h5 id="2-如何加锁防止-race">2. 如何加锁防止 race <a href="#2-%e5%a6%82%e4%bd%95%e5%8a%a0%e9%94%81%e9%98%b2%e6%ad%a2-race" class="anchor">🔗</a></h5><ol>
 <li>Raft 结构中的变量大多数都是有竞争的，任何对 Raft 结构变量<strong>读</strong>写前请加锁</li>
 <li>两个 RPC handler 都是并发的，请直接给方法加锁</li>
 <li>并发开启 goroutine 读写共享变量加锁</li>
@@ -468,26 +463,26 @@ if (!doNotTrack) {
 <h5 id="3-如何加锁防止死锁">3. 如何加锁防止死锁 <a href="#3-%e5%a6%82%e4%bd%95%e5%8a%a0%e9%94%81%e9%98%b2%e6%ad%a2%e6%ad%bb%e9%94%81" class="anchor">🔗</a></h5><ol>
 <li>mutex 是不可重入锁</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-GO" data-lang="GO"><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-<span style="color:#a6e22e">loadState</span>()	<span style="color:#75715e">// 死锁
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">loadState</span>() <span style="color:#a6e22e">State</span>  {
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span>
-}
-</code></pre></div><ol start="2">
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-GO" data-lang="GO"><span style="display:flex;"><span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">loadState</span>()    <span style="color:#75715e">// 死锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">loadState</span>() <span style="color:#a6e22e">State</span>  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="2">
 <li>不要把 rpc 请求锁在里面，在前后分开加锁</li>
 <li>不要忘记释放锁（if 中 unlock）</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-GO" data-lang="GO">			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> {
-				<span style="color:#75715e">// rf.mu.Unlock() if 中的 unlock 
-</span><span style="color:#75715e"></span>				<span style="color:#66d9ef">return</span>
-			}
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-</code></pre></div><h5 id="4-并发难以-debug请在关键位置打-log">4. 并发难以 debug，请在关键位置打 Log <a href="#4-%e5%b9%b6%e5%8f%91%e9%9a%be%e4%bb%a5-debug%e8%af%b7%e5%9c%a8%e5%85%b3%e9%94%ae%e4%bd%8d%e7%bd%ae%e6%89%93-log" class="anchor">🔗</a></h5><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-GO" data-lang="GO"><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// rf.mu.Unlock() if 中的 unlock 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span></code></pre></div><h5 id="4-并发难以-debug请在关键位置打-log">4. 并发难以 debug，请在关键位置打 Log <a href="#4-%e5%b9%b6%e5%8f%91%e9%9a%be%e4%bb%a5-debug%e8%af%b7%e5%9c%a8%e5%85%b3%e9%94%ae%e4%bd%8d%e7%bd%ae%e6%89%93-log" class="anchor">🔗</a></h5><ul>
 <li>Handler 收到 RPC 请求</li>
 <li>收到 RPC 回复时</li>
 <li>角色身份变化时</li>
@@ -499,121 +494,120 @@ if (!doNotTrack) {
 <li>拒绝 term 比自己小的请求</li>
 <li>收到 term 比自己大的请求，更新term，转成 Follower，再往下处理</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// RequestVote handler
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">RequestVote</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) {
-	<span style="color:#75715e">// rpc handler 通常是并发，加锁
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到了 RequestVote request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>)
-	<span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Follower</span>
-	}
-  <span style="color:#75715e">// ... 
-</span><span style="color:#75715e"></span>}
-
-</code></pre></div><p>如 client 端</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// RequestVote handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">RequestVote</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通常是并发，加锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到了 RequestVote request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Follower</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ... 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>如 client 端</p>
 <p>收到回复，client 逻辑</p>
 <ol>
 <li>如果 reply 的 term 比自己 term 大，更新term，转成 Follower，直接返回</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendRequestVote</span>(<span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
-  <span style="color:#66d9ef">return</span>
-}
-<span style="color:#75715e">// 这些变量可能并发修改了，需要注意
-</span><span style="color:#75715e"></span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#75715e">// 通用规则: reply 中 term 大于当前，转为 Follower
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-		<span style="color:#66d9ef">return</span>
-}
-<span style="color:#75715e">// ....
-</span></code></pre></div><h5 id="6-尽量使用大锁不要考虑性能">6. 尽量使用大锁，不要考虑性能 <a href="#6-%e5%b0%bd%e9%87%8f%e4%bd%bf%e7%94%a8%e5%a4%a7%e9%94%81%e4%b8%8d%e8%a6%81%e8%80%83%e8%99%91%e6%80%a7%e8%83%bd" class="anchor">🔗</a></h5><h5 id="7-logs-复制请用深拷贝不然很可能有并发-race-问题">7. Logs 复制请用深拷贝，不然很可能有并发 race 问题 <a href="#7-logs-%e5%a4%8d%e5%88%b6%e8%af%b7%e7%94%a8%e6%b7%b1%e6%8b%b7%e8%b4%9d%e4%b8%8d%e7%84%b6%e5%be%88%e5%8f%af%e8%83%bd%e6%9c%89%e5%b9%b6%e5%8f%91-race-%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h5><h5 id="8-rpc-请求前后请-double-check">8. RPC 请求前后请 double check： <a href="#8-rpc-%e8%af%b7%e6%b1%82%e5%89%8d%e5%90%8e%e8%af%b7-double-check" class="anchor">🔗</a></h5><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendRequestVote</span>(<span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 这些变量可能并发修改了，需要注意
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 通用规则: reply 中 term 大于当前，转为 Follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// ....
+</span></span></span></code></pre></div><h5 id="6-尽量使用大锁不要考虑性能">6. 尽量使用大锁，不要考虑性能 <a href="#6-%e5%b0%bd%e9%87%8f%e4%bd%bf%e7%94%a8%e5%a4%a7%e9%94%81%e4%b8%8d%e8%a6%81%e8%80%83%e8%99%91%e6%80%a7%e8%83%bd" class="anchor">🔗</a></h5><h5 id="7-logs-复制请用深拷贝不然很可能有并发-race-问题">7. Logs 复制请用深拷贝，不然很可能有并发 race 问题 <a href="#7-logs-%e5%a4%8d%e5%88%b6%e8%af%b7%e7%94%a8%e6%b7%b1%e6%8b%b7%e8%b4%9d%e4%b8%8d%e7%84%b6%e5%be%88%e5%8f%af%e8%83%bd%e6%9c%89%e5%b9%b6%e5%8f%91-race-%e9%97%ae%e9%a2%98" class="anchor">🔗</a></h5><h5 id="8-rpc-请求前后请-double-check">8. RPC 请求前后请 double check： <a href="#8-rpc-%e8%af%b7%e6%b1%82%e5%89%8d%e5%90%8e%e8%af%b7-double-check" class="anchor">🔗</a></h5><ul>
 <li>当前角色是否还需要进行这个动作，</li>
 <li>当前 term 是否还需要处理这个 回复</li>
 <li>回复的 term 是否与发起的 term 一致</li>
 </ul>
 <h3 id="具体实现">具体实现 <a href="#%e5%85%b7%e4%bd%93%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h3><h4 id="1-填写-raft-和两个-rpc-结构">1. 填写 Raft 和两个 RPC 结构 <a href="#1-%e5%a1%ab%e5%86%99-raft-%e5%92%8c%e4%b8%a4%e4%b8%aa-rpc-%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h4><p>根据论文依葫芦画瓢就行，后期根据自己需要再加，raft 结构已放过，这里放一下 RPC 的</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Go" data-lang="Go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesArgs</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">LeaderID</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">PrevLogTerm</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">Entries</span> []<span style="color:#a6e22e">LogEntry</span>
-	<span style="color:#a6e22e">LeaderCommit</span> <span style="color:#66d9ef">int</span>
-}
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesReply</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">Success</span> <span style="color:#66d9ef">bool</span>
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendAppendEntries</span>(<span style="color:#a6e22e">server</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesReply</span>) <span style="color:#66d9ef">bool</span> {
-	<span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">server</span>].<span style="color:#a6e22e">Call</span>(<span style="color:#e6db74">&#34;Raft.AppendEntries&#34;</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>)
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ok</span>
-}
-
-<span style="color:#75715e">// AppendEntries handler
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">AppendEntries</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesReply</span>) {
-  <span style="color:#75715e">// ...
-</span><span style="color:#75715e"></span>}
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RequestVoteArgs</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">CandidateID</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">LastLogIndex</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">LastLogTerm</span> <span style="color:#66d9ef">int</span>
-}
-
-<span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RequestVoteReply</span> <span style="color:#66d9ef">struct</span> {
-	<span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
-	<span style="color:#a6e22e">VoteGranted</span> <span style="color:#66d9ef">bool</span>
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendRequestVote</span>(<span style="color:#a6e22e">server</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) <span style="color:#66d9ef">bool</span> {
-	<span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">server</span>].<span style="color:#a6e22e">Call</span>(<span style="color:#e6db74">&#34;Raft.RequestVote&#34;</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>)
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ok</span>
-}
-
-<span style="color:#75715e">// RequestVote handler
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">RequestVote</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) {
-  
-}
-</code></pre></div><h4 id="2-启动-raft初始化">2. 启动 Raft，初始化 <a href="#2-%e5%90%af%e5%8a%a8-raft%e5%88%9d%e5%a7%8b%e5%8c%96" class="anchor">🔗</a></h4><ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-Go" data-lang="Go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesArgs</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LeaderID</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">PrevLogTerm</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Entries</span> []<span style="color:#a6e22e">LogEntry</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LeaderCommit</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">AppendEntriesReply</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Success</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendAppendEntries</span>(<span style="color:#a6e22e">server</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesReply</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">server</span>].<span style="color:#a6e22e">Call</span>(<span style="color:#e6db74">&#34;Raft.AppendEntries&#34;</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ok</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// AppendEntries handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">AppendEntries</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesReply</span>) {
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RequestVoteArgs</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">CandidateID</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LastLogIndex</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">LastLogTerm</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">RequestVoteReply</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">Term</span> <span style="color:#66d9ef">int</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">VoteGranted</span> <span style="color:#66d9ef">bool</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendRequestVote</span>(<span style="color:#a6e22e">server</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>[<span style="color:#a6e22e">server</span>].<span style="color:#a6e22e">Call</span>(<span style="color:#e6db74">&#34;Raft.RequestVote&#34;</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">ok</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// RequestVote handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">RequestVote</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) {
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="2-启动-raft初始化">2. 启动 Raft，初始化 <a href="#2-%e5%90%af%e5%8a%a8-raft%e5%88%9d%e5%a7%8b%e5%8c%96" class="anchor">🔗</a></h4><ol>
 <li>一些状态的初始赋值，如刚启动的 raft 角色是 follower</li>
 <li>启动检测选举超时的协程</li>
 <li>对于 2B 还需要在定期应用 commited 的 log 到上层应用</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Make</span>(<span style="color:#a6e22e">peers</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">labrpc</span>.<span style="color:#a6e22e">ClientEnd</span>, <span style="color:#a6e22e">me</span> <span style="color:#66d9ef">int</span>,
-	<span style="color:#a6e22e">persister</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Persister</span>, <span style="color:#a6e22e">applyCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">ApplyMsg</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span> {
-	<span style="color:#a6e22e">rf</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Raft</span>{}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> = <span style="color:#a6e22e">peers</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span> = <span style="color:#a6e22e">persister</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> = <span style="color:#a6e22e">me</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyCh</span> = <span style="color:#a6e22e">applyCh</span>
-	<span style="color:#75715e">// Your initialization code here (2A, 2B, 2C).
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">resetTimeout</span>()
-	<span style="color:#75715e">// initialize from state persisted before a crash
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">ReadRaftState</span>())
-	<span style="color:#75715e">// start ticker goroutine to start elections
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">ticker</span>()
-	<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyMsgToUpper</span>()	<span style="color:#75715e">// for 2B
-</span><span style="color:#75715e"></span>
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>
-}
-</code></pre></div><h4 id="3-leader-选举的逻辑">3. leader 选举的逻辑 <a href="#3-leader-%e9%80%89%e4%b8%be%e7%9a%84%e9%80%bb%e8%be%91" class="anchor">🔗</a></h4><p>上面的初始化中，启动了 <code>go rf.ticker()</code>的协程，现在需要实现 leader 选举这一部分逻辑</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Make</span>(<span style="color:#a6e22e">peers</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">labrpc</span>.<span style="color:#a6e22e">ClientEnd</span>, <span style="color:#a6e22e">me</span> <span style="color:#66d9ef">int</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">persister</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Persister</span>, <span style="color:#a6e22e">applyCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#a6e22e">ApplyMsg</span>) <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">Raft</span>{}
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> = <span style="color:#a6e22e">peers</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">persister</span> = <span style="color:#a6e22e">persister</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> = <span style="color:#a6e22e">me</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyCh</span> = <span style="color:#a6e22e">applyCh</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// Your initialization code here (2A, 2B, 2C).
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">resetTimeout</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// initialize from state persisted before a crash
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">readPersist</span>(<span style="color:#a6e22e">persister</span>.<span style="color:#a6e22e">ReadRaftState</span>())
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// start ticker goroutine to start elections
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">ticker</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyMsgToUpper</span>()    <span style="color:#75715e">// for 2B
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="3-leader-选举的逻辑">3. leader 选举的逻辑 <a href="#3-leader-%e9%80%89%e4%b8%be%e7%9a%84%e9%80%bb%e8%be%91" class="anchor">🔗</a></h4><p>上面的初始化中，启动了 <code>go rf.ticker()</code>的协程，现在需要实现 leader 选举这一部分逻辑</p>
 <ol>
 <li>
 <p>一个死循环，计时器的实现</p>
@@ -634,224 +628,223 @@ if (!doNotTrack) {
 <p>计数得到票数，票数超过一半，当选为 Leader</p>
 </li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// The ticker go routine starts a new election if this peer hasn&#39;t received
-</span><span style="color:#75715e">// heartsbeats recently.
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">ticker</span>() {
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
-		<span style="color:#75715e">// 状态不是 Leader, 并且已经过了选举时间，需要发起选举
-</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadState</span>() <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">After</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadTimeout</span>()) {
-			<span style="color:#75715e">// 1. 成为 candidate
-</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toCandidate</span>()
-			<span style="color:#75715e">// 2. 发起投票
-</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">numVote</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>
-			<span style="color:#75715e">// 所有 requestVote 的请求参数一致
-</span><span style="color:#75715e"></span>			<span style="color:#a6e22e">args</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">RequestVoteArgs</span>{
-				<span style="color:#a6e22e">Term</span>:         <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,
-				<span style="color:#a6e22e">CandidateID</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,
-				<span style="color:#a6e22e">LastLogIndex</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>(),
-				<span style="color:#a6e22e">LastLogTerm</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>()).<span style="color:#a6e22e">Term</span>,
-			}
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-			<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> {
-				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> {
-					<span style="color:#66d9ef">continue</span>
-				}
-				<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
-					<span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">RequestVoteReply</span>{}
-					<span style="color:#75715e">// 不能以不是 Candidate 的身份发送投票
-</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadState</span>() <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Candidate</span> {
-						<span style="color:#66d9ef">return</span>
-					}
-					<span style="color:#75715e">// rpc 请求
-</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendRequestVote</span>(<span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
-						<span style="color:#66d9ef">return</span>
-					}
-					<span style="color:#75715e">// 这些变量可能并发修改了，需要注意
-</span><span style="color:#75715e"></span>					<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-					<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-					<span style="color:#75715e">// 通用规则: reply 中 term 大于当前，转为 Follower
-</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-						<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>
-						<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-						<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-						<span style="color:#66d9ef">return</span>
-					}
-					<span style="color:#75715e">// double check，因为有可能发起新一轮选举了，才收到这个消息
-</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Candidate</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> {
-						<span style="color:#66d9ef">return</span>
-					}
-					<span style="color:#75715e">// 投票
-</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">VoteGranted</span> {
-						<span style="color:#a6e22e">numVote</span> <span style="color:#f92672">++</span>
-						<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到了 %d 的投票，现在票数 %d&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">numVote</span>)
-					}
-					<span style="color:#75715e">// 成为 Leader
-</span><span style="color:#75715e"></span>					<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">numVote</span> &gt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span> {
-						<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toLeader</span>()
-					}
-				}(<span style="color:#a6e22e">i</span>)
-			}
-		}
-		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">5</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
-	}
-}
-</code></pre></div><p>与角色转换的方法：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">toFollower</span>()  {
-	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在term %d 成为 follower&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>)
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Follower</span>
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">toCandidate</span>() {
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> <span style="color:#f92672">++</span>
-	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 发起了投票&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>)
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Candidate</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">resetTimeout</span>()
-}
-</code></pre></div><p>与 log 的有关的工具方法</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLastIndex</span>() <span style="color:#66d9ef">int</span> {
-	<span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
-}
-
-<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">LogEntry</span> {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>}
-	}<span style="color:#66d9ef">else</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">index</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
-	}
-}
-<span style="color:#75715e">// 包括: start 和 end, 深拷贝，不然极限情况下会有 race 的 bug
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">start</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">end</span> <span style="color:#66d9ef">int</span>) []<span style="color:#a6e22e">LogEntry</span> {
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> {
-		<span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[:<span style="color:#a6e22e">end</span>]<span style="color:#f92672">...</span>)
-	}<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">end</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>{
-		<span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>:]<span style="color:#f92672">...</span>)
-	}<span style="color:#66d9ef">else</span> {
-		<span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>: <span style="color:#a6e22e">end</span>]<span style="color:#f92672">...</span>)
-	}
-}
-</code></pre></div><h4 id="4-requestvote-server-端的逻辑">4. RequestVote server 端的逻辑 <a href="#4-requestvote-server-%e7%ab%af%e7%9a%84%e9%80%bb%e8%be%91" class="anchor">🔗</a></h4><p>在前面已经描述大致逻辑了，前面一大堆都是共有逻辑，20 行开始才是真正处理逻辑，这里直接看代码</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// RequestVote handler
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">RequestVote</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) {
-	<span style="color:#75715e">// rpc handler 通常是并发，加锁
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到了 RequestVote request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>)
-	<span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Follower</span>
-	}
-	<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-	<span style="color:#a6e22e">lastIndex</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>()
-	<span style="color:#75715e">// 发起投票的 candidate 要比当前有更新的 log
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">isNewer</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">true</span>
-	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">lastIndex</span>).<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastLogTerm</span> {
-		<span style="color:#a6e22e">isNewer</span> = <span style="color:#66d9ef">false</span>
-	}<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">lastIndex</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastLogTerm</span> {
-		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">lastIndex</span> &gt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastLogIndex</span> {
-			<span style="color:#a6e22e">isNewer</span> = <span style="color:#66d9ef">false</span>
-		}
-	}
-	<span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">CandidateID</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">isNewer</span> {
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 给 %d 投票&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">CandidateID</span>)
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">CandidateID</span>
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">VoteGranted</span> = <span style="color:#66d9ef">true</span>
-		<span style="color:#66d9ef">return</span>
-	}
-}
-</code></pre></div><h4 id="5-当选为-leader">5. 当选为 Leader <a href="#5-%e5%bd%93%e9%80%89%e4%b8%ba-leader" class="anchor">🔗</a></h4><ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// The ticker go routine starts a new election if this peer hasn&#39;t received
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e">// heartsbeats recently.
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">ticker</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 状态不是 Leader, 并且已经过了选举时间，需要发起选举
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadState</span>() <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">After</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadTimeout</span>()) {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 1. 成为 candidate
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toCandidate</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 2. 发起投票
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">numVote</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 所有 requestVote 的请求参数一致
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#a6e22e">args</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">RequestVoteArgs</span>{
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">Term</span>:         <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">CandidateID</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">LastLogIndex</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>(),
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">LastLogTerm</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>()).<span style="color:#a6e22e">Term</span>,
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">RequestVoteReply</span>{}
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 不能以不是 Candidate 的身份发送投票
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">loadState</span>() <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Candidate</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// rpc 请求
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendRequestVote</span>(<span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 这些变量可能并发修改了，需要注意
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 通用规则: reply 中 term 大于当前，转为 Follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// double check，因为有可能发起新一轮选举了，才收到这个消息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Candidate</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 投票
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">VoteGranted</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">numVote</span> <span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到了 %d 的投票，现在票数 %d&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">numVote</span>)
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e">// 成为 Leader
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">numVote</span> &gt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>)<span style="color:#f92672">/</span><span style="color:#ae81ff">2</span> {
+</span></span><span style="display:flex;"><span>                        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toLeader</span>()
+</span></span><span style="display:flex;"><span>                    }
+</span></span><span style="display:flex;"><span>                }(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">5</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>与角色转换的方法：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">toFollower</span>()  {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在term %d 成为 follower&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Follower</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">toCandidate</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> <span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 发起了投票&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Candidate</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">resetTimeout</span>()
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>与 log 的有关的工具方法</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLastIndex</span>() <span style="color:#66d9ef">int</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">index</span> <span style="color:#66d9ef">int</span>) <span style="color:#a6e22e">LogEntry</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">index</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">LogEntry</span>{<span style="color:#a6e22e">Term</span>: <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>}
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">index</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 包括: start 和 end, 深拷贝，不然极限情况下会有 race 的 bug
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">start</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">end</span> <span style="color:#66d9ef">int</span>) []<span style="color:#a6e22e">LogEntry</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">start</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[:<span style="color:#a6e22e">end</span>]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">end</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>:]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> append([]<span style="color:#a6e22e">LogEntry</span>{}, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>[<span style="color:#a6e22e">start</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>: <span style="color:#a6e22e">end</span>]<span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="4-requestvote-server-端的逻辑">4. RequestVote server 端的逻辑 <a href="#4-requestvote-server-%e7%ab%af%e7%9a%84%e9%80%bb%e8%be%91" class="anchor">🔗</a></h4><p>在前面已经描述大致逻辑了，前面一大堆都是共有逻辑，20 行开始才是真正处理逻辑，这里直接看代码</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// RequestVote handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">RequestVote</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">RequestVoteReply</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通常是并发，加锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到了 RequestVote request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Follower</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">lastIndex</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 发起投票的 candidate 要比当前有更新的 log
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">isNewer</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">lastIndex</span>).<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastLogTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">isNewer</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span> <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">lastIndex</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastLogTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">lastIndex</span> &gt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LastLogIndex</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">isNewer</span> = <span style="color:#66d9ef">false</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> (<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> <span style="color:#f92672">==</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">CandidateID</span>) <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">isNewer</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 给 %d 投票&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">CandidateID</span>)
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">CandidateID</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">VoteGranted</span> = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="5-当选为-leader">5. 当选为 Leader <a href="#5-%e5%bd%93%e9%80%89%e4%b8%ba-leader" class="anchor">🔗</a></h4><ol>
 <li>初始化 nextIndex 与 matchIndex 数组</li>
 <li>开启心跳后台协程</li>
 <li>开启后台更新 commitIndex 协程</li>
 </ol>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">toLeader</span>() {
-   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在term %d 成为了 leader&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>)
-   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Leader</span>
-   <span style="color:#75715e">// 成为 leader 要初始化 nextIndex matchIndex 数组
-</span><span style="color:#75715e"></span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span> = make([]<span style="color:#66d9ef">int</span>, len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>))
-   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span> = make([]<span style="color:#66d9ef">int</span>, len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>))
-   <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>); <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
-      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-   }
-   <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">heartbeat</span>()
-   <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">updateCommitIndex</span>()	<span style="color:#75715e">// for 2b
-</span><span style="color:#75715e"></span>}
-</code></pre></div><h4 id="6-leader-发起心跳日志复制rpc">6. leader 发起心跳（日志复制）RPC <a href="#6-leader-%e5%8f%91%e8%b5%b7%e5%bf%83%e8%b7%b3%e6%97%a5%e5%bf%97%e5%a4%8d%e5%88%b6rpc" class="anchor">🔗</a></h4><p>定期发起心跳, 角色不是 leader，退出这个协程</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">heartbeat</span>() {
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 触发心跳, state: %d, nextIndex: %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>) <span style="color:#75715e">// 共享变量访问 要加锁
-</span><span style="color:#75715e"></span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> {
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-			<span style="color:#66d9ef">return</span>
-		}
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendAppendLogsToAll</span>()
-		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">HeartbeatMs</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
-	}
-
-</code></pre></div><p>把心跳（复制日志）的 RPC 并发发送到每个 RPC 实例，逻辑在上文中提到，这里直接看代码理解</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendAppendLogsToAll</span>() {
-	<span style="color:#75715e">//log.Printf(&#34;%d 在 term %d 发起同步&#34;, rf.me, rf.currentTerm) // 这里 CurrentTerm 没加锁，可能会有 race
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> {
-		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> {
-			<span style="color:#66d9ef">continue</span>
-		}
-		<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-			<span style="color:#a6e22e">args</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">AppendEntriesArgs</span>{
-				<span style="color:#a6e22e">Term</span>:         <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,
-				<span style="color:#a6e22e">LeaderID</span>:     <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,
-				<span style="color:#a6e22e">PrevLogIndex</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>,
-				<span style="color:#a6e22e">PrevLogTerm</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>).<span style="color:#a6e22e">Term</span>,
-				<span style="color:#a6e22e">Entries</span>:      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>], <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>),
-				<span style="color:#a6e22e">LeaderCommit</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span>,
-			}
-			<span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">AppendEntriesReply</span>{}
-			<span style="color:#75715e">// 这个检查是因为当一个协程收到比当前 term 大的 reply，会转变成 follower. 后面协程不应该再以 leader 身份发送同步信息
-</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> {
-				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-				<span style="color:#66d9ef">return</span>
-			}
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendAppendEntries</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
-				<span style="color:#66d9ef">return</span>
-			}
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-			<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 %d 的AppendEntries reply %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">reply</span>)
-			<span style="color:#75715e">// 所有 server 的规则
-</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>
-				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-				<span style="color:#66d9ef">return</span>
-			}
-			<span style="color:#75715e">// double check
-</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> {
-				<span style="color:#66d9ef">return</span>
-			}
-			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> {
-				<span style="color:#75715e">// rf.nextIndex[i] += len(args.Entries) 走过的一个 bug
-</span><span style="color:#75715e"></span>				<span style="color:#75715e">// rf.matchIndex[i] = rf.nextIndex[i] - 1
-</span><span style="color:#75715e"></span>				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#f92672">+</span> len(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Entries</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#f92672">+</span> len(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Entries</span>)
-			}<span style="color:#66d9ef">else</span> {
-        <span style="color:#75715e">// 实际上把重试的机制推到了下次心跳 
-</span><span style="color:#75715e"></span>				<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>
-			}
-		}(<span style="color:#a6e22e">i</span>)
-	}
-}
-</code></pre></div><h4 id="7-appendentries-server-处理逻辑">7. AppendEntries server 处理逻辑 <a href="#7-appendentries-server-%e5%a4%84%e7%90%86%e9%80%bb%e8%be%91" class="anchor">🔗</a></h4><p>这里处理的准则，各个 server 之间 prevLogIndex 之前的日志保持一致，才能增加新的 log。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">toLeader</span>() {
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在term %d 成为了 leader&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>)
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> = <span style="color:#a6e22e">Leader</span>
+</span></span><span style="display:flex;"><span>   <span style="color:#75715e">// 成为 leader 要初始化 nextIndex matchIndex 数组
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span> = make([]<span style="color:#66d9ef">int</span>, len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>))
+</span></span><span style="display:flex;"><span>   <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span> = make([]<span style="color:#66d9ef">int</span>, len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>))
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>); <span style="color:#a6e22e">i</span> <span style="color:#f92672">++</span> {
+</span></span><span style="display:flex;"><span>      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>   }
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">heartbeat</span>()
+</span></span><span style="display:flex;"><span>   <span style="color:#66d9ef">go</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">updateCommitIndex</span>()    <span style="color:#75715e">// for 2b
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><h4 id="6-leader-发起心跳日志复制rpc">6. leader 发起心跳（日志复制）RPC <a href="#6-leader-%e5%8f%91%e8%b5%b7%e5%bf%83%e8%b7%b3%e6%97%a5%e5%bf%97%e5%a4%8d%e5%88%b6rpc" class="anchor">🔗</a></h4><p>定期发起心跳, 角色不是 leader，退出这个协程</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">heartbeat</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 触发心跳, state: %d, nextIndex: %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>) <span style="color:#75715e">// 共享变量访问 要加锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendAppendLogsToAll</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#a6e22e">HeartbeatMs</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>把心跳（复制日志）的 RPC 并发发送到每个 RPC 实例，逻辑在上文中提到，这里直接看代码理解</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">sendAppendLogsToAll</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">//log.Printf(&#34;%d 在 term %d 发起同步&#34;, rf.me, rf.currentTerm) // 这里 CurrentTerm 没加锁，可能会有 race
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">args</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">AppendEntriesArgs</span>{
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">Term</span>:         <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">LeaderID</span>:     <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">PrevLogIndex</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">PrevLogTerm</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">-</span> <span style="color:#ae81ff">1</span>).<span style="color:#a6e22e">Term</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">Entries</span>:      <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">subLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>], <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>),
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">LeaderCommit</span>: <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span>,
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">reply</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">AppendEntriesReply</span>{}
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 这个检查是因为当一个协程收到比当前 term 大的 reply，会转变成 follower. 后面协程不应该再以 leader 身份发送同步信息
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">sendAppendEntries</span>(<span style="color:#a6e22e">i</span>, <span style="color:#a6e22e">args</span>, <span style="color:#a6e22e">reply</span>); !<span style="color:#a6e22e">ok</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 %d 的AppendEntries reply %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">i</span>,<span style="color:#a6e22e">reply</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 所有 server 的规则
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// double check
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">Leader</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e">// rf.nextIndex[i] += len(args.Entries) 走过的一个 bug
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#75715e">// rf.matchIndex[i] = rf.nextIndex[i] - 1
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#f92672">+</span> len(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Entries</span>) <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#f92672">+</span> len(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Entries</span>)
+</span></span><span style="display:flex;"><span>            }<span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 实际上把重试的机制推到了下次心跳 
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>                <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">i</span>] = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }(<span style="color:#a6e22e">i</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="7-appendentries-server-处理逻辑">7. AppendEntries server 处理逻辑 <a href="#7-appendentries-server-%e5%a4%84%e7%90%86%e9%80%bb%e8%be%91" class="anchor">🔗</a></h4><p>这里处理的准则，各个 server 之间 prevLogIndex 之前的日志保持一致，才能增加新的 log。</p>
 <ul>
 <li>
 <p>少 log 的补上 (重试：下一次 prevLogIndex - 1)</p>
@@ -860,99 +853,99 @@ if (!doNotTrack) {
 <p>不一致的删掉</p>
 </li>
 </ul>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#75715e">// AppendEntries handler
-</span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">AppendEntries</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesReply</span>) {
-	<span style="color:#75715e">// rpc handler 通常是并发，加锁
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 %d 的 AppendEntries request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderID</span>, <span style="color:#a6e22e">args</span>)
-	<span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">resetTimeout</span>()
-	<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
-	<span style="color:#75715e">// 调用者需要减少 PrevLogIndex，重试
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() &lt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#f92672">||</span>  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogTerm</span> {
-		<span style="color:#66d9ef">return</span>
-	}
-	<span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> = <span style="color:#66d9ef">true</span>
-	<span style="color:#75715e">// 删除比 leader 多的 log
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">subLog</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>)
-	<span style="color:#75715e">// 新增的 Entries 放入
-</span><span style="color:#75715e"></span>	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = append(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Entries</span><span style="color:#f92672">...</span>)
-	<span style="color:#75715e">// 更新成 Follower 的 commit
-</span><span style="color:#75715e"></span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderCommit</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> = <span style="color:#a6e22e">min</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderCommit</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>())
-	}
-}
-</code></pre></div><p>到这一步 2a 的逻辑已完成，下面是处理 2b 所需要的。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#75715e">// AppendEntries handler
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">AppendEntries</span>(<span style="color:#a6e22e">args</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesArgs</span>, <span style="color:#a6e22e">reply</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">AppendEntriesReply</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通常是并发，加锁
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 收到 %d 的 AppendEntries request %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderID</span>, <span style="color:#a6e22e">args</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用的规则: args 中 term 比 当前小，直接返回
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &lt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// rpc handler 通用规则: args 中的 term 比当前 server 大，当前 server 更新为 term，转成 follower
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> = <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Term</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">voteFor</span> = <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">toFollower</span>()
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">resetTimeout</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Term</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 调用者需要减少 PrevLogIndex，重试
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() &lt; <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span> <span style="color:#f92672">||</span>  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogTerm</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">reply</span>.<span style="color:#a6e22e">Success</span> = <span style="color:#66d9ef">true</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 删除比 leader 多的 log
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">subLog</span>(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">PrevLogIndex</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 新增的 Entries 放入
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = append(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>, <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">Entries</span><span style="color:#f92672">...</span>)
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 更新成 Follower 的 commit
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderCommit</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> = <span style="color:#a6e22e">min</span>(<span style="color:#a6e22e">args</span>.<span style="color:#a6e22e">LeaderCommit</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>())
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>到这一步 2a 的逻辑已完成，下面是处理 2b 所需要的。</p>
 <h4 id="8-leader-更新-commitindex">8. leader 更新 commitIndex <a href="#8-leader-%e6%9b%b4%e6%96%b0-commitindex" class="anchor">🔗</a></h4><p>定期去检查 commiteIndex + 1 的 Log 是否复制到大多数机器上</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">updateCommitIndex</span>() {
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-
-		<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>(); <span style="color:#a6e22e">n</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">n</span> <span style="color:#f92672">--</span> {
-			<span style="color:#75715e">// 论文中提到只能提交当前任期的日志，但我暂时感觉有点无意义，因为这样不还是顺带把任期小的提交了
-</span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">n</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
-				<span style="color:#66d9ef">break</span>
-			}
-			<span style="color:#a6e22e">count</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
-			<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span> {
-				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">n</span> {
-					<span style="color:#a6e22e">count</span> <span style="color:#f92672">++</span>
-				}
-				<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">count</span> &gt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span> {
-					<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> = <span style="color:#a6e22e">n</span>
-					<span style="color:#66d9ef">break</span>
-				}
-			}
-		}
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">5</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Microsecond</span>)
-	}
-}
-</code></pre></div><h4 id="10-把消息应用到上层">10. 把消息应用到上层 <a href="#10-%e6%8a%8a%e6%b6%88%e6%81%af%e5%ba%94%e7%94%a8%e5%88%b0%e4%b8%8a%e5%b1%82" class="anchor">🔗</a></h4><p>也是定期去检查是否存在已 commited 的 log 没有应用到上层应用</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">applyMsgToUpper</span>() {
-	<span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> {
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> <span style="color:#f92672">++</span>
-			<span style="color:#a6e22e">msg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ApplyMsg</span>{
-				<span style="color:#a6e22e">CommandValid</span>:  <span style="color:#66d9ef">true</span>,
-				<span style="color:#a6e22e">Command</span>:       <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span>).<span style="color:#a6e22e">Command</span>,
-				<span style="color:#a6e22e">CommandIndex</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span>,
-			}
-			<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">msg</span>
-			<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 往上层状态机成功发送 Msg %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">msg</span>)
-		}
-		<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-		<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">10</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
-	}
-}
-</code></pre></div><h4 id="11-接受上层应用消息">11. 接受上层应用消息 <a href="#11-%e6%8e%a5%e5%8f%97%e4%b8%8a%e5%b1%82%e5%ba%94%e7%94%a8%e6%b6%88%e6%81%af" class="anchor">🔗</a></h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">Start</span>(<span style="color:#a6e22e">command</span> <span style="color:#66d9ef">interface</span>{}) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">bool</span>) {
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
-	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
-	<span style="color:#a6e22e">term</span>, <span style="color:#a6e22e">isLeader</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">Leader</span>
-	<span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">isLeader</span> {
-		<span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">term</span>, <span style="color:#a6e22e">isLeader</span>
-	}
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = append(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>, <span style="color:#a6e22e">LogEntry</span>{
-		<span style="color:#a6e22e">Command</span>: <span style="color:#a6e22e">command</span>,
-		<span style="color:#a6e22e">Term</span>: <span style="color:#a6e22e">term</span>,
-	})
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>] = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
-	<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>] = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>()
-	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>(), <span style="color:#a6e22e">term</span>, <span style="color:#a6e22e">isLeader</span>
-}
-</code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>上述就是我 Raft 2a 2b 部分的实现逻辑了，上述涉及代码可能不太齐全，不过相信你能够补齐。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">updateCommitIndex</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">n</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>(); <span style="color:#a6e22e">n</span> <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>; <span style="color:#a6e22e">n</span> <span style="color:#f92672">--</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e">// 论文中提到只能提交当前任期的日志，但我暂时感觉有点无意义，因为这样不还是顺带把任期小的提交了
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>            <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">n</span>).<span style="color:#a6e22e">Term</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">count</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#66d9ef">range</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span> {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">i</span>] <span style="color:#f92672">&gt;=</span> <span style="color:#a6e22e">n</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">count</span> <span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">count</span> &gt; len(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">peers</span>) <span style="color:#f92672">/</span> <span style="color:#ae81ff">2</span> {
+</span></span><span style="display:flex;"><span>                    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> = <span style="color:#a6e22e">n</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">5</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Microsecond</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="10-把消息应用到上层">10. 把消息应用到上层 <a href="#10-%e6%8a%8a%e6%b6%88%e6%81%af%e5%ba%94%e7%94%a8%e5%88%b0%e4%b8%8a%e5%b1%82" class="anchor">🔗</a></h4><p>也是定期去检查是否存在已 commited 的 log 没有应用到上层应用</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">applyMsgToUpper</span>() {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">killed</span>() <span style="color:#f92672">==</span> <span style="color:#66d9ef">false</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">commitIndex</span> &gt; <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> {
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span> <span style="color:#f92672">++</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">msg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ApplyMsg</span>{
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">CommandValid</span>:  <span style="color:#66d9ef">true</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">Command</span>:       <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLog</span>(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span>).<span style="color:#a6e22e">Command</span>,
+</span></span><span style="display:flex;"><span>                <span style="color:#a6e22e">CommandIndex</span>:  <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">lastApplied</span>,
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">applyCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">msg</span>
+</span></span><span style="display:flex;"><span>            <span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;%d 在 term %d 往上层状态机成功发送 Msg %+v&#34;</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">msg</span>)
+</span></span><span style="display:flex;"><span>        }
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">10</span><span style="color:#f92672">*</span><span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Millisecond</span>)
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="11-接受上层应用消息">11. 接受上层应用消息 <a href="#11-%e6%8e%a5%e5%8f%97%e4%b8%8a%e5%b1%82%e5%ba%94%e7%94%a8%e6%b6%88%e6%81%af" class="anchor">🔗</a></h4><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">rf</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Raft</span>) <span style="color:#a6e22e">Start</span>(<span style="color:#a6e22e">command</span> <span style="color:#66d9ef">interface</span>{}) (<span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">int</span>, <span style="color:#66d9ef">bool</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Lock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">mu</span>.<span style="color:#a6e22e">Unlock</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">term</span>, <span style="color:#a6e22e">isLeader</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">currentTerm</span>, <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">state</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">Leader</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> !<span style="color:#a6e22e">isLeader</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> <span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>, <span style="color:#a6e22e">term</span>, <span style="color:#a6e22e">isLeader</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span> = append(<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">logs</span>, <span style="color:#a6e22e">LogEntry</span>{
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Command</span>: <span style="color:#a6e22e">command</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#a6e22e">Term</span>: <span style="color:#a6e22e">term</span>,
+</span></span><span style="display:flex;"><span>    })
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">nextIndex</span>[<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>] = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>() <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">matchIndex</span>[<span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">me</span>] = <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">rf</span>.<span style="color:#a6e22e">getLastIndex</span>(), <span style="color:#a6e22e">term</span>, <span style="color:#a6e22e">isLeader</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><p>上述就是我 Raft 2a 2b 部分的实现逻辑了，上述涉及代码可能不太齐全，不过相信你能够补齐。</p>
 <p>在测试中请多跑几次脚本（10 次？），一两次无 bug 出现可能只是运气好</p>
 <p>个人测试上述的实现，在 2a 2b 测试样例中能完美运行，如果你发现上述实现存在 bug，请评论告知我。</p>
 
@@ -973,14 +966,6 @@ if (!doNotTrack) {
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

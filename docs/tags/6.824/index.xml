@@ -20,7 +20,7 @@ B 站视频学习
 个人博客在线阅读
 声明：
  不生产知识，只是知识的搬运工 遵循协议实验代码不公开，但博客中会记录个人实现思路 在每个翻译文档开头都放了原链接，若翻译不行（我也大部分都是翻译器复制的），请直接查看原文档  文件夹说明：
-docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学习过程想法，笔记记录，lab 实现等相关博客 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
+docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog --&amp;gt; 个人学习过程想法，笔记记录，lab 实现等相关博客 个人博客是根据实验来写的，如果想快速完成实验，可以从我博客开始，我会给出我的实验前的准备与实现中的思路。
 如有文档中存在错误/想参与此项目（翻译文档/实验实现思路），请：
  直接提 issue / mr 发邮件联系 1070259395@qq.com 6.824 讨论群【todo】  导航目录: 已完成（个人实现部分）：
  Lab1-MapReduce-实现过程 Lab2A&amp;amp;2B-Raft-leader选举与日志同步-实现过程 Lab2C-Raft-持久化状态与日志同步优化-实现过程 Lab2D-Raft-快照-实现过程  已完成（翻译部分）：
@@ -39,7 +39,7 @@ docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学�
   服务重启后，上层应用每次都需要从头到尾执行一次全部 Log，这个恢复速度太慢
   解决 🔗 服务通过不时保存一下它的快照（SnapShot），然后告诉 Raft 快照点之前的日志可以丢了 使：1. Raft 不必维持所有 Log 2. crash 恢复速度也很快速  Lab 2D 实现 🔗我的理解 🔗下图是论文中给出的图，它很形象，让我们一下理解快照的含义。但是这个图给了我一个错觉：快照是经过 log 压缩产生的。然而这是错误的，快照是由上层服务产生，传给 raft 层，然后让 Raft 层丢弃这之前的日志。
 下面的交互图更加准确，让我们了解到数据流通的方向
- Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态  // For 2D 快照 	lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index 	lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term 	snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int { return len(rf.</description>
+ Snapshot(index int, snapshot []byte)：这里由上层服务触发，把保存快照传过来，raft 保存快照，裁剪冗余日志 InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) : 这是个 RPC handler，通常为 Follower 落后leader 太多时触发，leader 向 Follower 发起请求，让 Follower 上层服务安装 leader 的快照快速跟上节奏。 CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int, snapshot []byte) bool: 这是属于 InstallSnapshot RPC 的延续，RPC 在上层服务安装快照后，会触发这个接口更新 Raft 的状态。  State 🔗 首先我们需要在 Raft 实例中加入跟快照相关的状态   // For 2D 快照  lastIncludedIndex int // 保存到快照中的最后一个 Log 的 index  lastIncludedTerm int // 保存到快照中的最后一个 Log 的 term  snapshot []byte // 保存的最近一个快照 既然 logs 不保存所有 log 了，操作相关 logs 的方法也需要修改(把快照中 log 算上)  func (rf *Raft) getLastIndex() int {  return len(rf.</description>
     </item>
     
     <item>
@@ -55,7 +55,7 @@ docs-cn --&amp;gt; 官方 note，lab 中文翻译 my-blog	--&amp;gt; 个人学�
   logs：日志，重启回复需要重新执行一次命令
   因此代码中修改了上述三个变量的地方都要进行一次持久化。
 持久化一般到磁盘中，但在这个 lab，使用了 persister 来模拟，方便测试。
- 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) { if data == nil || len(data) &amp;lt; 1 { // bootstrap without any state?</description>
+ 读取持久化状态  // // restore previously persisted state. // func (rf *Raft) readPersist(data []byte) {  if data == nil || len(data) &amp;lt; 1 { // bootstrap without any state?</description>
     </item>
     
     <item>

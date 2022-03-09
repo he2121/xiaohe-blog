@@ -10,11 +10,11 @@
  背景 🔗存储引擎存在着两个主要流派：
  日志结构流派，只允许追加式更新/删除文件，不会修改已写入的文件，Bitcast，SSTables，LSM-Tree，LevelDB，RocksDB，Cassandra，HBase，Lucene 等属于此类 原地更新流派，将磁盘视为可以覆盖的一组固定大小的页。B-tree 就是这一流派的典型代表，已用于所有主流关系型数据库，以及大量的非关系数据库  大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比
 演化过程 🔗1. 一个最简单的数据库 🔗基本原理 🔗由两个 Bash 函数实现：
-db_set(){ echo &#34;$1,$2&#34; &gt;&gt; database } db_get(){ grep &#34;^$1,&#34; database | sed -e &#34;s/^$1,//&#34; | tail -n 1 } 插入/更新数据: 往 database 文本中追加一行 &lt;key，value&gt;
+db_set(){  echo &#34;$1,$2&#34; &gt;&gt; database }  db_get(){  grep &#34;^$1,&#34; database | sed -e &#34;s/^$1,//&#34; | tail -n 1 } 插入/更新数据: 往 database 文本中追加一行 &lt;key，value&gt;
 查询数据： 查找文本中最后一次出现的 &lt;key，value&gt;
 例如：
 ➜ ~ db_set key1 val1 ➜ ~ db_set key2 val2 ➜ ~ db_set key1 val3 ➜ ~ cat database key1,val1 key2,val2 key1,val3 ➜ ~ db_get key1 val3 局限性 🔗db_set: 追加式写，性能高。但db_get: 从头扫描到尾，性能很差">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -75,7 +75,7 @@ if (!doNotTrack) {
     <h1 class="title">日志结构流派存储引擎的演化</h1>
 
     <div class="tip">
-      <div>2022年1月7日</div>
+        <time datetime="2022-01-07 14:30:00 &#43;0800 CST">2022年01月07日</time>
         <span class="split">
           ·
         </span>
@@ -86,13 +86,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          3分钟 读完
+          3分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2freading%2fddia%2f%25E6%2597%25A5%25E5%25BF%2597%25E7%25BB%2593%25E6%259E%2584%25E6%25B5%2581%25E6%25B4%25BE%25E5%25AD%2598%25E5%2582%25A8%25E5%25BC%2595%25E6%2593%258E%25E7%259A%2584%25E6%25BC%2594%25E5%258C%2596%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -110,26 +105,26 @@ if (!doNotTrack) {
 </ol>
 <p>大部分人已经对原地更新流派中 B-tree 已经比较熟悉了，但对日志结构流派并不是很了解，本文带领大家了解下其演化过程及 LSM-tree 与 B-tree 的对比</p>
 <h2 id="演化过程">演化过程 <a href="#%e6%bc%94%e5%8c%96%e8%bf%87%e7%a8%8b" class="anchor">🔗</a></h2><h3 id="1-一个最简单的数据库">1. 一个最简单的数据库 <a href="#1-%e4%b8%80%e4%b8%aa%e6%9c%80%e7%ae%80%e5%8d%95%e7%9a%84%e6%95%b0%e6%8d%ae%e5%ba%93" class="anchor">🔗</a></h3><h4 id="基本原理">基本原理 <a href="#%e5%9f%ba%e6%9c%ac%e5%8e%9f%e7%90%86" class="anchor">🔗</a></h4><p>由两个 Bash 函数实现：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">db_set<span style="color:#f92672">(){</span>
-        echo <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">,</span>$2<span style="color:#e6db74">&#34;</span> &gt;&gt; database
-<span style="color:#f92672">}</span>
-
-db_get<span style="color:#f92672">(){</span>
-        grep <span style="color:#e6db74">&#34;^</span>$1<span style="color:#e6db74">,&#34;</span> database | sed -e <span style="color:#e6db74">&#34;s/^</span>$1<span style="color:#e6db74">,//&#34;</span> | tail -n <span style="color:#ae81ff">1</span>
-<span style="color:#f92672">}</span>
-</code></pre></div><p><strong>插入/更新数据</strong>: 往 database 文本中追加一行 &lt;key，value&gt;</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>db_set<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        echo <span style="color:#e6db74">&#34;</span>$1<span style="color:#e6db74">,</span>$2<span style="color:#e6db74">&#34;</span> &gt;&gt; database
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>db_get<span style="color:#f92672">(){</span>
+</span></span><span style="display:flex;"><span>        grep <span style="color:#e6db74">&#34;^</span>$1<span style="color:#e6db74">,&#34;</span> database | sed -e <span style="color:#e6db74">&#34;s/^</span>$1<span style="color:#e6db74">,//&#34;</span> | tail -n <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">}</span>
+</span></span></code></pre></div><p><strong>插入/更新数据</strong>: 往 database 文本中追加一行 &lt;key，value&gt;</p>
 <p><strong>查询数据：</strong> 查找文本中最后一次出现的 &lt;key，value&gt;</p>
 <p>例如：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">➜  ~ db_set key1 val1
-➜  ~ db_set key2 val2
-➜  ~ db_set key1 val3
-➜  ~ cat database
-key1,val1
-key2,val2
-key1,val3
-➜  ~ db_get key1
-val3
-</code></pre></div><h4 id="局限性">局限性 <a href="#%e5%b1%80%e9%99%90%e6%80%a7" class="anchor">🔗</a></h4><p><code>db_set</code>: 追加式写，性能高。但<code>db_get</code>: 从头扫描到尾，性能很差</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>➜  ~ db_set key1 val1
+</span></span><span style="display:flex;"><span>➜  ~ db_set key2 val2
+</span></span><span style="display:flex;"><span>➜  ~ db_set key1 val3
+</span></span><span style="display:flex;"><span>➜  ~ cat database
+</span></span><span style="display:flex;"><span>key1,val1
+</span></span><span style="display:flex;"><span>key2,val2
+</span></span><span style="display:flex;"><span>key1,val3
+</span></span><span style="display:flex;"><span>➜  ~ db_get key1
+</span></span><span style="display:flex;"><span>val3
+</span></span></code></pre></div><h4 id="局限性">局限性 <a href="#%e5%b1%80%e9%99%90%e6%80%a7" class="anchor">🔗</a></h4><p><code>db_set</code>: 追加式写，性能高。但<code>db_get</code>: 从头扫描到尾，性能很差</p>
 <p><strong>如何解决：</strong></p>
 <p>增加一个数据结构：<strong>索引</strong></p>
 <p>索引：原始数据派生的额外数据结构，适当的索引可以加速，但是加索引会减慢写的速度</p>
@@ -301,14 +296,6 @@ val3
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>

@@ -11,7 +11,7 @@ binlog 作用 🔗 用于复制，如主从复制 数据恢复  binlog 类型 �
 一开始只有 statement-based，但 statement-based 存在不少问题，后面才有的 row 与 mixed。
 SBL 优点 🔗 产生的日志文件少， io 次数少  SBL 缺点 🔗  在一些不安全的语句上，主从复制做不到数据一致，比如
   含有系统函数的语句，可能会在副本上返回不同的值，如 RAND(), USER(),UUID(), SYSDATE() .">
-<meta name="generator" content="Hugo 0.89.2" />
+<meta name="generator" content="Hugo 0.93.3" />
 
 
   <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
@@ -72,7 +72,7 @@ if (!doNotTrack) {
     <h1 class="title">MySQL binlog 设计</h1>
 
     <div class="tip">
-      <div>2021年11月10日</div>
+        <time datetime="2021-11-10 18:33:24 &#43;0800 CST">2021年11月10日</time>
         <span class="split">
           ·
         </span>
@@ -83,13 +83,8 @@ if (!doNotTrack) {
           ·
         </span>
         <span>
-          3分钟 读完
+          3分钟
         </span>
-        <div class="views">
-          <span class="views">
-              <img src="https://visitor-badge.glitch.me/badge?page_id=https%3a%2f%2fhe2121.github.io%2fxiaohe-blog%2fposts%2fmysql%2fmysqlbinlog%25E8%25AE%25BE%25E8%25AE%25A1%2f" alt="Views"/>
-          </span>
-      </div>
     </div>
 
     
@@ -150,35 +145,35 @@ if (!doNotTrack) {
 <h3 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h3><p>推荐使用 <code>RBL</code>，利大于弊，最新 MySQL 版本默认也是使用 <code>RBL</code>。</p>
 <h2 id="binlog-结构"><code>binlog</code> 结构 <a href="#binlog-%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h2><h3 id="binlog-文件结构">binlog 文件结构 <a href="#binlog-%e6%96%87%e4%bb%b6%e7%bb%93%e6%9e%84" class="anchor">🔗</a></h3><p><code>binlog.index</code> : 文本文件，如下面的例子，列出了当前的二进制日志文件（现在有 6 个）。</p>
 <p><code>binlog.xxxxxx:</code> log 二进制文件，</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">binlog.000001
-binlog.000002
-binlog.000003
-binlog.000004
-binlog.000005
-binlog.000006
-binlog.index 
-</code></pre></div><p>每个日志文件以一个 4 字节魔数 ( 0xfe b i n) 开头，后面是一组<strong>描述数据修改的事件</strong>，文件格式如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+<span style="color:#f92672">===================</span>+
-| Magic Number        |
-+<span style="color:#f92672">===================</span>+
-| Start Event        |
-+<span style="color:#f92672">===================</span>+
-| Event <span style="color:#ae81ff">1</span>            |
-+<span style="color:#f92672">===================</span>+
-| ...                |
-+<span style="color:#f92672">===================</span>+
-</code></pre></div><p>一个具体的例子：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash"> show BINLOG EVENTS in <span style="color:#e6db74">&#39;binlog.000001&#39;</span>
-+---------------+---------+----------------+-----------+-------------+-------------------------------------------------------------------+
-| Log_name      | Pos     | Event_type     | Server_id | End_log_pos | Info                                                              |
-+---------------+---------+----------------+-----------+-------------+-------------------------------------------------------------------+
-| binlog.000001 | <span style="color:#ae81ff">4</span>       | Format_desc    | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">125</span>         | Server ver: 8.0.26, Binlog ver: <span style="color:#ae81ff">4</span>                                 |
-| binlog.000001 | <span style="color:#ae81ff">125</span>     | Previous_gtids | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">156</span>         |                                                                   |
-| binlog.000001 | <span style="color:#ae81ff">156</span>     | Anonymous_Gtid | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">233</span>         | SET @@SESSION.GTID_NEXT<span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;ANONYMOUS&#39;</span>                              |
-| binlog.000001 | <span style="color:#ae81ff">233</span>     | Query          | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">337</span>         | use <span style="color:#e6db74">`</span>mysql<span style="color:#e6db74">`</span>; TRUNCATE TABLE time_zone /* xid<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span> */                 |
-| binlog.000001 | <span style="color:#ae81ff">337</span>     | Anonymous_Gtid | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">414</span>         | SET @@SESSION.GTID_NEXT<span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;ANONYMOUS&#39;</span>                              |
-| binlog.000001 | <span style="color:#ae81ff">414</span>     | Query          | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">523</span>         | use <span style="color:#e6db74">`</span>mysql<span style="color:#e6db74">`</span>; TRUNCATE TABLE time_zone_name /* xid<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> */            |
-</code></pre></div><h3 id="事件-event-常见分类">事件 Event 常见分类 <a href="#%e4%ba%8b%e4%bb%b6-event-%e5%b8%b8%e8%a7%81%e5%88%86%e7%b1%bb" class="anchor">🔗</a></h3><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>binlog.000001
+</span></span><span style="display:flex;"><span>binlog.000002
+</span></span><span style="display:flex;"><span>binlog.000003
+</span></span><span style="display:flex;"><span>binlog.000004
+</span></span><span style="display:flex;"><span>binlog.000005
+</span></span><span style="display:flex;"><span>binlog.000006
+</span></span><span style="display:flex;"><span>binlog.index 
+</span></span></code></pre></div><p>每个日志文件以一个 4 字节魔数 ( 0xfe b i n) 开头，后面是一组<strong>描述数据修改的事件</strong>，文件格式如下：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span><span style="display:flex;"><span>| Magic Number        |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span><span style="display:flex;"><span>| Start Event        |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span><span style="display:flex;"><span>| Event <span style="color:#ae81ff">1</span>            |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span><span style="display:flex;"><span>| ...                |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span></code></pre></div><p>一个具体的例子：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span> show BINLOG EVENTS in <span style="color:#e6db74">&#39;binlog.000001&#39;</span>
+</span></span><span style="display:flex;"><span>+---------------+---------+----------------+-----------+-------------+-------------------------------------------------------------------+
+</span></span><span style="display:flex;"><span>| Log_name      | Pos     | Event_type     | Server_id | End_log_pos | Info                                                              |
+</span></span><span style="display:flex;"><span>+---------------+---------+----------------+-----------+-------------+-------------------------------------------------------------------+
+</span></span><span style="display:flex;"><span>| binlog.000001 | <span style="color:#ae81ff">4</span>       | Format_desc    | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">125</span>         | Server ver: 8.0.26, Binlog ver: <span style="color:#ae81ff">4</span>                                 |
+</span></span><span style="display:flex;"><span>| binlog.000001 | <span style="color:#ae81ff">125</span>     | Previous_gtids | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">156</span>         |                                                                   |
+</span></span><span style="display:flex;"><span>| binlog.000001 | <span style="color:#ae81ff">156</span>     | Anonymous_Gtid | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">233</span>         | SET @@SESSION.GTID_NEXT<span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;ANONYMOUS&#39;</span>                              |
+</span></span><span style="display:flex;"><span>| binlog.000001 | <span style="color:#ae81ff">233</span>     | Query          | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">337</span>         | use <span style="color:#e6db74">`</span>mysql<span style="color:#e6db74">`</span>; TRUNCATE TABLE time_zone /* xid<span style="color:#f92672">=</span><span style="color:#ae81ff">3</span> */                 |
+</span></span><span style="display:flex;"><span>| binlog.000001 | <span style="color:#ae81ff">337</span>     | Anonymous_Gtid | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">414</span>         | SET @@SESSION.GTID_NEXT<span style="color:#f92672">=</span> <span style="color:#e6db74">&#39;ANONYMOUS&#39;</span>                              |
+</span></span><span style="display:flex;"><span>| binlog.000001 | <span style="color:#ae81ff">414</span>     | Query          | <span style="color:#ae81ff">1</span>         | <span style="color:#ae81ff">523</span>         | use <span style="color:#e6db74">`</span>mysql<span style="color:#e6db74">`</span>; TRUNCATE TABLE time_zone_name /* xid<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span> */            |
+</span></span></code></pre></div><h3 id="事件-event-常见分类">事件 Event 常见分类 <a href="#%e4%ba%8b%e4%bb%b6-event-%e5%b8%b8%e8%a7%81%e5%88%86%e7%b1%bb" class="anchor">🔗</a></h3><ul>
 <li><strong><code>START_EVENT_V3</code></strong>: 每个日志文件的第一个事件， 该事件在MySQL 3.23 至 4.1 中使用，在 MySQL 5.0 中被 <code>FORMAT_DESCRIPTION_EVENT</code> 所取代， 从第五个字节开始（魔数后）</li>
 <li><strong><code>QUERY_EVENT</code></strong> : <code>SBL</code> 的 <code>binlog</code> 记录 sql 语句，在 row 模式下记录事务 begin</li>
 <li><strong><code>STOP_EVENT</code></strong> : mysqld 进程停止时记录</li>
@@ -203,33 +198,33 @@ binlog.index
 </ul>
 <p>v2 已经在 4.0 中使用过，已经废弃了</p>
 <p>其中 Event 又分为两个部分: Event header 和 Event data。header 部分的长度由 binlog 版本决定，data 部分的长度又由 header 决定</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+<span style="color:#f92672">===================</span>+
-| event header      |
-+<span style="color:#f92672">===================</span>+
-| event data        |
-+<span style="color:#f92672">===================</span>+
-</code></pre></div><p>以下是 Event 的<strong>具体结构</strong>以及<strong>各版本之间的差异</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span><span style="display:flex;"><span>| event header      |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span><span style="display:flex;"><span>| event data        |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">===================</span>+
+</span></span></code></pre></div><p>以下是 Event 的<strong>具体结构</strong>以及<strong>各版本之间的差异</strong></p>
 <p>其中数字代表着这个字段在 Event 中的 limit 与 offset， 例如 0:4，代表着在这个字段的位置在 Event 的 0-4 个字节。</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+<span style="color:#f92672">=====================================</span>+
-| event  | timestamp         <span style="color:#ae81ff">0</span> : <span style="color:#ae81ff">4</span>    |
-| header +----------------------------+
-|        | type_code         <span style="color:#ae81ff">4</span> : <span style="color:#ae81ff">1</span>    |
-|        +----------------------------+
-|        | server_id         <span style="color:#ae81ff">5</span> : <span style="color:#ae81ff">4</span>    |
-|        +----------------------------+
-|        | event_length      <span style="color:#ae81ff">9</span> : <span style="color:#ae81ff">4</span>    | v1 header 共 <span style="color:#ae81ff">13</span> 个字节
-|        +----------------------------+
-|        | next_position    <span style="color:#ae81ff">13</span> : <span style="color:#ae81ff">4</span>    | v3 版本增加。
-|        +----------------------------+
-|        | flags            <span style="color:#ae81ff">17</span> : <span style="color:#ae81ff">2</span>    | v3 版本增加。 v3 header 共 <span style="color:#ae81ff">19</span> 个字节
-|        +----------------------------+
-|        | extra_headers    <span style="color:#ae81ff">19</span> : x-19 | v4 版本增加。 v4 header 最少 <span style="color:#ae81ff">19</span> 个字节
-<span style="color:#f92672">+=====================================</span>+
-| event  | fixed part        x : y    |
-| data   +----------------------------+
-|        | variable part              |
-+<span style="color:#f92672">=====================================</span>+
-</code></pre></div><p><strong>header 部分各字段解释</strong></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>+<span style="color:#f92672">=====================================</span>+
+</span></span><span style="display:flex;"><span>| event  | timestamp         <span style="color:#ae81ff">0</span> : <span style="color:#ae81ff">4</span>    |
+</span></span><span style="display:flex;"><span>| header +----------------------------+
+</span></span><span style="display:flex;"><span>|        | type_code         <span style="color:#ae81ff">4</span> : <span style="color:#ae81ff">1</span>    |
+</span></span><span style="display:flex;"><span>|        +----------------------------+
+</span></span><span style="display:flex;"><span>|        | server_id         <span style="color:#ae81ff">5</span> : <span style="color:#ae81ff">4</span>    |
+</span></span><span style="display:flex;"><span>|        +----------------------------+
+</span></span><span style="display:flex;"><span>|        | event_length      <span style="color:#ae81ff">9</span> : <span style="color:#ae81ff">4</span>    | v1 header 共 <span style="color:#ae81ff">13</span> 个字节
+</span></span><span style="display:flex;"><span>|        +----------------------------+
+</span></span><span style="display:flex;"><span>|        | next_position    <span style="color:#ae81ff">13</span> : <span style="color:#ae81ff">4</span>    | v3 版本增加。
+</span></span><span style="display:flex;"><span>|        +----------------------------+
+</span></span><span style="display:flex;"><span>|        | flags            <span style="color:#ae81ff">17</span> : <span style="color:#ae81ff">2</span>    | v3 版本增加。 v3 header 共 <span style="color:#ae81ff">19</span> 个字节
+</span></span><span style="display:flex;"><span>|        +----------------------------+
+</span></span><span style="display:flex;"><span>|        | extra_headers    <span style="color:#ae81ff">19</span> : x-19 | v4 版本增加。 v4 header 最少 <span style="color:#ae81ff">19</span> 个字节
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+=====================================</span>+
+</span></span><span style="display:flex;"><span>| event  | fixed part        x : y    |
+</span></span><span style="display:flex;"><span>| data   +----------------------------+
+</span></span><span style="display:flex;"><span>|        | variable part              |
+</span></span><span style="display:flex;"><span>+<span style="color:#f92672">=====================================</span>+
+</span></span></code></pre></div><p><strong>header 部分各字段解释</strong></p>
 <ul>
 <li><code>timestamp</code>: 事物开始执行的时间，单位秒</li>
 <li><code>type_code</code>: 事件类型， 见上文 [事件常见分类](#事件 Event 常见分类)，它决定了 data 部分的写入数据</li>
@@ -241,20 +236,20 @@ binlog.index
 </ul>
 <p><strong>data 部分</strong></p>
 <p>由事件类型决定，如 v1，v3 query 事件，data 部分构成如下：</p>
-<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">+<span style="color:#f92672">======================================</span>+
-| fixed   | issue_thread      <span style="color:#ae81ff">0</span> : <span style="color:#ae81ff">4</span>    | 触发该语句的线程id
-| part    +----------------------------+
-|         | timestamp         <span style="color:#ae81ff">4</span> : <span style="color:#ae81ff">4</span>    | 语句执行的时间
-|         +----------------------------+
-|         | db_name_len       <span style="color:#ae81ff">8</span> : <span style="color:#ae81ff">1</span>    | 使用数据库名长度
-|         +----------------------------+
-|         | error_code        <span style="color:#ae81ff">9</span> : <span style="color:#ae81ff">2</span>    | 错误码
-<span style="color:#f92672">+======================================</span>+
-| variable| db_name                    | db name
-| part    +----------------------------+
-|         | sql_statment               | sql 语句
-<span style="color:#f92672">+======================================</span>+
-</code></pre></div><h3 id="总结-1">总结 <a href="#%e6%80%bb%e7%bb%93-1" class="anchor">🔗</a></h3><ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>+<span style="color:#f92672">======================================</span>+
+</span></span><span style="display:flex;"><span>| fixed   | issue_thread      <span style="color:#ae81ff">0</span> : <span style="color:#ae81ff">4</span>    | 触发该语句的线程id
+</span></span><span style="display:flex;"><span>| part    +----------------------------+
+</span></span><span style="display:flex;"><span>|         | timestamp         <span style="color:#ae81ff">4</span> : <span style="color:#ae81ff">4</span>    | 语句执行的时间
+</span></span><span style="display:flex;"><span>|         +----------------------------+
+</span></span><span style="display:flex;"><span>|         | db_name_len       <span style="color:#ae81ff">8</span> : <span style="color:#ae81ff">1</span>    | 使用数据库名长度
+</span></span><span style="display:flex;"><span>|         +----------------------------+
+</span></span><span style="display:flex;"><span>|         | error_code        <span style="color:#ae81ff">9</span> : <span style="color:#ae81ff">2</span>    | 错误码
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+======================================</span>+
+</span></span><span style="display:flex;"><span>| variable| db_name                    | db name
+</span></span><span style="display:flex;"><span>| part    +----------------------------+
+</span></span><span style="display:flex;"><span>|         | sql_statment               | sql 语句
+</span></span><span style="display:flex;"><span><span style="color:#f92672">+======================================</span>+
+</span></span></code></pre></div><h3 id="总结-1">总结 <a href="#%e6%80%bb%e7%bb%93-1" class="anchor">🔗</a></h3><ul>
 <li><code>binlog</code> 文件由魔数与事件列表构成，事件列表分成三部分：开始事件 + 数据更新相关的事件 + 切换事件</li>
 <li>事件的类型决定了事件的格式，因为每种事件所需的信息是不一致的</li>
 </ul>
@@ -307,14 +302,6 @@ binlog.index
     
 
 </section>
-
-<script src="https://utteranc.es/client.js"
-        repo="he2121/xiaohe-blog"
-        issue-term="pathname"
-        theme="github-light"
-        crossorigin="anonymous"
-        async>
-</script>
 
 
     </main>
