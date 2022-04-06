@@ -6,7 +6,29 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 02 Mar 2022 00:38:28 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 05 Apr 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>球状闪电</title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/%E7%90%83%E7%8A%B6%E9%97%AA%E7%94%B5/</link>
+      <pubDate>Tue, 05 Apr 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/%E7%90%83%E7%8A%B6%E9%97%AA%E7%94%B5/</guid>
+      <description>球状闪电与三体共用一个世界观，可以算是三体前传。属于短篇小说，花了五个小时读完。
+大致内容 🔗 主角小时目睹双亲被 “落地雷” 神秘击中死亡，从此主角踏入对球状闪电的研究领域中 主角全身心投入研究，利用现有理论提出各种数据模型试图解释球状闪电的原理，同时在这其中也遇到了许多对球状闪电有研究的人，其导师阻止研究球形闪电，但实际上其导师对球形闪电研究了几十年，一直没成果才阻止。俄罗斯也有大的研究部门，三十年来复现出来多次球形闪电，但都是随机出来的，实际成果也不多，荒芜很多研究人员的青春 在研究球形闪电的过程中，主角遇上军方新概念武器研究部门人员，林云。主角对其有好感。但林云对武器有一种痴迷感，很危险。 主角提出不是闪电产生球形闪电，而是球形闪电本来存在这种世界中，只是被闪电激发出来。主角与林云开始空中撒网，大面积复现出球形闪电，成功复现出多次。 寻求基础研究部门大佬解释，丁仪解释球形闪电是一个宏电子，宏观维度的电子，震惊所有人。但其是正确的，利用其理论成功捕获到了宏电子，并于军方武器部门林云开始一起研制成武器 武器被实战在恐怖分子身上，主角不能容忍其被研究成武器，退出研究，转型研究龙卷风的预测 中美开战，中航母编队被美歼灭，并且是利用主角龙卷风的技术完成 中利用球形闪电反击，美早有预防，反击失败 丁仪找出宏原子，林云强行宏聚变实验，导致中 1/3 的国土的半导体芯片被毁，但形成了核威慑，战争结束  我的想法 🔗 这本科幻小说涉及到了许多物理知识，确实有许多看不懂 把球形闪电解释成宏电子确实惊艳到我了 书中几乎对基础科学的研究人员有着无尽的崇拜  </description>
+    </item>
+    
+    <item>
+      <title>Redis 数据结构与对象</title>
+      <link>https://he2121.github.io/xiaohe-blog/reading/redis-%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E5%AF%B9%E8%B1%A1%E6%80%BB%E7%BB%93/</link>
+      <pubDate>Sun, 20 Mar 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/reading/redis-%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E7%8E%B0/redis%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E5%AF%B9%E8%B1%A1%E6%80%BB%E7%BB%93/</guid>
+      <description> 此节内容主要来自于 &amp;lt;Redis 设计与实现&amp;gt; 书中的第一部分，在此留下部分笔记与个人理解。 常见面试情形 ​	Q: Redis 有几种对象 ​	A: 5 种 blablabla 。。。。。 这种八股早已经熟稔于心，但是网上看的博客、面经得到的知识点感觉有点过于零散，没有完全理解，因此进行一次系统的学习，加强理解。
+ 六种基础数据结构 🔗Redis 实现了六种基础数据结构，分别是简单动态字符串（SDS），链表（List），字典/哈希表（dict），跳跃表（skiplist），整数集合（intset），下面分别来简单介绍下它们的设计思想。
+简单动态字符串（SDS） 🔗链表（List） 🔗字典/哈希表（dict） 🔗跳跃表（skiplist） 🔗整数集合（intset） 🔗五种对象 🔗 Redis 中总共有 5 种对象，分别为 字符串、列表、哈希、集合、有序集合对象 一种对象基本对应一种基础数据结构 Redis 为了性能考虑，一种对象都有 2-3 种编码方式，除了对象对应的主要基础数据结构的实现以外，其它基本使用压缩列表、整数集合这种特定情形下的实现  对象与底层数据结构对应关系如下图（网图）：
+1. 字符 🔗</description>
+    </item>
+    
     <item>
       <title>字符编码发展梳理</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</link>
@@ -54,7 +76,6 @@ ASCII 意义 🔗包含了使用最广泛的控制字符、数字符号、英文
 宝玉笑道：“我为林姑娘病了”
  来自高鹗续写 105 回
 最近刚读完红楼梦全集，在此留下一些个人想法
-![image-20220213195723422](/Users/bytedance/Library/Application Support/typora-user-images/image-20220213195723422.png)
 后 40 回相关的 🔗 续写部分超出个人预期，除开最开始几回目比较生疏，后面渐入佳境，完全无烂尾的迹象 个人认为高鹗起码读过相当部分残稿，要不然写不出这些情节 宝玉丢玉，被骗结婚，黛玉在宝玉结婚当天死亡的回目非常精彩，描写他们之间的爱情部分达到了全文的高潮 后续贾家败亡情节也令人唏嘘，主要人物也依次下场，却在最后结尾明确了贾家复兴的希望 总之不像网上评论的那样，值得一看  不满意的地方 🔗贾母对黛玉的态度转换太快了 🔗前面看着贾母是很挺爱黛玉，支持宝黛的。
 后面支持哄骗宝玉取宝钗，黛玉快死了也不去看望。虽说书中写了贾母相对外孙女更看重宝玉，但个人还是难以接受贾母会无视黛玉的性命。
 探春无戏份了 🔗前面的情节，让我非常喜欢探春。高鹗的续写部分，探春只有出嫁。。。
@@ -160,7 +181,7 @@ db_set(){  echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database }  db_get(){  
       
       <guid>https://he2121.github.io/xiaohe-blog/reading/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
       <description> 之前学习新知识总是游离在网上博客，学习到的各个知识点都是零散的。所以今年决定读一些纸质书，增强下自己的底蕴。读完每一本书至少输出一篇博客，分享自己的收获或者对这本书的评价。
- 技术类 🔗已读完 🔗 DDIA 数据密集型应用系统设计  正在进行中 🔗 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗 红楼梦 小狗钱钱  正在进行中 🔗 家庭、私有制和国家的起源 巴菲特致股东的信  待安排 🔗 毛选 亲密关系 原则  </description>
+ 技术类 🔗已读完 🔗 DDIA 数据密集型应用系统设计  正在进行中 🔗 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道 代码大全  非技术类 🔗已读完 🔗 红楼梦 小狗钱钱 巴菲特致股东的信 球状闪电  正在进行中 🔗 家庭、私有制和国家的起源 毛选  待安排 🔗 亲密关系 原则  </description>
     </item>
     
     <item>
