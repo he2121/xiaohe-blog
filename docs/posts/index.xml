@@ -6,7 +6,43 @@
     <description>Recent content in Posts on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Wed, 02 Mar 2022 00:38:28 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 10 Apr 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Golang 内存分配器介绍</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</link>
+      <pubDate>Sun, 10 Apr 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>Golang 内存分配器介绍</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</link>
+      <pubDate>Sun, 10 Apr 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E5%99%A8%E4%BB%8B%E7%BB%8D/</guid>
+      <description>内存管理属于计算机中的基石，在各种操作系统以及编程语言的设计中，最重要考量之一在于内存管理部分。而内存管理中可以分成两个主要部分：内存分配与内存回收。今天我们主要来分析下 Golang 内存分配器的设计，也不可避免对内存回收有所提及
+基础概念 🔗此节简单介绍下与此文相关的一些概念
+内存布局 🔗用户程序所看到内存是操作系统为其分配的虚拟内存，其内存布局可分为以下五个部分：
+ 栈区（Stack）：存储程序执行期间的本地变量和函数的参数，从高地址向低地址生长 堆区（Heap）：动态内存分配区域，通过 malloc、new、free 和 delete 等函数管理 未初始化变量区（BSS）：存储未被初始化的全局变量和静态变量 数据区（Data）：存储在源代码中有预定义值的全局变量和静态变量 代码区（Text）：存储只读的程序执行代码，即机器指令  其中 BSS，Data，Text 区内存占用不会变化（分配和回收），也可称为静态内存。栈区内存会由编译器自动分配释放，而堆区上的内存需要应用手动申请与释放。所以虽然上述内存布局中存在有 5 个部分，但当我们谈及内存管理时，都是指的堆内存
+堆内存管理方式 🔗手动管理 🔗C/C++ 系列的 malloc/free 的手动管理
+优点：性能比较好
+缺点
+  对程序员心智压力大，容易出 bug
+  内存泄漏：垃圾对象占用堆内存没有被释放
+  悬挂指针：指向被释放的内存区域
+    自动管理 🔗JAVA、Golang、 Python 等语言。主要存在两种自动回收方式：垃圾回收、引用计数
+优点
+ 对程序员友好  缺点：性能有所损耗
+内存分配 🔗内存分配主要有两种方式：线性分配器与空闲链表分配器，其它任何不同的内存分配器都是这两者方式的变种。
+线性分配器 🔗线性分配器易产生内存碎片，所以使用这种分配器时要搭配合适的内存回收算法使用，如 java 中的标记-压缩，复制回收等算法
+空闲链表分配器 🔗把内存分为一个个块，然后利用链表连接不同的内存块
+这种方式可以重新利用回收的内存块，但是分配内存时需要遍历链表，时间复杂度 O(n)。
+一般有以下几种方式在不同大小的内存块选择分配
+ 首次适应：从表头遍历，第一个大于申请内存的内存块 循环首次适应：从上次遍历结束位置开始遍历，第一个大于申请内存的内存块 最优适应：选择大小最合适的内存块 最差适用：选择最大内存块  Golang 内存分配器 🔗整体框架 🔗Golang 内存分配算法源自 Google 的 TCMalloc 算法（Thread-Caching），具有减少内存碎片，适用于多核，更好的并行性支持等特性，主要利用了多级缓存与大小分类的思想来优化内存分配速度。TCMalloc 整体框架如下。</description>
+    </item>
+    
     <item>
       <title>字符编码发展梳理</title>
       <link>https://he2121.github.io/xiaohe-blog/posts/%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81%E5%8F%91%E5%B1%95%E6%A2%B3%E7%90%86/</link>

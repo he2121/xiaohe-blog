@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+  <head>
+    <title>Golang 内存分配器介绍 | 小贺的博客</title>
+
+    <meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">    
+<meta name="viewport" content="width=device-width,minimum-scale=1">
+<meta name="description" content="内存管理属于计算机中的基石，在各种操作系统以及编程语言的设计中，最重要考量之一在于内存管理部分。而内存管理中可以分成两个主要部分：内存分配与内存回收。今天我们主要来分析下 Golang 内存分配器的设计，也不可避免对内存回收有所提及
+基础概念 🔗此节简单介绍下与此文相关的一些概念
+内存布局 🔗用户程序所看到内存是操作系统为其分配的虚拟内存，其内存布局可分为以下五个部分：
+ 栈区（Stack）：存储程序执行期间的本地变量和函数的参数，从高地址向低地址生长 堆区（Heap）：动态内存分配区域，通过 malloc、new、free 和 delete 等函数管理 未初始化变量区（BSS）：存储未被初始化的全局变量和静态变量 数据区（Data）：存储在源代码中有预定义值的全局变量和静态变量 代码区（Text）：存储只读的程序执行代码，即机器指令  其中 BSS，Data，Text 区内存占用不会变化（分配和回收），也可称为静态内存。栈区内存会由编译器自动分配释放，而堆区上的内存需要应用手动申请与释放。所以虽然上述内存布局中存在有 5 个部分，但当我们谈及内存管理时，都是指的堆内存
+堆内存管理方式 🔗手动管理 🔗C/C&#43;&#43; 系列的 malloc/free 的手动管理
+优点：性能比较好
+缺点
+  对程序员心智压力大，容易出 bug
+  内存泄漏：垃圾对象占用堆内存没有被释放
+  悬挂指针：指向被释放的内存区域
+    自动管理 🔗JAVA、Golang、 Python 等语言。主要存在两种自动回收方式：垃圾回收、引用计数
+优点
+ 对程序员友好  缺点：性能有所损耗
+内存分配 🔗内存分配主要有两种方式：线性分配器与空闲链表分配器，其它任何不同的内存分配器都是这两者方式的变种。
+线性分配器 🔗线性分配器易产生内存碎片，所以使用这种分配器时要搭配合适的内存回收算法使用，如 java 中的标记-压缩，复制回收等算法
+空闲链表分配器 🔗把内存分为一个个块，然后利用链表连接不同的内存块
+这种方式可以重新利用回收的内存块，但是分配内存时需要遍历链表，时间复杂度 O(n)。
+一般有以下几种方式在不同大小的内存块选择分配
+ 首次适应：从表头遍历，第一个大于申请内存的内存块 循环首次适应：从上次遍历结束位置开始遍历，第一个大于申请内存的内存块 最优适应：选择大小最合适的内存块 最差适用：选择最大内存块  Golang 内存分配器 🔗整体框架 🔗Golang 内存分配算法源自 Google 的 TCMalloc 算法（Thread-Caching），具有减少内存碎片，适用于多核，更好的并行性支持等特性，主要利用了多级缓存与大小分类的思想来优化内存分配速度。TCMalloc 整体框架如下。">
+<meta name="generator" content="Hugo 0.93.3" />
+
+
+  <META NAME="ROBOTS" CONTENT="NOINDEX, NOFOLLOW">
+
+
+<link rel="stylesheet" href="/xiaohe-blog/css/style.css">
+
+
+
+<link rel="shortcut icon" href="/xiaohe-blog/images/favicon.ico" type="image/x-icon" />
+
+ 
+    
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'G-FY1WNXTY3L', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </head>
+
+  <body>
+    <nav class="navigation">
+	
+		<a href="/xiaohe-blog/"> <span class="arrow">←</span>首页</a>
+	
+	<a href="/xiaohe-blog/posts">归档</a>
+	<a href="/xiaohe-blog/tags">标签</a>
+	<a href="/xiaohe-blog/about">关于</a>
+
+	
+		<a href="/xiaohe-blog/algorithm">算法</a>
+	
+		<a href="/xiaohe-blog/mixed">杂谈</a>
+	
+		<a href="/xiaohe-blog/reading">读书</a>
+	
+
+	
+</nav>
+
+
+    <main class="main">
+      
+
+<section id="single">
+    <h1 class="title">Golang 内存分配器介绍</h1>
+
+    <div class="tip">
+        <time datetime="2022-04-10 11:10:12 &#43;0800 CST">2022年04月10日</time>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          769字
+        </span>
+        <span class="split">
+          ·
+        </span>
+        <span>
+          4分钟
+        </span>
+    </div>
+
+    
+    
+
+
+    <div class="content">
+      <p>内存管理属于计算机中的基石，在各种操作系统以及编程语言的设计中，最重要考量之一在于内存管理部分。而内存管理中可以分成两个主要部分：<strong>内存分配</strong>与<strong>内存回收</strong>。今天我们主要来分析下 Golang 内存分配器的设计，也不可避免对内存回收有所提及</p>
+<h2 id="基础概念">基础概念 <a href="#%e5%9f%ba%e7%a1%80%e6%a6%82%e5%bf%b5" class="anchor">🔗</a></h2><p>此节简单介绍下与此文相关的一些概念</p>
+<h3 id="内存布局">内存布局 <a href="#%e5%86%85%e5%ad%98%e5%b8%83%e5%b1%80" class="anchor">🔗</a></h3><p>用户程序所看到内存是操作系统为其分配的虚拟内存，其内存布局可分为以下五个部分：</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/2021-02-28-16145096642893-memory-layout-2022-04-07.png" alt="memory-layout"  />
+</p></p>
+<ul>
+<li>栈区（Stack）：存储程序执行期间的本地变量和函数的参数，从高地址向低地址生长</li>
+<li>堆区（Heap）：动态内存分配区域，通过 <code>malloc</code>、<code>new</code>、<code>free</code> 和 <code>delete</code> 等函数管理</li>
+<li>未初始化变量区（BSS）：存储未被初始化的全局变量和静态变量</li>
+<li>数据区（Data）：存储在源代码中有预定义值的全局变量和静态变量</li>
+<li>代码区（Text）：存储只读的程序执行代码，即机器指令</li>
+</ul>
+<p>其中 BSS，Data，Text 区内存占用不会变化（分配和回收），也可称为静态内存。栈区内存会由编译器自动分配释放，而堆区上的内存需要应用手动申请与释放。所以虽然上述内存布局中存在有 5 个部分，但当我们谈及内存管理时，都是指的堆内存</p>
+<h3 id="堆内存管理方式">堆内存管理方式 <a href="#%e5%a0%86%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e6%96%b9%e5%bc%8f" class="anchor">🔗</a></h3><h4 id="手动管理">手动管理 <a href="#%e6%89%8b%e5%8a%a8%e7%ae%a1%e7%90%86" class="anchor">🔗</a></h4><p>C/C++ 系列的 malloc/free 的手动管理</p>
+<p>优点：性能比较好</p>
+<p>缺点</p>
+<ul>
+<li>
+<p>对程序员心智压力大，容易出 bug</p>
+<ul>
+<li>
+<p>内存泄漏：垃圾对象占用堆内存没有被释放</p>
+</li>
+<li>
+<p>悬挂指针：指向被释放的内存区域</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="自动管理">自动管理 <a href="#%e8%87%aa%e5%8a%a8%e7%ae%a1%e7%90%86" class="anchor">🔗</a></h3><p>JAVA、Golang、 Python 等语言。主要存在两种自动回收方式：垃圾回收、引用计数</p>
+<p>优点</p>
+<ul>
+<li>对程序员友好</li>
+</ul>
+<p>缺点：性能有所损耗</p>
+<h3 id="内存分配">内存分配 <a href="#%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d" class="anchor">🔗</a></h3><p>内存分配主要有两种方式：<strong>线性分配器</strong>与<strong>空闲链表分配器</strong>，其它任何不同的内存分配器都是这两者方式的变种。</p>
+<h4 id="线性分配器">线性分配器 <a href="#%e7%ba%bf%e6%80%a7%e5%88%86%e9%85%8d%e5%99%a8" class="anchor">🔗</a></h4><p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/68747470733a2f2f63646e2e6e6c61726b2e636f6d2f79757175652f302f323032302f706e672f3130363934372f313538323235323631373633362d66616638333034302d626334632d346165312d623233652d3262323464613036323030382e706e67-2022-04-07.png" alt="Introduction-to-Golang/图解Go内存分配器.md at main · 0voice/Introduction-to-GolangGitHub"  />
+</p></p>
+<p>线性分配器易产生内存碎片，所以使用这种分配器时要搭配合适的内存回收算法使用，如 java 中的标记-压缩，复制回收等算法</p>
+<h4 id="空闲链表分配器">空闲链表分配器 <a href="#%e7%a9%ba%e9%97%b2%e9%93%be%e8%a1%a8%e5%88%86%e9%85%8d%e5%99%a8" class="anchor">🔗</a></h4><p>把内存分为一个个块，然后利用链表连接不同的内存块</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/2021-02-28-16145096642935-free-list-allocator-2022-04-07.png" alt="free-list-allocator"  />
+</p></p>
+<p>这种方式可以重新利用回收的内存块，但是分配内存时需要<strong>遍历链表</strong>，时间复杂度 O(n)。</p>
+<p>一般有以下几种方式在不同大小的内存块选择分配</p>
+<ol>
+<li>首次适应：从表头遍历，第一个大于申请内存的内存块</li>
+<li>循环首次适应：从上次遍历结束位置开始遍历，第一个大于申请内存的内存块</li>
+<li>最优适应：选择大小最合适的内存块</li>
+<li>最差适用：选择最大内存块</li>
+</ol>
+<h2 id="golang-内存分配器">Golang 内存分配器 <a href="#golang-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d%e5%99%a8" class="anchor">🔗</a></h2><h3 id="整体框架">整体框架 <a href="#%e6%95%b4%e4%bd%93%e6%a1%86%e6%9e%b6" class="anchor">🔗</a></h3><p>Golang 内存分配算法源自 Google 的 <code>TCMalloc 算法（Thread-Caching）</code>，具有减少内存碎片，适用于多核，更好的并行性支持等特性，主要利用了<strong>多级缓存</strong>与<strong>大小分类</strong>的思想来优化内存分配速度。TCMalloc 整体框架如下。</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/v2-af5ba79341db113855678eb11507dee5_1440w-2022-04-07.jpg" alt="TCMalloc解密（一） - 知乎"  />
+</p></p>
+<h4 id="多级缓存设计">多级缓存设计 <a href="#%e5%a4%9a%e7%ba%a7%e7%bc%93%e5%ad%98%e8%ae%be%e8%ae%a1" class="anchor">🔗</a></h4><p>可以简单认为分别是 ThreadCache、CentralCache、PageHeap 这三级</p>
+<ol>
+<li><strong>ThreadCache:</strong> 对于每个线程 TCMalloc 都为其分配了一份单独的缓存，因此从 TheadCache 取内存与回收内存不需要加锁。</li>
+<li><strong>CentralCache:</strong> 所有线程公用的缓存，供各线程的ThreadCache从中取用空闲内存，因此需要加锁</li>
+<li><strong>PageHeap:</strong> 处理向 OS 申请内存相关的操作，并提供了一层缓存，整个可供应用程序动态分配的内存的抽象</li>
+</ol>
+<h3 id="内存管理基本单元">内存管理基本单元 <a href="#%e5%86%85%e5%ad%98%e7%ae%a1%e7%90%86%e5%9f%ba%e6%9c%ac%e5%8d%95%e5%85%83" class="anchor">🔗</a></h3><p><strong><code>page</code></strong>: 类似于操作系统的内存管理，TCMalloc 将整个虚拟内存空间划分为 n 个同等大小的 <strong>Page</strong>，每个 page 默认 8 KB。</p>
+<p><strong><code>span</code></strong>: 将连续的 n 个 page 称为一个 <strong>Span</strong>, 是 TCMalloc 内存管理的基本单元，多级缓存直接持有的都是 span 链表，其实就是内存块。</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzMTg4NzQ0,size_16,color_FFFFFF,t_70-2022-04-07.png" alt="在这里插入图片描述"  />
+</p></p>
+<p><strong><code>object</code></strong>：申请内存的是 <code>object</code>，因此 span 分割成一个个 <code>object</code>(逻辑上) ，实际上分配内存是根据 <code>object</code>的大小去寻找合适大小 有空闲位置的 span</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzMTg4NzQ0,size_16,color_FFFFFF,t_70-20220407203048702-2022-04-07.png" alt="img"  />
+</p></p>
+<p><strong><code>size class</code></strong>: 根据对象大小预定义的一些 span 种类，并且在其中分割成等大的区域来存对象（不同大小的内存块）</p>
+<h3 id="golang-分配器的具体实现">Golang 分配器的具体实现 <a href="#golang-%e5%88%86%e9%85%8d%e5%99%a8%e7%9a%84%e5%85%b7%e4%bd%93%e5%ae%9e%e7%8e%b0" class="anchor">🔗</a></h3><h3 id="golang-内存布局110-及以前">Golang 内存布局（1.10 及以前） <a href="#golang-%e5%86%85%e5%ad%98%e5%b8%83%e5%b1%80110-%e5%8f%8a%e4%bb%a5%e5%89%8d" class="anchor">🔗</a></h3><p><p class="markdown-image">
+  <img src="https://img-blog.csdnimg.cn/20210406192927464.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FxXzQzMTg4NzQ0,size_16,color_FFFFFF,t_70" alt="img"  />
+</p></p>
+<ul>
+<li>
+<p><code>Arena</code>: 真正的堆区</p>
+</li>
+<li>
+<p><code>bitmap</code>: 标识堆区上的每一个指针大小的区域是否回收、是否是指针，所以使用 2 bit 代表 8 byte 长的区域。用于垃圾回收</p>
+</li>
+<li>
+<p><code>spans</code>:  保存 span 的指针，arena 区域中每一页都指向的 span。8 byte 代表一页（8 KB）</p>
+</li>
+</ul>
+<p>后来为了解决 C 与 Go 混合使用可能会导致程序崩溃的问题，Golang 1.11 后使用了稀疏内存布局，把虚拟内存分割成一个个离散的堆区（64 MB），但其基本思想没有变化，只是内存管理部分逻辑变得更加复杂，在此我们可以简单认为内存布局还是如上图所述。</p>
+<h3 id="golang-内存组件">Golang 内存组件 <a href="#golang-%e5%86%85%e5%ad%98%e7%bb%84%e4%bb%b6" class="anchor">🔗</a></h3><h4 id="runtimemspan"><code>runtime.mspan</code> <a href="#runtimemspan" class="anchor">🔗</a></h4><ul>
+<li>对应 TCMalloc 中 Span 的实现</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">mspan</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">next</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">mspan</span>     <span style="color:#75715e">// 组成的 span 双向链表
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">prev</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">mspan</span>     
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">startAddr</span> <span style="color:#66d9ef">uintptr</span> <span style="color:#75715e">// 起始地址
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">npages</span>    <span style="color:#66d9ef">uintptr</span> <span style="color:#75715e">// 页数
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">freeindex</span> <span style="color:#66d9ef">uintptr</span>	<span style="color:#75715e">// 空闲对象的初始索引
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">allocBits</span>  <span style="color:#f92672">*</span><span style="color:#a6e22e">gcBits</span> <span style="color:#75715e">// 划分的对象区域分配情况 bitmap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">gcmarkBits</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">gcBits</span> <span style="color:#75715e">// 划分的对像 GC 回收情况 bitmap
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">spanclass</span>   <span style="color:#a6e22e">spanClass</span>     <span style="color:#75715e">// 这个 span 的所属种类（大小分级）
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p><code>spanClass</code>: 对应 TCMalloc 中的 sizeClass，实现其实就是一个 uint8, 代表 span 按照对象大小划分出不同种类</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">spanClass</span> <span style="color:#66d9ef">uint8</span>
+</span></span></code></pre></div><p>如下图所示，Golang 中按对象大小分级总共有 67 种 span，运行时中还包含 spanClass ID 为 0 的特殊 span，它用于大于 32KB 的大对象的分配过程</p>
+<pre tabindex="0"><code>// runtime.sizeclasses.go
+// class  bytes/obj  bytes/span  objects  tail waste  max waste  min align
+//     1          8        8192     1024           0     87.50%          8
+//     2         16        8192      512           0     43.75%         16
+//     3         24        8192      341           8     29.24%          8
+//     4         32        8192      256           0     21.88%         32
+// ....
+//    65      27264       81920        3         128     10.00%        128
+//    66      28672       57344        2           0      4.91%       4096
+//    67      32768       32768        1           0     12.50%       8192
+</code></pre><p>此外，为了垃圾回收的性能，spanClass 这个 uint8 使用了最后的 1 个 bit 位来区分存放带指针（scan）与不带指针（noscan）的对象。所以总的来说 span 总共有 68*2 种</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">sc</span> <span style="color:#a6e22e">spanClass</span>) <span style="color:#a6e22e">sizeclass</span>() <span style="color:#66d9ef">int8</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> int8(<span style="color:#a6e22e">sc</span> <span style="color:#f92672">&gt;&gt;</span> <span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">sc</span> <span style="color:#a6e22e">spanClass</span>) <span style="color:#a6e22e">noscan</span>() <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">sc</span><span style="color:#f92672">&amp;</span><span style="color:#ae81ff">1</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h4 id="runtimemcache"><code>runtime.mcache</code> <a href="#runtimemcache" class="anchor">🔗</a></h4><pre tabindex="0"><code>type mcache struct {
+ 	alloc [numSpanClasses]*mspan // 持有 (68 * 2) 种 span 缓存
+ 	// ...
+}
+</code></pre><p>golang 中 mcache 是属于 P 的，如下图所示。</p>
+<p><p class="markdown-image">
+  <img src="https://ganghuan.oss-cn-shenzhen.aliyuncs.com/img/mcache_alloc-2022-04-12.png" alt="Golang内存分配| Random walk to my blog"  />
+</p></p>
+<h4 id="runtimemcentral"><code>runtime.mcentral</code> <a href="#runtimemcentral" class="anchor">🔗</a></h4><p><code>mcache</code> 作为线程的私有资源为单个线程服务，而 central 则是全局资源，为多个线程服务。它会同时持有两个 <code>runtime.spanSet</code>，分别存储包含空闲对象和不包含空闲对象的内存管理单元。其中 partial 和 full 又分别有两个 spanSet，一个是被 GC 清理过的，一个是未被 GC 清理过的。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">mcentral</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span> <span style="color:#a6e22e">spanclass</span> <span style="color:#a6e22e">spanClass</span>	<span style="color:#75715e">// 68 * 2 种 span
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#a6e22e">partial</span> [<span style="color:#ae81ff">2</span>]<span style="color:#a6e22e">spanSet</span> <span style="color:#75715e">// 包含空闲对象的 span list，spanSet 支持安全并发操作
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span> <span style="color:#a6e22e">full</span>    [<span style="color:#ae81ff">2</span>]<span style="color:#a6e22e">spanSet</span> <span style="color:#75715e">// 不包含空闲对象的 span list
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p><code>mcache</code> 会通过 <code>runtime.mcentral.cacheSpan</code> 方法从 <code>mcentral</code> 获取可用的 span，主要分为以下几个部分</p>
+<ol>
+<li>从 partial 并且清理过 spanlist 的获取可用 span</li>
+<li>从 partial 并且没有被清理过的 spanlist 获取可用 span</li>
+<li>从 full 并且未被清理过的 spanlist，获取 span 并且清理，获取可用 span</li>
+<li><code>mcentral</code> 从 <code>mheap</code>中申请内存</li>
+</ol>
+<h4 id="runtimemheap"><code>runtime.mheap</code> <a href="#runtimemheap" class="anchor">🔗</a></h4><p>上述介绍的 <code>mcentral</code> 结构可知，一个 <code>mcentral</code> 实例只代表一种 span，实际上会有 68*2 种 span。因此需要一个长度为 68 *2 的 <code>mcentral</code> 数组, 而这个结构位于 <code>mheap</code></p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">mheap</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">lock</span>  <span style="color:#a6e22e">mutex</span>
+</span></span><span style="display:flex;"><span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">allspans</span> []<span style="color:#f92672">*</span><span style="color:#a6e22e">mspan</span> 					<span style="color:#75715e">// 所有的 span
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  <span style="color:#a6e22e">arenas</span> [<span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#a6e22e">arenaL1Bits</span>]<span style="color:#f92672">*</span>[<span style="color:#ae81ff">1</span> <span style="color:#f92672">&lt;&lt;</span> <span style="color:#a6e22e">arenaL2Bits</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">heapArena</span> <span style="color:#75715e">// 离散的堆区
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  
+</span></span><span style="display:flex;"><span>  <span style="color:#a6e22e">central</span> [<span style="color:#a6e22e">numSpanClasses</span>]<span style="color:#66d9ef">struct</span> {		<span style="color:#75715e">// 持有的 68*2 种 mentral
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">mcentral</span> <span style="color:#a6e22e">mcentral</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">pad</span>      [<span style="color:#a6e22e">cpu</span>.<span style="color:#a6e22e">CacheLinePadSize</span> <span style="color:#f92672">-</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Sizeof</span>(<span style="color:#a6e22e">mcentral</span>{})<span style="color:#f92672">%</span><span style="color:#a6e22e">cpu</span>.<span style="color:#a6e22e">CacheLinePadSize</span>]<span style="color:#66d9ef">byte</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>  <span style="color:#75715e">// ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e">// 离散的 heapArena 每个 64 MB
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">heapArena</span> <span style="color:#66d9ef">struct</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">bitmap</span> [<span style="color:#a6e22e">heapArenaBitmapBytes</span>]<span style="color:#66d9ef">byte</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">spans</span> [<span style="color:#a6e22e">pagesPerArena</span>]<span style="color:#f92672">*</span><span style="color:#a6e22e">mspan</span> <span style="color:#75715e">// 页到 mspan 的映射
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>	<span style="color:#a6e22e">pageInUse</span> [<span style="color:#a6e22e">pagesPerArena</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">8</span>]<span style="color:#66d9ef">uint8</span> <span style="color:#75715e">// bitmap 标记哪些页在使用中
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span></code></pre></div><p>Go 程序就是通过一个 <code>mheap</code> 类型的全局变量来进行内存管理的，其上向操作系统申请内存，下向 <code>mcentral</code> 提供 span</p>
+<h3 id="内存分配过程">内存分配过程 <a href="#%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d%e8%bf%87%e7%a8%8b" class="anchor">🔗</a></h3><ol>
+<li>堆上分配的所有对象都通过 <code>runtime.newobject</code> 分配，该函数会调用 <code>runtime.mallocgc</code> 分配内存</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">newobject</span>(<span style="color:#a6e22e">typ</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>) <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">mallocgc</span>(<span style="color:#a6e22e">typ</span>.<span style="color:#a6e22e">size</span>, <span style="color:#a6e22e">typ</span>, <span style="color:#66d9ef">true</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="2">
+<li>Golang 对待分配对象大小不同有不同的分配逻辑，这段逻辑在 <code>runtime.mallocgc</code> 中
+<ol>
+<li>tiny 对象：小于 16 B 且不包括指针的对象</li>
+<li>大对象：大于 32 KB 的对象</li>
+<li>正常对象： (0, 16 B) 包含指针的对象，[16 B, 32 KB] 的对象</li>
+</ol>
+</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">mallocgc</span>(<span style="color:#a6e22e">size</span> <span style="color:#66d9ef">uintptr</span>, <span style="color:#a6e22e">typ</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">_type</span>, <span style="color:#a6e22e">needzero</span> <span style="color:#66d9ef">bool</span>) <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e">// ....
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>  	<span style="color:#75715e">// 获取当前线程的 mcache
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">c</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">getMCache</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">span</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">mspan</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">x</span> <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">noscan</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">typ</span> <span style="color:#f92672">==</span> <span style="color:#66d9ef">nil</span> <span style="color:#f92672">||</span> <span style="color:#a6e22e">typ</span>.<span style="color:#a6e22e">ptrdata</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">size</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">maxSmallSize</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">noscan</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">size</span> &lt; <span style="color:#a6e22e">maxTinySize</span> {
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">// Tiny 分配
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      } <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e">// 正常对象分配
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>      }
+</span></span><span style="display:flex;"><span>    }<span style="color:#66d9ef">else</span>{
+</span></span><span style="display:flex;"><span>      	<span style="color:#75715e">// 大对象分配
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    }
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">x</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><ol start="3">
+<li>微对象与大对象都属于内存管理的优化手段，大对象所需要连续空间比较多，而且相对比较少见，直接从 <code>mheap</code> 申请。tiny 对象则是因为 sizeclass 中分割最小 object 是 8 B，对 bool，int8，int32 这种分配比较浪费内存空间，把这些挤在一起分配在一个 object 中。下面我们重点分析下正常对象的分配过程</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>			<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">sizeclass</span> <span style="color:#66d9ef">uint8</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 根据待分配对象确定 sizeclass
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">size</span> <span style="color:#f92672">&lt;=</span> <span style="color:#a6e22e">smallSizeMax</span><span style="color:#f92672">-</span><span style="color:#ae81ff">8</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">sizeclass</span> = <span style="color:#a6e22e">size_to_class8</span>[<span style="color:#a6e22e">divRoundUp</span>(<span style="color:#a6e22e">size</span>, <span style="color:#a6e22e">smallSizeDiv</span>)]
+</span></span><span style="display:flex;"><span>			} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">sizeclass</span> = <span style="color:#a6e22e">size_to_class128</span>[<span style="color:#a6e22e">divRoundUp</span>(<span style="color:#a6e22e">size</span><span style="color:#f92672">-</span><span style="color:#a6e22e">smallSizeMax</span>, <span style="color:#a6e22e">largeSizeDiv</span>)]
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">size</span> = uintptr(<span style="color:#a6e22e">class_to_size</span>[<span style="color:#a6e22e">sizeclass</span>])
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">spc</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">makeSpanClass</span>(<span style="color:#a6e22e">sizeclass</span>, <span style="color:#a6e22e">noscan</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">span</span> = <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">alloc</span>[<span style="color:#a6e22e">spc</span>]
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 在 mcache 中 对应 sizeclass 的 span 链表中获取可用的内存空间
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#a6e22e">v</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">nextFreeFast</span>(<span style="color:#a6e22e">span</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// mcache 中没有可用的，向上 mcentral 申请，如果 mcentral 也没有可用空间，继续向上 mheap 申请
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">v</span> <span style="color:#f92672">==</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">v</span>, <span style="color:#a6e22e">span</span>, <span style="color:#a6e22e">shouldhelpgc</span> = <span style="color:#a6e22e">c</span>.<span style="color:#a6e22e">nextFree</span>(<span style="color:#a6e22e">spc</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">x</span> = <span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">v</span>)
+</span></span><span style="display:flex;"><span>			<span style="color:#75715e">// 把申请的这块空间清空
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">needzero</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">span</span>.<span style="color:#a6e22e">needzero</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+</span></span><span style="display:flex;"><span>				<span style="color:#a6e22e">memclrNoHeapPointers</span>(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">v</span>), <span style="color:#a6e22e">size</span>)
+</span></span><span style="display:flex;"><span>			}
+</span></span></code></pre></div><ol>
+<li>获取当前线程的私有缓存 <code>mcache</code></li>
+<li>根据分配对象的大小确定是 tiny 对象、大对象还是正常对象分配模式</li>
+<li>如果是正常对象分配，根据待分配对象的大小确定跨度类 <code>runtime.spanClass</code> 的ID</li>
+<li>在 <code>mcache</code> 找到对应 sizeclass 的 span list 寻找空闲的内存块</li>
+<li>如果在 <code>mcache</code> 没有可用的内存块，从 <code>mcentral</code> 申请一个可用 <code>span</code>, 如果 <code>mcentral</code> 也没有，则像 <code>mheap</code> 申请 <code>span</code>。当然，<code>mheap</code>也没有会继续向操作系统申请</li>
+</ol>
+<h2 id="总结">总结 <a href="#%e6%80%bb%e7%bb%93" class="anchor">🔗</a></h2><ul>
+<li>Golang 内存分配器基于谷歌 TCMolloc 来实现的，其实质上是空闲链表分配的变种，主要优化思想是多级缓存池与大小分级</li>
+<li>Golang 内存管理将堆区分成页作为最小管理单位，每页 8 KB</li>
+<li>连续页组成大小不同的内存块，即 <code>span</code>，<code>span</code> 是内存分配的基本单位</li>
+<li><code>span</code> 根据分割对象大小以及内存页数预定义了 68 * 2 种 sizeclass 的 span，根据待分配对象大小去选择合适的种类的 span，这就是大小分级。</li>
+<li><code>mcache</code>，<code>mcentral</code>,<code>mheap</code> 作为三层内存缓冲区，也极大提高了内存分配的效率</li>
+</ul>
+<h2 id="参考">参考 <a href="#%e5%8f%82%e8%80%83" class="anchor">🔗</a></h2><ol>
+<li><a href="https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/" target="_blank" rel="noopener">https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/323915446" target="_blank" rel="noopener">https://zhuanlan.zhihu.com/p/323915446</a></li>
+<li><a href="https://juejin.cn/post/6844903795739082760" target="_blank" rel="noopener">https://juejin.cn/post/6844903795739082760</a></li>
+<li><a href="https://tech.bytedance.net/articles/6948356640802340877" target="_blank" rel="noopener">https://tech.bytedance.net/articles/6948356640802340877</a></li>
+<li><a href="https://blog.csdn.net/qq_43188744/article/details/115433514" target="_blank" rel="noopener">https://blog.csdn.net/qq_43188744/article/details/115433514</a></li>
+<li><a href="https://blog.csdn.net/qq_43188744/article/details/115355566" target="_blank" rel="noopener">https://blog.csdn.net/qq_43188744/article/details/115355566</a></li>
+</ol>
+
+    </div>
+
+    
+        <div class="tags">
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/%E8%AE%A1%E7%AE%97%E6%9C%BA%E5%9F%BA%E7%A1%80">计算机基础</a>
+            
+                <a href="https://he2121.github.io/xiaohe-blog/tags/golang">golang</a>
+            
+        </div>
+    
+    
+    
+
+</section>
+
+
+    </main>
+    
+    <footer id="footer">
+    
+        <div id="social">
+
+
+    <a class="symbol" href="https://github.com/he2121/" rel="me" target="_blank">
+        
+        <svg fill="#bbbbbb" width="28" height="28"  viewBox="0 0 72 72" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    
+    <title>Github</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="Social-Icons---Rounded-Black" transform="translate(-264.000000, -939.000000)">
+            <g id="Github" transform="translate(264.000000, 939.000000)">
+                <path d="M8,72 L64,72 C68.418278,72 72,68.418278 72,64 L72,8 C72,3.581722 68.418278,-8.11624501e-16 64,0 L8,0 C3.581722,8.11624501e-16 -5.41083001e-16,3.581722 0,8 L0,64 C5.41083001e-16,68.418278 3.581722,72 8,72 Z" id="Rounded" fill="#bbbbbb"></path>
+                <path d="M35.9985,13 C22.746,13 12,23.7870921 12,37.096644 C12,47.7406712 18.876,56.7718301 28.4145,59.9584121 C29.6145,60.1797862 30.0525,59.4358488 30.0525,58.7973276 C30.0525,58.2250681 30.0315,56.7100863 30.0195,54.6996482 C23.343,56.1558981 21.9345,51.4693938 21.9345,51.4693938 C20.844,48.6864054 19.2705,47.9454799 19.2705,47.9454799 C17.091,46.4500754 19.4355,46.4801943 19.4355,46.4801943 C21.843,46.6503662 23.1105,48.9634994 23.1105,48.9634994 C25.2525,52.6455377 28.728,51.5823398 30.096,50.9649018 C30.3135,49.4077535 30.9345,48.3460615 31.62,47.7436831 C26.2905,47.1352808 20.688,45.0691228 20.688,35.8361671 C20.688,33.2052792 21.6225,31.0547881 23.1585,29.3696344 C22.911,28.7597262 22.0875,26.3110578 23.3925,22.9934585 C23.3925,22.9934585 25.4085,22.3459017 29.9925,25.4632101 C31.908,24.9285993 33.96,24.6620468 36.0015,24.6515052 C38.04,24.6620468 40.0935,24.9285993 42.0105,25.4632101 C46.5915,22.3459017 48.603,22.9934585 48.603,22.9934585 C49.9125,26.3110578 49.089,28.7597262 48.8415,29.3696344 C50.3805,31.0547881 51.309,33.2052792 51.309,35.8361671 C51.309,45.0917119 45.6975,47.1292571 40.3515,47.7256117 C41.2125,48.4695491 41.9805,49.9393525 41.9805,52.1877301 C41.9805,55.4089489 41.9505,58.0067059 41.9505,58.7973276 C41.9505,59.4418726 42.3825,60.1918338 43.6005,59.9554002 C53.13,56.7627944 60,47.7376593 60,37.096644 C60,23.7870921 49.254,13 35.9985,13" fill="#FFFFFF"></path>
+            </g>
+        </g>
+    </g>
+</svg>
+    </a>
+
+
+</div>
+
+    
+
+    <div class="copyright">
+    
+       © Copyright 
+       2022 
+       <span class="split">
+        <svg fill="#bbbbbb" width="15" height="15" version="1.1" id="heart-15" xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 15 15">
+  <path d="M13.91,6.75c-1.17,2.25-4.3,5.31-6.07,6.94c-0.1903,0.1718-0.4797,0.1718-0.67,0C5.39,12.06,2.26,9,1.09,6.75&#xA;&#x9;C-1.48,1.8,5-1.5,7.5,3.45C10-1.5,16.48,1.8,13.91,6.75z"/>
+</svg>
+       </span>
+       小贺
+    
+    </div>
+
+    
+</footer>
+
+
+
+  </body>
+</html>
