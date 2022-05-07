@@ -316,7 +316,6 @@ func mallocgc(size uintptr, typ *_type, needzero bool) unsafe.Pointer {
 1. https://draveness.me/golang/docs/part3-runtime/ch07-memory/golang-memory-allocator/
 1. https://zhuanlan.zhihu.com/p/323915446
 1. https://juejin.cn/post/6844903795739082760
-1. https://tech.bytedance.net/articles/6948356640802340877
 1. https://blog.csdn.net/qq_43188744/article/details/115433514
 1. https://blog.csdn.net/qq_43188744/article/details/115355566
 
