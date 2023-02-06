@@ -6,14 +6,37 @@
     <description>Recent content on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 30 Apr 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 06 Feb 2023 00:08:32 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>todo</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</link>
-      <pubDate>Sat, 30 Apr 2022 11:10:12 +0800</pubDate>
+      <title>如何在微信公众号上搭建一个属于自己的 chatgpt 服务</title>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E5%A6%82%E4%BD%95%E5%9C%A8%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84chatgpt%E6%9C%8D%E5%8A%A1/</link>
+      <pubDate>Mon, 06 Feb 2023 00:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</guid>
-      <description></description>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E5%A6%82%E4%BD%95%E5%9C%A8%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84chatgpt%E6%9C%8D%E5%8A%A1/</guid>
+      <description>chatgpt 刚出时就体验了一下，并且写了一个飞书机器人再飞书上使用至今，感觉还挺方便。最近想起自己还有一个 n 年没用过的阿里云服务器和一个已冻结的微信公众号，便想着废物利用，在微信上也搞一个 chatgpt 的机器人。
+ 通过本文你能获得什么 🔗  属于自己的 chatgpt 微信机器人
+  熟悉微信公众号的 golang 服务开发过程
+  前置条件 🔗 服务器一台 chatgpt 注册账号 申请一个微信公众号 在服务器安装好 Git 和最新 Go 版本  以上每一个步骤对于小白来说都会比较繁琐，但这就是折腾的乐趣
+部署服务 🔗  克隆仓库到服务器，仓库地址
+git clone https://github.com/he2121/chatgpt_weixin.git 代码其实很简单，只有三个文件
+ main.go: 使用 gin 起一个 HTTP 服务，作为微信公众号的回调地址 weixin.go: 使用 微信SDK 监听消息，返回消息 gpt.go: 封装了下 open-ai 的 HTTP 请求  发送消息的总链路：用户私聊公众号 -&amp;gt; 公众号后台 -&amp;gt; 自己的服务器 -&amp;gt; open-ai
+open-ai 的返回结果则逆向翻译
+  代码配置设置</description>
+    </item>
+    
+    <item>
+      <title>Golang 基础知识总结01</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%9301/</link>
+      <pubDate>Tue, 10 May 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%9301/</guid>
+      <description>1. Golang 中 make 与 new 的区别 🔗相同点：都是用来申请内存的
+make 一般是用于 slice，map，channel 类型的申请，使用时一般可以指定长度和容量参数, 返回相应的引用类型
+new 用于普通类型对象内存的申请，返回的是指针
+2. 数组与切片的区别 🔗相同点：存放特定数据的集合
+数据：固定长度，不可变，值传递
+切片：长度可变，引用类型
+type slice struct { 	array unsafe.Pointer 	len int 	cap int } 3. for range 🔗</description>
     </item>
     
     <item>
@@ -123,15 +146,6 @@ ASCII 意义 🔗包含了使用最广泛的控制字符、数字符号、英文
     </item>
     
     <item>
-      <title>todo Golang Select 关键词详解</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</link>
-      <pubDate>Fri, 28 Jan 2022 17:10:12 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</guid>
-      <description>背景 🔗在分析 Golang channel 源码时 todo</description>
-    </item>
-    
-    <item>
       <title>kmp 算法</title>
       <link>https://he2121.github.io/xiaohe-blog/algorithm/kmp-%E7%AE%97%E6%B3%95/</link>
       <pubDate>Sun, 23 Jan 2022 17:10:12 +0800</pubDate>
@@ -217,7 +231,7 @@ db_set(){  echo &amp;#34;$1,$2&amp;#34; &amp;gt;&amp;gt; database }  db_get(){  
       
       <guid>https://he2121.github.io/xiaohe-blog/reading/2022%E8%AF%BB%E4%B9%A6%E8%AE%A1%E5%88%92/</guid>
       <description> 之前学习新知识总是游离在网上博客，学习到的各个知识点都是零散的。所以今年决定读一些纸质书，增强下自己的底蕴。读完每一本书至少输出一篇博客，分享自己的收获或者对这本书的评价。
- 技术类 🔗已读完 🔗 DDIA 数据密集型应用系统设计  正在进行中 🔗 Redis 设计与实现 Go专家编程  待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道 代码大全  非技术类 🔗已读完 🔗 红楼梦 小狗钱钱 巴菲特致股东的信 球状闪电  正在进行中 🔗 家庭、私有制和国家的起源 毛选  待安排 🔗 亲密关系 原则  </description>
+ 技术类 🔗已读完 🔗 DDIA 数据密集型应用系统设计 Redis 设计与实现 Go专家编程  正在进行中 🔗 代码大全   待安排 🔗 高性能 MySQL TCP/IP 第一卷 计算机程序的构造和解释 重构（第2版） 领域驱动设计 代码整洁之道  非技术类 🔗已读完 🔗 红楼梦 小狗钱钱 巴菲特致股东的信 球状闪电 家庭、私有制和国家的起源  正在进行中 🔗 毛选 南明史  待安排 🔗 亲密关系 原则  </description>
     </item>
     
     <item>
@@ -641,6 +655,15 @@ Interface 🔗定义 🔗接口有两种定义：
       
       <guid>https://he2121.github.io/xiaohe-blog/mixed/%E6%B5%81%E7%A8%8B%E5%9B%BE%E4%BB%A3%E7%A0%81/</guid>
       <description>channel 🔗graph LR  1(channel) --&amp;gt; 2(向 channel 发送消息)  1 --&amp;gt; 3(接受消息)  1 --&amp;gt; 4(关闭channel)  2 -- full channel--&amp;gt; 5(阻塞)  2 --closed channel--&amp;gt; 6(panic)  3 --empty channel--&amp;gt;5  3 --closed channel--&amp;gt; 7(读到零值)  4 --closed/nil channel--&amp;gt; 6  graph TB 1(向 channel 发送消息) --&amp;gt; 2{channel 是否 nil} --否--&amp;gt; 4{channel 是否 closed}--否--&amp;gt; 6{recvq 队列是否存在值}--否--&amp;gt;8{buf 是否未满} --否--&amp;gt; 10(阻塞协程,并放到 sendq 队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(panic) 6 --是--&amp;gt; 7(队首出队,消息直接发送至该 goroutine 中) 8--是--&amp;gt; 9(消息拷贝到 buf sendx位置中,等待唤醒) graph TB 1(向channel接受消息) --&amp;gt; 2{channel是否nil} --否--&amp;gt; 4{channel是否closed &amp;amp;&amp;amp; buf中元素为空}--否--&amp;gt; 6{sendq队列是否存在值}--否--&amp;gt;8{buf 是否为空} --是--&amp;gt; 10(阻塞协程,并放到recvq队列中) 2 --是--&amp;gt; 3(阻塞) 4 --是--&amp;gt; 5(返回零值) 6 --是--&amp;gt; 7(sendq队首出队) --无缓冲channel--&amp;gt; 11(将出队goroutine发送的消息拷贝到返回数据) 7 --缓冲channel--&amp;gt; 12(将buf队首消息copy到返回数据) --&amp;gt; 13(再将sendq出队的goroutine发送消息拷贝到buf) 8--否--&amp;gt; 9(将 buf 队首消息 copy 到返回数据) </description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%AE%9E%E8%B7%B5-%E8%81%8A%E8%81%8A-%E5%8D%95%E6%B5%8Bmock-%E5%92%8C%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%AE%9E%E8%B7%B5-%E8%81%8A%E8%81%8A-%E5%8D%95%E6%B5%8Bmock-%E5%92%8C%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</guid>
+      <description></description>
     </item>
     
   </channel>

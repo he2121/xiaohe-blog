@@ -6,14 +6,20 @@
     <description>Recent content in Posts on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 30 Apr 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 10 May 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/posts/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>todo</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</link>
-      <pubDate>Sat, 30 Apr 2022 11:10:12 +0800</pubDate>
+      <title>Golang 基础知识总结01</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%9301/</link>
+      <pubDate>Tue, 10 May 2022 11:10:12 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</guid>
-      <description></description>
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%9301/</guid>
+      <description>1. Golang 中 make 与 new 的区别 🔗相同点：都是用来申请内存的
+make 一般是用于 slice，map，channel 类型的申请，使用时一般可以指定长度和容量参数, 返回相应的引用类型
+new 用于普通类型对象内存的申请，返回的是指针
+2. 数组与切片的区别 🔗相同点：存放特定数据的集合
+数据：固定长度，不可变，值传递
+切片：长度可变，引用类型
+type slice struct { 	array unsafe.Pointer 	len int 	cap int } 3. for range 🔗</description>
     </item>
     
     <item>
@@ -62,15 +68,6 @@
 编码范围 🔗十进制: 0-127
 字节形式：
 ASCII 意义 🔗包含了使用最广泛的控制字符、数字符号、英文字母、英文符号，作为鼻祖，成为计算机编码系统的基础，以后出现的各种字符编码基本都要兼容它</description>
-    </item>
-    
-    <item>
-      <title>todo Golang Select 关键词详解</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</link>
-      <pubDate>Fri, 28 Jan 2022 17:10:12 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</guid>
-      <description>背景 🔗在分析 Golang channel 源码时 todo</description>
     </item>
     
     <item>
@@ -363,6 +360,15 @@ Interface 🔗定义 🔗接口有两种定义：
   eface: 空接口定义, 包含具体类型与数据
   iface: 非空接口定义（实现了方法的接口），
   // 位于 src/runtime/runtime2.go type eface struct {  _type *_type // 具体的类型  data unsafe.</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%AE%9E%E8%B7%B5-%E8%81%8A%E8%81%8A-%E5%8D%95%E6%B5%8Bmock-%E5%92%8C%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%AE%9E%E8%B7%B5-%E8%81%8A%E8%81%8A-%E5%8D%95%E6%B5%8Bmock-%E5%92%8C%E4%BE%9D%E8%B5%96%E6%B3%A8%E5%85%A5/</guid>
+      <description></description>
     </item>
     
   </channel>

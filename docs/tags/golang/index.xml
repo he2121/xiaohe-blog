@@ -6,14 +6,37 @@
     <description>Recent content in golang on 小贺的博客</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Sat, 30 Apr 2022 11:10:12 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/golang/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Mon, 06 Feb 2023 00:08:32 +0800</lastBuildDate><atom:link href="https://he2121.github.io/xiaohe-blog/tags/golang/index.xml" rel="self" type="application/rss+xml" />
     <item>
-      <title>todo</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</link>
-      <pubDate>Sat, 30 Apr 2022 11:10:12 +0800</pubDate>
+      <title>如何在微信公众号上搭建一个属于自己的 chatgpt 服务</title>
+      <link>https://he2121.github.io/xiaohe-blog/mixed/%E5%A6%82%E4%BD%95%E5%9C%A8%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84chatgpt%E6%9C%8D%E5%8A%A1/</link>
+      <pubDate>Mon, 06 Feb 2023 00:08:32 +0800</pubDate>
       
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-1.15-~-1.18-%E6%96%B0%E7%89%B9%E6%80%A7%E5%AE%9E%E6%88%98/</guid>
-      <description></description>
+      <guid>https://he2121.github.io/xiaohe-blog/mixed/%E5%A6%82%E4%BD%95%E5%9C%A8%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7%E6%90%AD%E5%BB%BA%E4%B8%80%E4%B8%AA%E5%B1%9E%E4%BA%8E%E8%87%AA%E5%B7%B1%E7%9A%84chatgpt%E6%9C%8D%E5%8A%A1/</guid>
+      <description>chatgpt 刚出时就体验了一下，并且写了一个飞书机器人再飞书上使用至今，感觉还挺方便。最近想起自己还有一个 n 年没用过的阿里云服务器和一个已冻结的微信公众号，便想着废物利用，在微信上也搞一个 chatgpt 的机器人。
+ 通过本文你能获得什么 🔗  属于自己的 chatgpt 微信机器人
+  熟悉微信公众号的 golang 服务开发过程
+  前置条件 🔗 服务器一台 chatgpt 注册账号 申请一个微信公众号 在服务器安装好 Git 和最新 Go 版本  以上每一个步骤对于小白来说都会比较繁琐，但这就是折腾的乐趣
+部署服务 🔗  克隆仓库到服务器，仓库地址
+git clone https://github.com/he2121/chatgpt_weixin.git 代码其实很简单，只有三个文件
+ main.go: 使用 gin 起一个 HTTP 服务，作为微信公众号的回调地址 weixin.go: 使用 微信SDK 监听消息，返回消息 gpt.go: 封装了下 open-ai 的 HTTP 请求  发送消息的总链路：用户私聊公众号 -&amp;gt; 公众号后台 -&amp;gt; 自己的服务器 -&amp;gt; open-ai
+open-ai 的返回结果则逆向翻译
+  代码配置设置</description>
+    </item>
+    
+    <item>
+      <title>Golang 基础知识总结01</title>
+      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%9301/</link>
+      <pubDate>Tue, 10 May 2022 11:10:12 +0800</pubDate>
+      
+      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%9301/</guid>
+      <description>1. Golang 中 make 与 new 的区别 🔗相同点：都是用来申请内存的
+make 一般是用于 slice，map，channel 类型的申请，使用时一般可以指定长度和容量参数, 返回相应的引用类型
+new 用于普通类型对象内存的申请，返回的是指针
+2. 数组与切片的区别 🔗相同点：存放特定数据的集合
+数据：固定长度，不可变，值传递
+切片：长度可变，引用类型
+type slice struct { 	array unsafe.Pointer 	len int 	cap int } 3. for range 🔗</description>
     </item>
     
     <item>
@@ -41,15 +64,6 @@
 这种方式可以重新利用回收的内存块，但是分配内存时需要遍历链表，时间复杂度 O(n)。
 一般有以下几种方式在不同大小的内存块选择分配
  首次适应：从表头遍历，第一个大于申请内存的内存块 循环首次适应：从上次遍历结束位置开始遍历，第一个大于申请内存的内存块 最优适应：选择大小最合适的内存块 最差适用：选择最大内存块  Golang 内存分配器 🔗整体框架 🔗Golang 内存分配算法源自 Google 的 TCMalloc 算法（Thread-Caching），具有减少内存碎片，适用于多核，更好的并行性支持等特性，主要利用了多级缓存与大小分类的思想来优化内存分配速度。TCMalloc 整体框架如下。</description>
-    </item>
-    
-    <item>
-      <title>todo Golang Select 关键词详解</title>
-      <link>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</link>
-      <pubDate>Fri, 28 Jan 2022 17:10:12 +0800</pubDate>
-      
-      <guid>https://he2121.github.io/xiaohe-blog/posts/golang/golang-select-%E5%85%B3%E9%94%AE%E8%AF%8D%E8%AF%A6%E8%A7%A3/</guid>
-      <description>背景 🔗在分析 Golang channel 源码时 todo</description>
     </item>
     
     <item>
